@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Генератор изображений</title>
+</head>
+<body>
+    <h1>Генератор изображений для радиостанций</h1>
+    <p>Эта страница создаст и скачает изображения для радиостанций</p>
+    
+    <script>
+        // Функция для создания и скачивания изображения
+        function createAndDownloadImage(filename, text) {
+            // Создаем canvas элемент
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Заливаем фон
+            ctx.fillStyle = '#00008B'; // Темносиний цвет
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Настройки текста
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 30px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Рисуем текст по центру
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            // Создаем ссылку для скачивания
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/jpeg');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Создаем изображения для радиостанций
+        setTimeout(() => createAndDownloadImage('viktoria.jpg', 'Виктория'), 100);
+        setTimeout(() => createAndDownloadImage('tetim.jpg', 'Тэтим'), 200);
+        setTimeout(() => createAndDownloadImage('ir_radio.jpg', 'IR Radio'), 300);
+        setTimeout(() => createAndDownloadImage('europa_plus.jpg', 'Европа Плюс'), 400);
+        
+        setTimeout(() => {
+            alert('Изображения созданы и скачиваются. После завершения скачивания переместите их в папку assets/images вашего проекта.');
+        }, 500);
+    </script>
+</body>
+</html>

@@ -1,64 +1,95 @@
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../data/weather_repository.dart';
+import 'package:radio_v2/core/providers/providers.dart';
 import '../models/weather_model.dart';
 import '../models/weather_failure.dart';
-import '../data/weather_service.dart';
 
-class WeatherProvider extends ChangeNotifier {
-  WeatherData? _weatherData;
-  bool _isLoading = false;
-  String? _error;
-
-  WeatherData? get weatherData => _weatherData;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  final WeatherRepository _repository;
-  final WeatherService _weatherService;
+class WeatherNotifier extends AsyncNotifier<WeatherData?> {
   static const String _cachedWeatherKey = 'cached_weather_data';
+  DateTime? _lastFetchTime;
 
-  WeatherProvider() 
-      : _repository = WeatherRepositoryImpl(),
-        _weatherService = WeatherService();
+  @override
+  Future<WeatherData?> build() async {
+    // Пытаемся загрузить из кэша сразу при создании
+    final cached = await _loadCachedWeatherData();
+    if (cached != null) {
+      // Запускаем фоновое обновление, если данные устарели (> 15 мин)
+      // или если это первый запуск
+      _refreshInBackground();
+      return cached;
+    }
 
-  Future<void> fetchWeather() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    // Если в кэше пусто, загружаем
+    return _fetchWeather();
+  }
+
+  void _refreshInBackground() async {
+    try {
+      await refreshWeather(
+        isSilent: true,
+      ); // Use public method which checks time
+    } catch (_) {}
+  }
+
+  Future<WeatherData?> _fetchWeather() async {
+    final repository = ref.read(weatherRepositoryProvider);
+    final service = ref.read(weatherServiceProvider);
 
     try {
-      // Пытаемся получить текущее местоположение пользователя
+      WeatherData data;
       try {
-        final position = await _weatherService.getCurrentLocation();
-        _weatherData = await _repository.getWeatherForecastByCoords(
-          position.latitude, 
-          position.longitude
+        final position = await service.getCurrentLocation();
+        data = await repository.getWeatherForecastByCoords(
+          position.latitude,
+          position.longitude,
         );
-        // Сохраняем данные в кэш
-        _cacheWeatherData(_weatherData!);
       } catch (locationError) {
-        // Если не удалось получить местоположение, используем Якутск как резервный вариант
         debugPrint('Ошибка получения местоположения: $locationError');
-        _weatherData = await _repository.getWeatherForecast("Yakutsk");
-        // Сохраняем данные в кэш
-        _cacheWeatherData(_weatherData!);
+        data = await repository.getWeatherForecast("Yakutsk");
       }
-    } on WeatherFailure catch (e) {
-      _error = e.message;
-      _weatherData = null;
-      // Пытаемся загрузить данные из кэша
-      await _loadCachedWeatherData();
+
+      _cacheWeatherData(data);
+      _lastFetchTime = DateTime.now(); // Update timestamp
+      state = AsyncData(data);
+      return data;
+    } on WeatherFailure catch (_) {
+      final cached = await _loadCachedWeatherData();
+      if (cached != null) {
+        state = AsyncData(cached);
+        return cached;
+      }
+      rethrow;
     } catch (e) {
-      _error = 'Произошла неизвестная ошибка: ${e.toString()}';
-      _weatherData = null;
-      // Пытаемся загрузить данные из кэша
-      await _loadCachedWeatherData();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      final cached = await _loadCachedWeatherData();
+      if (cached != null) {
+        state = AsyncData(cached);
+        return cached;
+      }
+      throw WeatherFailure('Произошла ошибка: ${e.toString()}');
     }
+  }
+
+  Future<void> refreshWeather({
+    bool force = false,
+    bool isSilent = false,
+  }) async {
+    // Check if we need to update
+    if (!force && _lastFetchTime != null) {
+      final difference = DateTime.now().difference(_lastFetchTime!);
+      if (difference.inMinutes < 15) {
+        debugPrint(
+          'Weather data is fresh (updated ${difference.inMinutes} mins ago). Skipping refresh.',
+        );
+        return;
+      }
+    }
+
+    if (!isSilent) {
+      state = const AsyncLoading(); // Show loading indicator only if not silent
+    }
+    await _fetchWeather();
   }
 
   Future<void> _cacheWeatherData(WeatherData data) async {
@@ -66,26 +97,24 @@ class WeatherProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cachedWeatherKey, jsonEncode(data.toJson()));
     } catch (e) {
-      // Игнорируем ошибки кэширования
       debugPrint('Ошибка кэширования данных погоды: $e');
     }
   }
 
-  Future<void> _loadCachedWeatherData() async {
+  Future<WeatherData?> _loadCachedWeatherData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final cachedData = prefs.getString(_cachedWeatherKey);
       if (cachedData != null) {
-        _weatherData = WeatherData.fromJson(jsonDecode(cachedData));
-        _error = null; // Очищаем ошибку при успешной загрузке кэша
+        return WeatherData.fromJson(jsonDecode(cachedData));
       }
     } catch (e) {
-      // Игнорируем ошибки загрузки кэша
       debugPrint('Ошибка загрузки кэшированных данных погоды: $e');
     }
-  }
-
-  Future<void> refreshWeather() async {
-    await fetchWeather();
+    return null;
   }
 }
+
+final weatherProvider = AsyncNotifierProvider<WeatherNotifier, WeatherData?>(
+  WeatherNotifier.new,
+);

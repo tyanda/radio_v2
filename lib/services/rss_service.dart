@@ -1,15 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_rss/dart_rss.dart';
 
 class RssService {
+  final http.Client _client;
   static const String _rssUrl = 'https://ysia.ru/feed/';
   static const String _userAgent = 'SakhaRadio/1.0';
 
+  RssService(this._client);
+
   /// Получает RSS-ленту и возвращает список заголовков новостей
-  static Future<List<String>> fetchNewsTitles({int limit = 5}) async {
+  Future<List<String>> fetchNewsTitles({int limit = 5}) async {
     try {
-      final response = await http.get(
-        Uri.parse(_rssUrl),
+      final uri = kIsWeb
+          ? Uri.parse('https://corsproxy.io/?${Uri.encodeComponent(_rssUrl)}')
+          : Uri.parse(_rssUrl);
+
+      final response = await _client.get(
+        uri,
         headers: {'User-Agent': _userAgent},
       );
 
@@ -18,8 +26,10 @@ class RssService {
         final titles = <String>[];
 
         for (final item in feed.items) {
-          if (item.title != null && item.title!.isNotEmpty && titles.length < limit) {
-            titles.add(item.title!.toUpperCase());
+          if (titles.length >= limit) break;
+
+          if (item.title != null && item.title!.trim().isNotEmpty) {
+            titles.add(item.title!.trim().toUpperCase());
           }
         }
 
@@ -33,9 +43,9 @@ class RssService {
   }
 
   /// Получает RSS-ленту и возвращает полные данные
-  static Future<RssFeed> fetchRssFeed() async {
+  Future<RssFeed> fetchRssFeed() async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(_rssUrl),
         headers: {'User-Agent': _userAgent},
       );

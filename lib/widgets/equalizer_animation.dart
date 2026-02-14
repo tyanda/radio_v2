@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-// Цвета приложения, определенные здесь для использования в виджете
-class AppColors {
-  static const Color accent = Color(0xFFFFD700); // Золотой
-  static const Color background = Colors.black;
-  static const Color cardBackground = Color(0xFF111111);
-  static const Color error = Color(0xFFEF4444);
-}
+import 'package:radio_v2/core/theme/app_colors.dart';
 
 class EqualizerAnimation extends StatefulWidget {
   final bool isActive;
@@ -59,7 +53,8 @@ class _EqualizerAnimationState extends State<EqualizerAnimation>
             animation: _controller,
             builder: (context, child) {
               final delay = index * 0.2;
-              final value = (math.sin((_controller.value + delay) * 2 * math.pi) + 1) / 2;
+              final value =
+                  (math.sin((_controller.value + delay) * 2 * math.pi) + 1) / 2;
               final height = 4.0 + value * (widget.size - 8.0);
 
               return Container(

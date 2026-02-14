@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,49 +11,42 @@ import 'home_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Инициализация локализации для форматирования дат
+  // 1. Локализация
   try {
     await initializeDateFormatting('ru_RU');
-    debugPrint("Локализация дат успешно инициализирована");
   } catch (e) {
-    debugPrint("Ошибка инициализации локализации дат: $e");
+    debugPrint("Ошибка локализации: $e");
   }
 
-  // Инициализация Firebase с обработкой ошибок и таймаутом
-  debugPrint("Инициализация Firebase");
+  // 2. Firebase
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 15));
-    debugPrint("Firebase успешно инициализирована");
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint("Firebase initialized");
+    } else {
+      debugPrint("Firebase already initialized");
+    }
   } catch (e) {
-    debugPrint("Firebase initialization failed: $e");
-    debugPrint("Error details: ${e.runtimeType}");
-    // Продолжаем работу приложения даже при ошибке Firebase
+    debugPrint("Firebase init error (ignored if already exists): $e");
   }
 
-  // Инициализация фона и уведомлений с таймаутом
-  debugPrint("Инициализация JustAudioBackground");
-  try {
-    // Проверяем, является ли текущая платформа web
-    if (!kIsWeb) {
+  // 3. Audio Background
+  if (!kIsWeb) {
+    try {
       await JustAudioBackground.init(
         androidNotificationChannelId: 'com.sakha.radio.channel',
         androidNotificationChannelName: 'Sakha Radio Playback',
         androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
-      ).timeout(const Duration(seconds: 10));
-      debugPrint("JustAudioBackground успешно инициализирован");
-    } else {
-      debugPrint("Пропускаем инициализацию JustAudioBackground для web");
+      );
+    } catch (e) {
+      debugPrint("AudioBackground init error: $e");
     }
-  } catch (e) {
-    debugPrint("JustAudioBackground initialization failed: $e");
-    debugPrint("Error details: ${e.runtimeType}");
-    // Продолжаем работу приложения даже при ошибке инициализации аудио
   }
 
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -68,10 +62,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ru', 'RU'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
       theme: ThemeData.dark().copyWith(
         primaryColor: const Color(0xFFFFD700),
         scaffoldBackgroundColor: const Color(0xFF000000),

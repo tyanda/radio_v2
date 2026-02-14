@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import '../providers/weather_provider.dart';
 import '../models/weather_model.dart';
 import 'widgets/weather_widgets.dart';
 
-// Глобальный ValueNotifier для хранения текста бегущей строки
-final ValueNotifier<String?> globalMarqueeTextNotifier = ValueNotifier<String?>(
-  null,
-);
-
-class WeatherScreen extends StatefulWidget {
+class WeatherScreen extends ConsumerStatefulWidget {
   const WeatherScreen({super.key});
 
   @override
-  State<WeatherScreen> createState() => _WeatherScreenState();
+  ConsumerState<WeatherScreen> createState() => _WeatherScreenState();
 }
 
-class _WeatherScreenState extends State<WeatherScreen>
+class _WeatherScreenState extends ConsumerState<WeatherScreen>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
@@ -28,8 +23,7 @@ class _WeatherScreenState extends State<WeatherScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback((_) {
-      // Запускаем автоматическое обновление каждые 15 минут
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _startAutoRefresh();
     });
   }
@@ -44,61 +38,49 @@ class _WeatherScreenState extends State<WeatherScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
     if (state == AppLifecycleState.resumed) {
-      // Обновляем погоду при возвращении в приложение
-      Provider.of<WeatherProvider>(context, listen: false).refreshWeather();
+      ref.read(weatherProvider.notifier).refreshWeather();
     }
   }
 
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
-      Provider.of<WeatherProvider>(context, listen: false).refreshWeather();
+      ref.read(weatherProvider.notifier).refreshWeather();
     });
-  }
-
-  String getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 6) return 'Доброй ночи';
-    if (hour < 12) return 'Доброе утро';
-    if (hour < 18) return 'Добрый день';
-    return 'Добрый вечер';
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Call super.build for AutomaticKeepAliveClientMixin
+    super.build(context);
 
-    // Цветовая палитра SakhaLive
     const accent = Color(0xFFFFD700);
     const bgColor = Colors.black;
     const cardColor = Color(0xFF111111);
     const textColor = Colors.white;
     const subText = Color(0xFFA3A3A3);
 
+    final weatherAsync = ref.watch(weatherProvider);
+
     return Scaffold(
       backgroundColor: bgColor,
-      body: Consumer<WeatherProvider>(
-        builder: (context, weatherProvider, child) {
-          return weatherProvider.error != null
-              ? _buildErrorView(weatherProvider, accent)
-              : weatherProvider.weatherData != null
-              ? _buildWeatherContent(
-                  weatherProvider.weatherData!,
-                  accent,
-                  cardColor,
-                  textColor,
-                  subText,
-                )
-              : _buildLoadingView(accent, textColor);
-        },
+      body: weatherAsync.when(
+        data: (weatherData) => weatherData != null
+            ? _buildWeatherContent(
+                weatherData,
+                accent,
+                cardColor,
+                textColor,
+                subText,
+              )
+            : _buildLoadingView(accent, textColor),
+        loading: () => _buildLoadingView(accent, textColor),
+        error: (err, _) => _buildErrorView(err.toString(), accent),
       ),
     );
   }
 
-  // Виджет ошибки
-  Widget _buildErrorView(WeatherProvider provider, Color accent) {
+  Widget _buildErrorView(String error, Color accent) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -121,13 +103,14 @@ class _WeatherScreenState extends State<WeatherScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              provider.error!,
+              error,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: () => provider.refreshWeather(),
+              onPressed: () =>
+                  ref.read(weatherProvider.notifier).refreshWeather(),
               style: FilledButton.styleFrom(
                 backgroundColor: accent,
                 foregroundColor: Colors.black,
@@ -189,10 +172,7 @@ class _WeatherScreenState extends State<WeatherScreen>
 
     return RefreshIndicator(
       onRefresh: () async {
-        await Provider.of<WeatherProvider>(
-          context,
-          listen: false,
-        ).refreshWeather();
+        await ref.read(weatherProvider.notifier).refreshWeather();
       },
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),

@@ -251,11 +251,19 @@ class _HomeScreenState extends State<HomeScreen>
       }
     } catch (e) {
       debugPrint("Ошибка загрузки новостей: $e");
+      // Если не удалось загрузить RSS-новости, используем только сообщения из Firebase
       if (mounted) {
         setState(() {
-          _latestNews = "НЕТ СВЯЗИ С ИНТЕРНЕТОМ";
+          // Если есть сообщения из Firebase, отображаем их, иначе - "НЕТ АКТУАЛЬНЫХ НОВОСТЕЙ"
+          if (_firebaseTicker.isNotEmpty) {
+            _latestNews = _firebaseTicker.toUpperCase();
+          } else {
+            _latestNews = "НЕТ АКТУАЛЬНЫХ НОВОСТЕЙ";
+          }
           _isNewsLoading = false;
         });
+        // Обновляем глобальный ValueNotifier
+        globalMarqueeTextNotifier.value = _latestNews;
       }
     }
   }

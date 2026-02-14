@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/weather_repository.dart';
 import '../models/weather_model.dart';
 import '../models/weather_failure.dart';
+import '../data/weather_service.dart';
 
 class WeatherProvider extends ChangeNotifier {
   WeatherData? _weatherData;
@@ -15,9 +16,12 @@ class WeatherProvider extends ChangeNotifier {
   String? get error => _error;
 
   final WeatherRepository _repository;
+  final WeatherService _weatherService;
   static const String _cachedWeatherKey = 'cached_weather_data';
 
-  WeatherProvider() : _repository = WeatherRepositoryImpl();
+  WeatherProvider() 
+      : _repository = WeatherRepositoryImpl(),
+        _weatherService = WeatherService();
 
   Future<void> fetchWeather() async {
     _isLoading = true;
@@ -25,9 +29,22 @@ class WeatherProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _weatherData = await _repository.getWeatherForecast("Yakutsk");
-      // Сохраняем данные в кэш
-      _cacheWeatherData(_weatherData!);
+      // Пытаемся получить текущее местоположение пользователя
+      try {
+        final position = await _weatherService.getCurrentLocation();
+        _weatherData = await _repository.getWeatherForecastByCoords(
+          position.latitude, 
+          position.longitude
+        );
+        // Сохраняем данные в кэш
+        _cacheWeatherData(_weatherData!);
+      } catch (locationError) {
+        // Если не удалось получить местоположение, используем Якутск как резервный вариант
+        debugPrint('Ошибка получения местоположения: $locationError');
+        _weatherData = await _repository.getWeatherForecast("Yakutsk");
+        // Сохраняем данные в кэш
+        _cacheWeatherData(_weatherData!);
+      }
     } on WeatherFailure catch (e) {
       _error = e.message;
       _weatherData = null;

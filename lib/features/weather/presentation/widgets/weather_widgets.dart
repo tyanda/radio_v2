@@ -20,10 +20,10 @@ class WeatherSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final temp = weather.temp.round();
+    final temp = weather.main.temp.round();
     final description = weather.weather.first.description;
-    final wind = weather.windSpeed;
-    final humidity = weather.humidity;
+    final wind = weather.wind.speed;
+    final humidity = weather.main.humidity;
 
     return Container(
       width: double.infinity,
@@ -179,12 +179,14 @@ class WeatherForecastList extends StatelessWidget {
   final List<ForecastWeather> forecast;
   final Color cardColor;
   final Color subTextColor;
+  final Color? iconColor;
 
   const WeatherForecastList({
     super.key,
     required this.forecast,
     required this.cardColor,
     required this.subTextColor,
+    this.iconColor,
   });
 
   @override
@@ -210,7 +212,7 @@ class WeatherForecastList extends StatelessWidget {
             itemBuilder: (context, i) {
               final day = forecast[i];
               final dt = day.dateTime;
-              final dayTemp = day.temp.round();
+              final dayTemp = day.main.temp.round();
               final icon = day.weather.first.icon;
 
               return Padding(
@@ -246,7 +248,11 @@ class WeatherForecastList extends StatelessWidget {
                         'https://openweathermap.org/img/wn/$icon@2x.png',
                         width: 40,
                         height: 40,
-                        errorBuilder: (exception, stackTrace, widget) => const Icon(Icons.cloud, size: 32),
+                        errorBuilder: (exception, stackTrace, widget) => Icon(
+                          Icons.cloud, 
+                          size: 32, 
+                          color: iconColor ?? subTextColor, // Используем iconColor, если задан, иначе subTextColor
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(

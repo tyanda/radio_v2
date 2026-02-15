@@ -27,43 +27,95 @@ class WeatherData {
   }
 }
 
-class CurrentWeather {
+class MainWeather {
   final double temp;
   final double feelsLike;
+  final double tempMin;
+  final double tempMax;
   final int pressure;
   final int humidity;
-  final double windSpeed;
-  final int windDeg;
+
+  MainWeather({
+    required this.temp,
+    required this.feelsLike,
+    required this.tempMin,
+    required this.tempMax,
+    required this.pressure,
+    required this.humidity,
+  });
+
+  factory MainWeather.fromJson(Map<String, dynamic> json) {
+    return MainWeather(
+      temp: json['temp'].toDouble(),
+      feelsLike: json['feels_like'].toDouble(),
+      tempMin: json['temp_min'].toDouble(),
+      tempMax: json['temp_max'].toDouble(),
+      pressure: json['pressure'],
+      humidity: json['humidity'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'temp': temp,
+      'feels_like': feelsLike,
+      'temp_min': tempMin,
+      'temp_max': tempMax,
+      'pressure': pressure,
+      'humidity': humidity,
+    };
+  }
+}
+
+class Wind {
+  final double speed;
+  final int deg;
+
+  Wind({
+    required this.speed,
+    required this.deg,
+  });
+
+  factory Wind.fromJson(Map<String, dynamic> json) {
+    return Wind(
+      speed: json['speed'].toDouble(),
+      deg: json['deg'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'speed': speed,
+      'deg': deg,
+    };
+  }
+}
+
+class CurrentWeather {
+  final MainWeather main;
+  final Wind wind;
   final List<WeatherDescription> weather;
-  final String cityName;
+  final String name;
   final int timezone;
   final Sys sys;
 
   CurrentWeather({
-    required this.temp,
-    required this.feelsLike,
-    required this.pressure,
-    required this.humidity,
-    required this.windSpeed,
-    required this.windDeg,
+    required this.main,
+    required this.wind,
     required this.weather,
-    required this.cityName,
+    required this.name,
     required this.timezone,
     required this.sys,
   });
 
   factory CurrentWeather.fromJson(Map<String, dynamic> json) {
     return CurrentWeather(
-      temp: json['main']['temp'].toDouble(),
-      feelsLike: json['main']['feels_like'].toDouble(),
-      pressure: json['main']['pressure'],
-      humidity: json['main']['humidity'],
-      windSpeed: json['wind']['speed'].toDouble(),
-      windDeg: json['wind']['deg'],
+      main: MainWeather.fromJson(json['main']),
+      wind: Wind.fromJson(json['wind']),
       weather: List<WeatherDescription>.from(
         json['weather'].map((item) => WeatherDescription.fromJson(item)),
       ),
-      cityName: json['name'],
+      name: json['name'],
       timezone: json['timezone'],
       sys: Sys.fromJson(json['sys']),
     );
@@ -71,18 +123,10 @@ class CurrentWeather {
 
   Map<String, dynamic> toJson() {
     return {
-      'main': {
-        'temp': temp,
-        'feels_like': feelsLike,
-        'pressure': pressure,
-        'humidity': humidity,
-      },
-      'wind': {
-        'speed': windSpeed,
-        'deg': windDeg,
-      },
+      'main': main.toJson(),
+      'wind': wind.toJson(),
       'weather': weather.map((e) => e.toJson()).toList(),
-      'name': cityName,
+      'name': name,
       'timezone': timezone,
       'sys': sys.toJson(),
     };
@@ -90,42 +134,38 @@ class CurrentWeather {
 }
 
 class ForecastWeather {
-  final double temp;
-  final int humidity;
-  final double windSpeed;
+  final MainWeather main;
+  final Wind wind;
   final List<WeatherDescription> weather;
+  final int dt; // Unix timestamp
   final DateTime dateTime;
 
   ForecastWeather({
-    required this.temp,
-    required this.humidity,
-    required this.windSpeed,
+    required this.main,
+    required this.wind,
     required this.weather,
+    required this.dt,
     required this.dateTime,
   });
 
   factory ForecastWeather.fromJson(Map<String, dynamic> json) {
     return ForecastWeather(
-      temp: json['main']['temp'].toDouble(),
-      humidity: json['main']['humidity'],
-      windSpeed: json['wind']['speed'].toDouble(),
+      main: MainWeather.fromJson(json['main']),
+      wind: Wind.fromJson(json['wind']),
       weather: List<WeatherDescription>.from(
         json['weather'].map((item) => WeatherDescription.fromJson(item)),
       ),
+      dt: json['dt'],
       dateTime: DateTime.parse(json['dt_txt']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'main': {
-        'temp': temp,
-        'humidity': humidity,
-      },
-      'wind': {
-        'speed': windSpeed,
-      },
+      'main': main.toJson(),
+      'wind': wind.toJson(),
       'weather': weather.map((e) => e.toJson()).toList(),
+      'dt': dt,
       'dt_txt': dateTime.toIso8601String(),
     };
   }

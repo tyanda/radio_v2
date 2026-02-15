@@ -14,16 +14,17 @@ class WeatherScreen extends ConsumerStatefulWidget {
 
 class _WeatherScreenState extends ConsumerState<WeatherScreen>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
-  
   @override
   bool get wantKeepAlive => true;
-  
+
   Timer? _refreshTimer;
 
   // Константы дизайна, соответствующие вашему MyApp (main.dart)
   static const Color accentColor = Color(0xFFFFD700); // Золотой
   static const Color backgroundColor = Color(0xFF000000); // Чистый черный
-  static const Color cardBackgroundColor = Color(0xFF111111); // Глубокий серый для карточек
+  static const Color cardBackgroundColor = Color(
+    0xFF111111,
+  ); // Глубокий серый для карточек
   static const Color primaryTextColor = Colors.white;
   static const Color secondaryTextColor = Color(0xFFA3A3A3);
 
@@ -86,12 +87,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final forecastList = weatherData.forecast;
 
     final sunrise = current.sys.sunrise > 0
-        ? DateTime.fromMillisecondsSinceEpoch(current.sys.sunrise * 1000).toLocal()
+        ? DateTime.fromMillisecondsSinceEpoch(
+            current.sys.sunrise * 1000,
+          ).toLocal()
         : DateTime.now();
     final sunset = current.sys.sunset > 0
-        ? DateTime.fromMillisecondsSinceEpoch(current.sys.sunset * 1000).toLocal()
+        ? DateTime.fromMillisecondsSinceEpoch(
+            current.sys.sunset * 1000,
+          ).toLocal()
         : DateTime.now().add(const Duration(hours: 12));
-    
+
     final dfTime = DateFormat.Hm('ru');
     final dfDate = DateFormat('EEEE, d MMM', 'ru');
 
@@ -108,7 +113,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: MediaQuery.of(context).padding.top),
-            
+
             // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
             Container(
               padding: const EdgeInsets.all(24),
@@ -120,7 +125,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
-                  )
+                  ),
                 ],
               ),
               child: Column(
@@ -198,32 +203,36 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     padding: const EdgeInsets.only(top: 24),
                     decoration: BoxDecoration(
                       border: Border(
-                        top: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
+                        top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildDetailItem('ВЕТЕР', '${current.wind.speed.round()} м/с'),
-                        _buildDetailItem('ВЛАЖНОСТЬ', '${current.main.humidity}%'),
-                        _buildDetailItem('ДАВЛЕНИЕ', '${current.main.pressure}'),
+                        _buildDetailItem(
+                          'ВЕТЕР',
+                          '${current.wind.speed.round()} м/с',
+                        ),
+                        _buildDetailItem(
+                          'ВЛАЖНОСТЬ',
+                          '${current.main.humidity}%',
+                        ),
+                        _buildDetailItem(
+                          'ДАВЛЕНИЕ',
+                          '${current.main.pressure}',
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Тонкий разделитель
-            Divider(
-              color: Colors.white.withValues(alpha: 0.12), 
-              height: 1
-            ),
-            
+            Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Row(
@@ -234,7 +243,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                 ],
               ),
             ),
-            
+
             const Padding(
               padding: EdgeInsets.only(left: 4, bottom: 16),
               child: Text(
@@ -247,55 +256,98 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                 ),
               ),
             ),
-            
-            // ГОРИЗОНТАЛЬНЫЙ СПИСОК КАРТОЧЕК (НАЧИНАЯ С ЗАВТРА)
+
+            // КАРТОЧКИ ПРОГНОЗА НА 7 ДНЕЙ
             SizedBox(
-              height: 165,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: forecastList.length - 1, // Убираем сегодняшний день
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
+              height: 560, // 7 карточек по 80 пикселей каждая
+              child: ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 7,
                 itemBuilder: (context, index) {
-                  final day = forecastList[index + 1]; // Начинаем с индекса 1 (завтра)
-                  final date = DateTime.fromMillisecondsSinceEpoch(day.dt * 1000);
-                  final dayName = DateFormat('E', 'ru').format(date).toUpperCase();
+                  final dayOffset = index + 1; // Начинаем с завтра (offset = 1)
+
+                  // Создаем дату для прогноза на каждый день недели
+                  final date = DateTime.now().add(Duration(days: dayOffset));
+                  final dayName = DateFormat(
+                    'EEEE',
+                    'ru',
+                  ).format(date).toUpperCase();
+                  final shortDayName = DateFormat(
+                    'E',
+                    'ru',
+                  ).format(date).toUpperCase();
+
+                  // Пытаемся найти соответствующий прогноз из доступных данных
+                  final forecastForDay = forecastList.firstWhere(
+                    (element) {
+                      final elementDate = DateTime.fromMillisecondsSinceEpoch(
+                        element.dt * 1000,
+                      );
+                      return elementDate.day == date.day &&
+                          elementDate.month == date.month &&
+                          elementDate.year == date.year;
+                    },
+                    orElse: () => forecastList.length > dayOffset
+                        ? forecastList[dayOffset]
+                        : forecastList.isNotEmpty
+                        ? forecastList[forecastList.length - 1]
+                        : forecastList.first,
+                  );
+
+                  final tempMax = forecastForDay.main.temp.round();
+                  final tempMin = forecastForDay.main.tempMin.round();
 
                   return Container(
-                    width: 95,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: cardBackgroundColor,
                       borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Row(
                       children: [
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            shortDayName,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: secondaryTextColor,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            dayName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: primaryTextColor,
+                            ),
+                          ),
+                        ),
+                        _getWeatherIcon(forecastForDay.weather[0].main),
+                        const SizedBox(width: 12),
                         Text(
-                          dayName,
+                          '$tempMin°',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: secondaryTextColor,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$tempMax°',
+                          style: const TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _getWeatherIcon(day.weather[0].main),
-                        const SizedBox(height: 16),
-                        Text(
-                          '${day.main.temp.round()}°',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
                             color: primaryTextColor,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${day.main.tempMin.round()}°',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: secondaryTextColor,
                           ),
                         ),
                       ],
@@ -312,7 +364,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               child: SizedBox(
                 width: 160,
                 child: FilledButton(
-                  onPressed: () => ref.read(weatherProvider.notifier).refreshWeather(),
+                  onPressed: () =>
+                      ref.read(weatherProvider.notifier).refreshWeather(),
                   style: FilledButton.styleFrom(
                     backgroundColor: accentColor,
                     foregroundColor: Colors.black,
@@ -367,11 +420,20 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   Widget _getWeatherIcon(String main, {double size = 28}) {
     IconData iconData;
     switch (main.toLowerCase()) {
-      case 'clear': iconData = Icons.wb_sunny_outlined; break;
-      case 'clouds': iconData = Icons.wb_cloudy_outlined; break;
-      case 'rain': iconData = Icons.umbrella_outlined; break;
-      case 'snow': iconData = Icons.ac_unit_outlined; break;
-      default: iconData = Icons.wb_cloudy_outlined;
+      case 'clear':
+        iconData = Icons.wb_sunny_outlined;
+        break;
+      case 'clouds':
+        iconData = Icons.wb_cloudy_outlined;
+        break;
+      case 'rain':
+        iconData = Icons.umbrella_outlined;
+        break;
+      case 'snow':
+        iconData = Icons.ac_unit_outlined;
+        break;
+      default:
+        iconData = Icons.wb_cloudy_outlined;
     }
     return Icon(iconData, color: accentColor, size: size);
   }
@@ -402,9 +464,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   }
 
   Widget _buildLoadingView() {
-    return const Center(
-      child: CircularProgressIndicator(color: accentColor),
-    );
+    return const Center(child: CircularProgressIndicator(color: accentColor));
   }
 
   Widget _buildErrorView(String error) {
@@ -420,9 +480,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: () => ref.read(weatherProvider.notifier).refreshWeather(),
+            onPressed: () =>
+                ref.read(weatherProvider.notifier).refreshWeather(),
             style: FilledButton.styleFrom(backgroundColor: accentColor),
-            child: const Text('ПОВТОРИТЬ', style: TextStyle(color: Colors.black)),
+            child: const Text(
+              'ПОВТОРИТЬ',
+              style: TextStyle(color: Colors.black),
+            ),
           ),
         ],
       ),

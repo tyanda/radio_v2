@@ -77,10 +77,7 @@ class WeatherSummaryCard extends StatelessWidget {
                 top: 10,
                 child: Text(
                   '°C',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900),
                 ),
               ),
             ],
@@ -219,7 +216,10 @@ class WeatherForecastList extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 12),
                 child: Container(
                   width: 105,
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 15,
+                  ),
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(24),
@@ -249,9 +249,11 @@ class WeatherForecastList extends StatelessWidget {
                         width: 40,
                         height: 40,
                         errorBuilder: (exception, stackTrace, widget) => Icon(
-                          Icons.cloud, 
-                          size: 32, 
-                          color: iconColor ?? subTextColor, // Используем iconColor, если задан, иначе subTextColor
+                          Icons.cloud,
+                          size: 32,
+                          color:
+                              iconColor ??
+                              subTextColor, // Используем iconColor, если задан, иначе subTextColor
                         ),
                       ),
                       const SizedBox(height: 4),

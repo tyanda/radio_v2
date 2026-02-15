@@ -162,7 +162,10 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
 
   // Функция, имитирующая получение данных из парсера на сегодня
   String _getParserSimulatedText(
-      String zodiacName, String period, String stationName) {
+    String zodiacName,
+    String period,
+    String stationName,
+  ) {
     return 'Сегодня для знака $zodiacName звезды подготовили нечто особенное. '
         'Ваша энергия находится на пике, что позволит завершить все начатые дела. '
         'Слушайте $stationName, чтобы поймать волну вдохновения и сохранять отличное настроение до самого вечера.';

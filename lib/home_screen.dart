@@ -6,6 +6,7 @@ import 'package:radio_v2/features/radio/presentation/providers/radio_providers.d
 import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
 import 'package:radio_v2/features/horoscope/presentation/widgets/horoscope_view.dart';
+import 'package:radio_v2/features/radio/presentation/widgets/mini_player.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -82,10 +83,15 @@ class _MainNavBarState extends State<MainNavBar> {
   Widget build(BuildContext context) {
     // Используем MediaQuery для адаптации под высоту челки/нижней полоски
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    
+
     return Container(
       // Динамический отступ: минимум 20, плюс высота системной полоски навигации
-      padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding > 0 ? bottomPadding : 20),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        bottomPadding > 0 ? bottomPadding : 20,
+      ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.98),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -99,13 +105,14 @@ class _MainNavBarState extends State<MainNavBar> {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Важно: бар занимает только необходимое место
+        mainAxisSize:
+            MainAxisSize.min, // Важно: бар занимает только необходимое место
         children: [
           // Мини-плеер (сделан чуть ниже, чтобы освободить место экранам)
-          _buildMiniPlayerPlaceholder(),
-          
+          const MiniPlayer(),
+
           const SizedBox(height: 12),
-          
+
           // Контейнер навигации
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -128,9 +135,10 @@ class _MainNavBarState extends State<MainNavBar> {
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     bool active = widget.currentTab == index;
-    
+
     return Expanded(
-      child: Material( // Добавлено для корректной обработки жестов в Flutter
+      child: Material(
+        // Добавлено для корректной обработки жестов в Flutter
         color: Colors.transparent,
         child: GestureDetector(
           // "Невидимые границы": вся область Expanded реагирует на тап
@@ -165,7 +173,9 @@ class _MainNavBarState extends State<MainNavBar> {
                       scale: active ? 1.1 : 1.0,
                       child: Icon(
                         icon,
-                        color: active ? AppColors.accent : Colors.white.withValues(alpha: 0.2),
+                        color: active
+                            ? AppColors.accent
+                            : Colors.white.withValues(alpha: 0.2),
                         size: 24,
                       ),
                     ),
@@ -177,7 +187,9 @@ class _MainNavBarState extends State<MainNavBar> {
                   maxLines: 1, // Защита от переноса текста
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: active ? Colors.white : Colors.white.withValues(alpha: 0.2),
+                    color: active
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.2),
                     fontSize: 10,
                     fontWeight: active ? FontWeight.w900 : FontWeight.w600,
                     letterSpacing: 0.3,
@@ -198,35 +210,6 @@ class _MainNavBarState extends State<MainNavBar> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMiniPlayerPlaceholder() {
-    return Container(
-      height: 52, // Еще немного уменьшили высоту для предотвращения Overflow
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-           Icon(Icons.play_circle_fill_rounded, color: AppColors.accent.withValues(alpha: 0.5), size: 20),
-           const SizedBox(width: 10),
-           Text(
-             "SAYAS RADIO", 
-             style: TextStyle(
-               color: Colors.white.withValues(alpha: 0.2), 
-               fontSize: 9, 
-               fontWeight: FontWeight.w900, 
-               letterSpacing: 1.5
-             )
-           ),
-        ],
       ),
     );
   }
@@ -284,13 +267,20 @@ class _AppHeader extends ConsumerWidget {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3), width: 2),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.3),
+                width: 2,
+              ),
             ),
             child: const CircleAvatar(
               radius: 22,
               backgroundColor: AppColors.cardBackground,
               // Заменили иконку на "Добрый вечер" (Луна)
-              child: Icon(Icons.nights_stay_rounded, color: AppColors.accent, size: 20),
+              child: Icon(
+                Icons.nights_stay_rounded,
+                color: AppColors.accent,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -311,14 +301,15 @@ class _MarqueeSection extends ConsumerWidget {
         color: AppColors.accent,
         boxShadow: [
           BoxShadow(
-            color: Colors.black45, 
-            blurRadius: 12, 
-            offset: Offset(0, 2)
-          )
+            color: Colors.black45,
+            blurRadius: 12,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Marquee(
-        text: "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
+        text:
+            "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
         style: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.w900,

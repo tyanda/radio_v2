@@ -28,7 +28,8 @@ class HoroscopeView extends ConsumerWidget {
               crossAxisCount: 4,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 1.05,
+              // Немного увеличили высоту ячеек для комфортного отображения крупного текста
+              childAspectRatio: 0.95, 
             ),
             itemCount: zodiacSigns.length,
             itemBuilder: (context, index) {
@@ -63,9 +64,10 @@ class HoroscopeView extends ConsumerWidget {
                       zodiac.name,
                       style: TextStyle(
                         color: isSelected ? Colors.black : Colors.white,
-                        fontSize: 13,
+                        // УВЕЛИЧЕНО: Шрифт знаков стал крупнее и заметнее
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 0.3,
+                        letterSpacing: 0.1,
                       ),
                       textAlign: TextAlign.center,
                     ),

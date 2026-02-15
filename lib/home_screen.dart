@@ -6,7 +6,6 @@ import 'package:radio_v2/features/radio/presentation/providers/radio_providers.d
 import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
 import 'package:radio_v2/features/horoscope/presentation/widgets/horoscope_view.dart';
-import 'package:radio_v2/features/radio/presentation/widgets/mini_player.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -53,32 +52,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildBottomBar() {
+    return MainNavBar(
+      currentTab: _currentTab,
+      onTabChanged: (int tabIndex) {
+        setState(() {
+          _currentTab = tabIndex;
+        });
+      },
+    );
+  }
+}
+
+class MainNavBar extends StatefulWidget {
+  final int currentTab;
+  final Function(int) onTabChanged;
+
+  const MainNavBar({
+    super.key,
+    required this.currentTab,
+    required this.onTabChanged,
+  });
+
+  @override
+  State<MainNavBar> createState() => _MainNavBarState();
+}
+
+class _MainNavBarState extends State<MainNavBar> {
+  @override
+  Widget build(BuildContext context) {
+    // Используем MediaQuery для адаптации под высоту челки/нижней полоски
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     return Container(
-      // Увеличен padding снизу для удобства больших пальцев на современных смартфонах
-      padding: const EdgeInsets.fromLTRB(20, 15, 20, 35),
+      // Динамический отступ: минимум 20, плюс высота системной полоски навигации
+      padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding > 0 ? bottomPadding : 20),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.95),
+        color: Colors.black.withValues(alpha: 0.98),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.6),
+            blurRadius: 40,
+            offset: const Offset(0, -10),
+          ),
+        ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // Важно: бар занимает только необходимое место
         children: [
-          const MiniPlayer(),
-          const SizedBox(height: 20),
+          // Мини-плеер (сделан чуть ниже, чтобы освободить место экранам)
+          _buildMiniPlayerPlaceholder(),
+          
+          const SizedBox(height: 12),
+          
+          // Контейнер навигации
           Container(
-            // Сделали навигационную панель выше и просторнее
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(28),
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _navItem(Icons.radio_rounded, "ЭФИР", 0),
-                _navItem(Icons.wb_cloudy_rounded, "ПОГОДА", 1),
-                _navItem(Icons.star_rounded, "ГОРОСКОП", 2),
+                _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0),
+                _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1),
+                _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2),
               ],
             ),
           ),
@@ -87,34 +126,107 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
-    bool active = _currentTab == index;
-    return InkWell(
-      onTap: () => setState(() => _currentTab = index),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        // Увеличенная область нажатия
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon, 
-              color: active ? AppColors.accent : Colors.white.withValues(alpha: 0.3),
-              size: 28, // Слегка увеличили иконки
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    bool active = widget.currentTab == index;
+    
+    return Expanded(
+      child: Material( // Добавлено для корректной обработки жестов в Flutter
+        color: Colors.transparent,
+        child: GestureDetector(
+          // "Невидимые границы": вся область Expanded реагирует на тап
+          behavior: HitTestBehavior.opaque,
+          onTap: () => widget.onTabChanged(index),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (active)
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accent.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    AnimatedScale(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      scale: active ? 1.1 : 1.0,
+                      child: Icon(
+                        icon,
+                        color: active ? AppColors.accent : Colors.white.withValues(alpha: 0.2),
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1, // Защита от переноса текста
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: active ? Colors.white : Colors.white.withValues(alpha: 0.2),
+                    fontSize: 10,
+                    fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                // Компактный индикатор под активным пунктом
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.only(top: 4),
+                  height: 3,
+                  width: active ? 3 : 0,
+                  decoration: const BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: active ? AppColors.accent : Colors.white.withValues(alpha: 0.3),
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMiniPlayerPlaceholder() {
+    return Container(
+      height: 52, // Еще немного уменьшили высоту для предотвращения Overflow
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+           Icon(Icons.play_circle_fill_rounded, color: AppColors.accent.withValues(alpha: 0.5), size: 20),
+           const SizedBox(width: 10),
+           Text(
+             "SAYAS RADIO", 
+             style: TextStyle(
+               color: Colors.white.withValues(alpha: 0.2), 
+               fontSize: 9, 
+               fontWeight: FontWeight.w900, 
+               letterSpacing: 1.5
+             )
+           ),
+        ],
       ),
     );
   }

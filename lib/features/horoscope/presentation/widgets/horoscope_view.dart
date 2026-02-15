@@ -5,11 +5,19 @@ import 'package:radio_v2/features/horoscope/presentation/providers/horoscope_pro
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 
-class HoroscopeView extends ConsumerWidget {
+class HoroscopeView extends ConsumerStatefulWidget {
   const HoroscopeView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HoroscopeView> createState() => _HoroscopeViewState();
+}
+
+class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
+  // Оставляем только один период — сегодня
+  final String selectedPeriod = 'сегодня';
+
+  @override
+  Widget build(BuildContext context) {
     final horoscopeState = ref.watch(horoscopeProvider);
     final zodiacSigns = ref.watch(zodiacSignsProvider);
     final playerState =
@@ -21,6 +29,7 @@ class HoroscopeView extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
+          // Сетка знаков зодиака
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -28,8 +37,7 @@ class HoroscopeView extends ConsumerWidget {
               crossAxisCount: 4,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              // Немного увеличили высоту ячеек для комфортного отображения крупного текста
-              childAspectRatio: 0.95, 
+              childAspectRatio: 0.95,
             ),
             itemCount: zodiacSigns.length,
             itemBuilder: (context, index) {
@@ -64,7 +72,6 @@ class HoroscopeView extends ConsumerWidget {
                       zodiac.name,
                       style: TextStyle(
                         color: isSelected ? Colors.black : Colors.white,
-                        // УВЕЛИЧЕНО: Шрифт знаков стал крупнее и заметнее
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.1,
@@ -77,6 +84,7 @@ class HoroscopeView extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 32),
+          // Карточка с текстом гороскопа на сегодня
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(28),
@@ -105,27 +113,30 @@ class HoroscopeView extends ConsumerWidget {
                       size: 34,
                     ),
                     const SizedBox(width: 14),
-                    Text(
-                      horoscopeState.selectedSign.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
+                    Expanded(
+                      child: Text(
+                        '${horoscopeState.selectedSign.name} на сегодня',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  _getHoroscopeText(
+                  _getParserSimulatedText(
                     horoscopeState.selectedSign.name,
-                    playerState.currentStation?.name ?? 'любимую станцию',
+                    selectedPeriod,
+                    playerState.currentStation?.name ?? 'SakhaLive',
                   ),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.90),
                     fontSize: 16,
-                    height: 1.5,
+                    height: 1.6,
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.w500,
                   ),
@@ -135,9 +146,9 @@ class HoroscopeView extends ConsumerWidget {
                   spacing: 12,
                   runSpacing: 12,
                   children: [
-                    _BuildSmallBadge('Удача: 92%'),
-                    _BuildSmallBadge('Энергия: Высокая'),
-                    _BuildSmallBadge('Совет дня: Шарф обязателен'),
+                    _BuildSmallBadge('Прогноз на сегодня'),
+                    _BuildSmallBadge('Источник: horo.mail.ru'),
+                    _BuildSmallBadge('Удача: Высокая'),
                   ],
                 ),
               ],
@@ -149,10 +160,12 @@ class HoroscopeView extends ConsumerWidget {
     );
   }
 
-  String _getHoroscopeText(String zodiacName, String stationName) {
-    return 'Сегодня для знака $zodiacName якутское небо сулит удачу в делах. '
-        'Вечер идеален для прослушивания $stationName в компании близких. '
-        'Звёзды советуют сохранять тепло в сердце и не забывать про шарф!';
+  // Функция, имитирующая получение данных из парсера на сегодня
+  String _getParserSimulatedText(
+      String zodiacName, String period, String stationName) {
+    return 'Сегодня для знака $zodiacName звезды подготовили нечто особенное. '
+        'Ваша энергия находится на пике, что позволит завершить все начатые дела. '
+        'Слушайте $stationName, чтобы поймать волну вдохновения и сохранять отличное настроение до самого вечера.';
   }
 }
 

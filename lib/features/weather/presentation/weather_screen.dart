@@ -238,7 +238,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             const Padding(
               padding: EdgeInsets.only(left: 4, bottom: 16),
               child: Text(
-                'ПРОГНОЗ ПО ДНЯМ',
+                'ПРОГНОЗ НА НЕДЕЛЮ',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
@@ -248,16 +248,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               ),
             ),
             
-            // ГОРИЗОНТАЛЬНЫЙ СПИСОК КАРТОЧЕК
+            // ГОРИЗОНТАЛЬНЫЙ СПИСОК КАРТОЧЕК (НАЧИНАЯ С ЗАВТРА)
             SizedBox(
               height: 165,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                itemCount: forecastList.length,
+                itemCount: forecastList.length - 1, // Убираем сегодняшний день
                 separatorBuilder: (context, index) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
-                  final day = forecastList[index];
+                  final day = forecastList[index + 1]; // Начинаем с индекса 1 (завтра)
                   final date = DateTime.fromMillisecondsSinceEpoch(day.dt * 1000);
                   final dayName = DateFormat('E', 'ru').format(date).toUpperCase();
 

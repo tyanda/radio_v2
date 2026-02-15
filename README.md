@@ -1,6 +1,37 @@
 # radio_v2
 
-A new Flutter project.
+# Radio V2
+
+A new Flutter project for Sakha Radio with integrated horoscope, weather, and RSS feed functionality.
+
+## Features
+
+- Radio streaming
+- Weather information
+- Daily horoscopes
+- RSS feed integration
+- Multi-platform support (Android, iOS, Web, Desktop)
+
+## Special Feature: CORS Proxy Server
+
+This project includes a special proxy server solution to handle CORS (Cross-Origin Resource Sharing) issues when requesting data from external APIs like `horo.mail.ru`.
+
+### Problem
+When running the app in a web browser, direct requests to external APIs like `horo.mail.ru` are blocked by the browser due to CORS security policies.
+
+### Solution
+A Node.js proxy server is included that acts as an intermediary, fetching data from external APIs and serving it to the Flutter app without CORS restrictions.
+
+### Setup
+1. Install Node.js dependencies: `npm install`
+2. Start the proxy server: `node server.js`
+3. Run the Flutter app: `flutter run -d chrome`
+
+Alternatively, you can use the startup script:
+- On Windows: `run_app.bat`
+- On Linux/Mac: `./run_app.sh`
+
+The proxy server runs on port 5000 and handles requests to external APIs securely.
 
 ## Getting Started
 

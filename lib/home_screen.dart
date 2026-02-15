@@ -93,12 +93,12 @@ class _MainNavBarState extends State<MainNavBar> {
         bottomPadding > 0 ? bottomPadding : 20,
       ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.98),
+        color: Colors.black.withAlpha(250),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withAlpha(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
+            color: Colors.black.withAlpha(153),
             blurRadius: 40,
             offset: const Offset(0, -10),
           ),
@@ -117,7 +117,7 @@ class _MainNavBarState extends State<MainNavBar> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
+              color: Colors.white.withAlpha(10),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -160,7 +160,7 @@ class _MainNavBarState extends State<MainNavBar> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.accent.withValues(alpha: 0.4),
+                              color: AppColors.accent.withAlpha(102),
                               blurRadius: 12,
                               spreadRadius: 2,
                             ),
@@ -175,7 +175,7 @@ class _MainNavBarState extends State<MainNavBar> {
                         icon,
                         color: active
                             ? AppColors.accent
-                            : Colors.white.withValues(alpha: 0.2),
+                            : Colors.white.withAlpha(51),
                         size: 24,
                       ),
                     ),
@@ -188,8 +188,8 @@ class _MainNavBarState extends State<MainNavBar> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: active
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.2),
+                        ? AppColors.primaryText
+                        : Colors.white.withAlpha(51),
                     fontSize: 10,
                     fontWeight: active ? FontWeight.w900 : FontWeight.w600,
                     letterSpacing: 0.3,
@@ -268,7 +268,7 @@ class _AppHeader extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.3),
+                color: AppColors.accent.withAlpha(76),
                 width: 2,
               ),
             ),

@@ -31,10 +31,10 @@ class WeatherSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withAlpha(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 35,
             offset: const Offset(0, 15),
           ),
@@ -145,7 +145,7 @@ class WeatherMiniCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardColor.withValues(alpha: 0.7),
+        color: cardColor.withAlpha((0.7 * 255).round()),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -196,7 +196,7 @@ class WeatherForecastList extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
-            color: subTextColor.withValues(alpha: 0.6),
+            color: subTextColor.withAlpha((0.6 * 255).round()),
             letterSpacing: 1,
           ),
         ),
@@ -223,10 +223,10 @@ class WeatherForecastList extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    border: Border.all(color: Colors.white.withAlpha(20)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
+                        color: Colors.black.withAlpha(5),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

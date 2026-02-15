@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_rss/dart_rss.dart';
+import '../core/config.dart';
 
 class RssService {
   final http.Client _client;
-  static const String _rssUrl = 'https://ysia.ru/feed/';
+  static String get _rssUrl => AppConfig.rssFeedUrl;
   static const String _userAgent = 'SakhaRadio/1.0';
 
   RssService(this._client);

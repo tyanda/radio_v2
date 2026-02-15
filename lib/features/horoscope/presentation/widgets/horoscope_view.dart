@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
 import 'package:radio_v2/features/horoscope/presentation/providers/horoscope_provider.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
@@ -13,15 +12,10 @@ class HoroscopeView extends ConsumerStatefulWidget {
 }
 
 class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
-  // Оставляем только один период — сегодня
-  final String selectedPeriod = 'сегодня';
-
   @override
   Widget build(BuildContext context) {
     final horoscopeState = ref.watch(horoscopeProvider);
     final zodiacSigns = ref.watch(zodiacSignsProvider);
-    final playerState =
-        ref.watch(playerProvider).asData?.value ?? const PlayerState();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -124,31 +118,68 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                         ),
                       ),
                     ),
+                    if (horoscopeState.isLoading)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.accent,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text(
-                  _getParserSimulatedText(
-                    horoscopeState.selectedSign.name,
-                    selectedPeriod,
-                    playerState.currentStation?.name ?? 'SakhaLive',
+                if (horoscopeState.isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Загрузка гороскопа...',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  )
+                else if (horoscopeState.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Ошибка загрузки гороскопа: ${horoscopeState.errorMessage}',
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                  )
+                else if (horoscopeState.horoscopeData != null)
+                  Text(
+                    horoscopeState.horoscopeData!.text,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.90),
+                      fontSize: 16,
+                      height: 1.6,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                else
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Гороскоп временно недоступен',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.90),
-                    fontSize: 16,
-                    height: 1.6,
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
                 const SizedBox(height: 24),
-                const Wrap(
+                Wrap(
                   spacing: 12,
                   runSpacing: 12,
                   children: [
                     _BuildSmallBadge('Прогноз на сегодня'),
                     _BuildSmallBadge('Источник: horo.mail.ru'),
-                    _BuildSmallBadge('Удача: Высокая'),
+                    if (horoscopeState.horoscopeData != null)
+                      _BuildSmallBadge(
+                        'Обновлено: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                      ),
                   ],
                 ),
               ],
@@ -158,17 +189,6 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
         ],
       ),
     );
-  }
-
-  // Функция, имитирующая получение данных из парсера на сегодня
-  String _getParserSimulatedText(
-    String zodiacName,
-    String period,
-    String stationName,
-  ) {
-    return 'Сегодня для знака $zodiacName звезды подготовили нечто особенное. '
-        'Ваша энергия находится на пике, что позволит завершить все начатые дела. '
-        'Слушайте $stationName, чтобы поймать волну вдохновения и сохранять отличное настроение до самого вечера.';
   }
 }
 

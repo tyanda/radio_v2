@@ -122,7 +122,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Colors.black.withAlpha(128),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -203,7 +203,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     padding: const EdgeInsets.only(top: 24),
                     decoration: BoxDecoration(
                       border: Border(
-                        top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                        top: BorderSide(color: Colors.white.withAlpha(25)),
                       ),
                     ),
                     child: Row(
@@ -231,7 +231,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             const SizedBox(height: 20),
 
             // Тонкий разделитель
-            Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+            Divider(color: Colors.white.withAlpha(31), height: 1),
 
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
@@ -306,7 +306,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     decoration: BoxDecoration(
                       color: cardBackgroundColor,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      border: Border.all(color: Colors.white.withAlpha(20)),
                     ),
                     child: Row(
                       children: [

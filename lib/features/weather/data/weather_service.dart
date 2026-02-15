@@ -2,15 +2,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import '../../../core/config.dart';
 import '../models/weather_failure.dart';
 
 class WeatherService {
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
-  static const String _apiKey = "8a392c6308671b581410d09e97f6ecac";
+  static String get _apiKey => AppConfig.openWeatherApiKey;
 
   Future<Map<String, dynamic>> getCurrentWeather(String city) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/weather?q=$city&appid=$_apiKey&units=metric&lang=ru'),
+      Uri.parse(
+        '$_baseUrl/weather?q=$city&appid=$_apiKey&units=metric&lang=ru',
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -25,9 +28,14 @@ class WeatherService {
   }
 
   // Метод для получения погоды по координатам
-  Future<Map<String, dynamic>> getCurrentWeatherByCoords(double lat, double lon) async {
+  Future<Map<String, dynamic>> getCurrentWeatherByCoords(
+    double lat,
+    double lon,
+  ) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/weather?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=ru'),
+      Uri.parse(
+        '$_baseUrl/weather?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=ru',
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -41,7 +49,9 @@ class WeatherService {
 
   Future<Map<String, dynamic>> getForecast(String city) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/forecast?q=$city&appid=$_apiKey&units=metric&lang=ru'),
+      Uri.parse(
+        '$_baseUrl/forecast?q=$city&appid=$_apiKey&units=metric&lang=ru',
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -56,9 +66,14 @@ class WeatherService {
   }
 
   // Метод для получения прогноза по координатам
-  Future<Map<String, dynamic>> getForecastByCoords(double lat, double lon) async {
+  Future<Map<String, dynamic>> getForecastByCoords(
+    double lat,
+    double lon,
+  ) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/forecast?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=ru'),
+      Uri.parse(
+        '$_baseUrl/forecast?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=ru',
+      ),
     );
 
     if (response.statusCode == 200) {

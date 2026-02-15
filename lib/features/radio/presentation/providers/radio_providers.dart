@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/providers/providers.dart';
-import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
+import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 
 final stationListProvider = Provider<List<Station>>((ref) {
   return [
@@ -37,24 +37,18 @@ final stationListProvider = Provider<List<Station>>((ref) {
       icon: 'E',
       url: 'https://ep256.hostingradio.ru:8052/europaplus256.mp3',
     ),
+    Station(
+      name: 'Супердискотека 90-х',
+      desc: 'Хиты 90-х годов',
+      art: 'assets/images/superdisco.jpg', // Изображение для новой радиостанции
+      icon: 'S',
+      url: 'https://radiorecord.hostingradio.ru/sd9096.aacp',
+    ),
   ];
 });
 
 final zodiacSignsProvider = Provider<List<ZodiacSign>>((ref) {
-  return const [
-    ZodiacSign(id: 'aries', name: 'Овен'),
-    ZodiacSign(id: 'taurus', name: 'Телец'),
-    ZodiacSign(id: 'gemini', name: 'Близнецы'),
-    ZodiacSign(id: 'cancer', name: 'Рак'),
-    ZodiacSign(id: 'leo', name: 'Лев'),
-    ZodiacSign(id: 'virgo', name: 'Дева'),
-    ZodiacSign(id: 'libra', name: 'Весы'),
-    ZodiacSign(id: 'scorpio', name: 'Скорпион'),
-    ZodiacSign(id: 'sagittarius', name: 'Стрелец'),
-    ZodiacSign(id: 'capricorn', name: 'Козерог'),
-    ZodiacSign(id: 'aquarius', name: 'Водолей'),
-    ZodiacSign(id: 'pisces', name: 'Рыбы'),
-  ];
+  return ZodiacSign.all;
 });
 
 final greetingProvider = StreamProvider<String>((ref) async* {
@@ -121,7 +115,9 @@ final marqueeTextProvider = Provider<String>((ref) {
     error: (_, _) => [],
   );
 
-  final combined = tickerText != null ? [tickerText, ...newsText] : [...newsText];
+  final combined = tickerText != null
+      ? [tickerText, ...newsText]
+      : [...newsText];
 
   if (combined.isEmpty) {
     return news.isLoading ? "ЗАГРУЖАЮ НОВОСТИ..." : "НЕТ АКТУАЛЬНЫХ НОВОСТЕЙ";

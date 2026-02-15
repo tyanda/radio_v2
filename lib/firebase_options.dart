@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'core/config.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -43,8 +44,8 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCsP4btD3tfm9nOESW0YdCyVWYCJmmnBME',
+  static FirebaseOptions web = FirebaseOptions(
+    apiKey: AppConfig.firebaseWebApiKey,
     appId: '1:1097107309921:web:72ee1a1fd96448f62d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -54,8 +55,8 @@ class DefaultFirebaseOptions {
     measurementId: 'G-XZ80DE36V7',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q',
+  static FirebaseOptions android = FirebaseOptions(
+    apiKey: AppConfig.firebaseAndroidApiKey,
     appId: '1:1097107309921:android:7a5c8b928ec2005c2d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -63,8 +64,8 @@ class DefaultFirebaseOptions {
     storageBucket: 'sakhalive-ticker.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBPB2X2ke21Smr0vqSczfwRtM-dolvyPyA',
+  static FirebaseOptions ios = FirebaseOptions(
+    apiKey: AppConfig.firebaseIOSApiKey,
     appId: '1:1097107309921:ios:b8fb3ac41625f5ac2d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -73,8 +74,8 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.yourname.sakhaRadio',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCsP4btD3tfm9nOESW0YdCyVWYCJmmnBME',
+  static FirebaseOptions windows = FirebaseOptions(
+    apiKey: AppConfig.firebaseWebApiKey,
     appId: '1:1097107309921:web:43b1cd2d37c9f9822d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -83,5 +84,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'sakhalive-ticker.firebasestorage.app',
     measurementId: 'G-ZGSXJBQWX2',
   );
-
 }

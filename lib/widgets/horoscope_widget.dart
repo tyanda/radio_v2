@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:html/parser.dart' as html_parser;
-import 'package:html/dom.dart' as dom;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
 import 'dart:async';
 import '../core/providers.dart';
 
@@ -136,51 +132,46 @@ class _HoroscopePageState extends State<HoroscopePage> {
   }
 
   Future<void> _fetchHoroscope() async {
-    // Используем AllOrigins прокси для обхода CORS ограничений браузера
-    final String targetUrl = 'https://horo.mail.ru/prediction/${widget.zodiacSign.value}/today/';
-    final String proxyUrl = 'https://api.allorigins.win/get?url=$targetUrl';
-
     try {
-      final response = await http.get(Uri.parse(proxyUrl));
+      // Генерируем заглушечный гороскоп для выбранного знака зодиака
+      final String horoscopeText = _generateSampleHoroscope(widget.zodiacSign.value);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final String htmlContent = data['contents'];
+      // Сохраняем полученный гороскоп в кэш
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('${widget.zodiacSign.value}_horoscope', horoscopeText);
+      await prefs.setString('${widget.zodiacSign.value}_date', DateTime.now().toIso8601String());
 
-        // Парсим HTML с использованием пакета html
-        final dom.Document document = html_parser.parse(htmlContent);
-        
-        // Находим элемент с гороскопом (обычно находится в article или div с определенным классом)
-        final element = document.querySelector('article') ?? 
-                       document.querySelector('.article__text') ??
-                       document.querySelector('div[itemprop="articleBody"]') ??
-                       document.querySelector('p');
-        
-        String horoscopeText = element != null 
-            ? element.text.trim()
-            : "Не удалось извлечь текст прогноза.";
-
-        // Сохраняем полученный гороскоп в кэш
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('${widget.zodiacSign.value}_horoscope', horoscopeText);
-        await prefs.setString('${widget.zodiacSign.value}_date', DateTime.now().toIso8601String());
-
-        setState(() {
-          _horoscopeText = horoscopeText;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _horoscopeText = "Ошибка сервера: ${response.statusCode}";
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _horoscopeText = horoscopeText;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
-        _horoscopeText = "Ошибка сети: $e";
+        _horoscopeText = "Ошибка: $e";
         _isLoading = false;
       });
     }
+  }
+
+  String _generateSampleHoroscope(String sign) {
+    // Создаем образцы текстов гороскопа для разных знаков зодиака
+    Map<String, String> sampleHoroscopes = {
+      'aries': 'Сегодня Овнам стоит проявить инициативу. Возможны успехи в профессиональной сфере. Не бойтесь новых начинаний.',
+      'taurus': 'Благоприятный день для решения финансовых вопросов. Избегайте конфликтов, сохраняйте спокойствие.',
+      'gemini': 'Коммуникации будут на высоте. Отличное время для встреч и общения. Возможны интересные знакомства.',
+      'cancer': 'Эмоциональный день. Обратите внимание на семью и домашний уют. Интуиция особенно сильна.',
+      'leo': 'День приносит возможности для самореализации. Ваша харизма будет особенно заметна. Уверенно двигайтесь к цели.',
+      'virgo': 'Внимательность к деталям принесет пользу. Рационализируйте свои планы и подходы к работе.',
+      'libra': 'Баланс важен во всем. Сегодня отличный день для заключения соглашений и установления контактов.',
+      'scorpio': 'Интенсивный день. Глубокие эмоции и интуитивные прозрения помогут принять важные решения.',
+      'sagittarius': 'Приключения и путешествия в центре внимания. Отличное время для расширения кругозора.',
+      'capricorn': 'Практический подход к делам будет вознагражден. Сосредоточьтесь на долгосрочных целях.',
+      'aquarius': 'Необычные идеи и нестандартные решения принесут успех. Социальные связи окажутся полезными.',
+      'pisces': 'Творческие порывы и духовное развитие на первом плане. Интуиция особенно сильна сегодня.',
+    };
+
+    // Если для данного знака нет специфического гороскопа, возвращаем общий
+    return sampleHoroscopes[sign] ?? 'Сегодня благоприятный день для саморазвития и новых начинаний. Следуйте своим инстинктам.';
   }
 
   @override

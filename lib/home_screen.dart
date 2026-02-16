@@ -16,27 +16,17 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentTab = 0;
+  int _currentTab = 0; // По умолчанию открываем Эфир (левая вкладка)
+  final PageController _pageController = PageController(initialPage: 0); // По умолчанию открываем Эфир (левая вкладка)
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    Widget mainContent;
-
-    switch (_currentTab) {
-      case 0:
-        mainContent = const RadioView();
-        break;
-      case 1:
-        mainContent = const WeatherScreen();
-        break;
-      case 2:
-        mainContent = const HoroscopeView();
-        break;
-      default:
-        mainContent = const RadioView();
-        break;
-    }
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -44,7 +34,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             const _AppHeader(),
             const _MarqueeSection(),
-            Expanded(child: mainContent),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    // Обновляем состояние для нижней навигации
+                    _currentTab = index;
+                  });
+                },
+                children: [
+                  // 0. Эфир (используй свой radio_view.dart)
+                  const RadioView(), 
+
+                  // 1. Погода (используй свои виджеты из weather_widgets.dart)
+                  WeatherScreen(), 
+
+                  const HoroscopeView(), 
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -59,6 +68,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() {
           _currentTab = tabIndex;
         });
+        // Переключаем страницу в PageView
+        _pageController.animateToPage(
+          tabIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
       },
     );
   }

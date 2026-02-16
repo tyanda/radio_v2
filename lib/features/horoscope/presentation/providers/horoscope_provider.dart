@@ -4,7 +4,6 @@ import 'package:radio_v2/features/horoscope/data/implementations/horoscope_repos
 import 'package:radio_v2/features/horoscope/data/models/horoscope_data.dart';
 import 'package:radio_v2/features/horoscope/data/services/horoscope_service.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 
 @immutable
 class HoroscopeState {
@@ -42,7 +41,7 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
   HoroscopeState build() {
     final service = HoroscopeService();
     _repository = HoroscopeRepositoryImpl(service);
-    final initialSign = ref.watch(zodiacSignsProvider).first;
+    final initialSign = ZodiacSign.all.first;
     return HoroscopeState(selectedSign: initialSign);
   }
 

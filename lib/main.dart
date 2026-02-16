@@ -9,6 +9,7 @@ import 'firebase_options.dart';
 import 'home_screen.dart';
 import 'core/config.dart';
 import 'core/providers.dart';
+import 'widgets/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +65,7 @@ class MyApp extends StatelessWidget {
         builder: (context, ref, child) {
           ref.watch(themeProvider); // Watch for rebuilds when theme changes
           final themeNotifier = ref.read(themeProvider.notifier);
+          
           return MaterialApp(
             title: 'Sakha Radio',
             debugShowCheckedModeBanner: false,
@@ -74,10 +76,44 @@ class MyApp extends StatelessWidget {
             ],
             supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
             theme: themeNotifier.themeData,
-            home: const HomeScreen(),
+            home: const AppInitializer(), // Используем виджет для инициализации приложения
           );
         },
       ),
     );
+  }
+}
+
+// Виджет для инициализации приложения и перехода к главному экрану
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    // Запускаем инициализацию и переход к главному экрану
+    _initializeAndNavigate();
+  }
+
+  Future<void> _initializeAndNavigate() async {
+    // Небольшая задержка для отображения сплеш-экрана (не более 2 секунд)
+    await Future.delayed(const Duration(milliseconds: 1500));
+    
+    // Переход к главному экрану
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SplashScreen(); // Показываем сплеш-экран до перехода
   }
 }

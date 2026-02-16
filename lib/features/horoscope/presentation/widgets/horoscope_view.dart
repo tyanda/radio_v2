@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/features/horoscope/presentation/providers/horoscope_provider.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
   const HoroscopeView({super.key});
@@ -15,7 +15,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
   @override
   Widget build(BuildContext context) {
     final horoscopeState = ref.watch(horoscopeProvider);
-    final zodiacSigns = ref.watch(zodiacSignsProvider);
+    final zodiacSigns = ZodiacSign.all;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),

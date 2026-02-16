@@ -245,6 +245,27 @@ class _AppHeader extends ConsumerWidget {
       error: (_, _) => "ДОБРО ПОЖАЛОВАТЬ",
     );
 
+    // Extract the emoji from the greeting to determine the icon
+    IconData getIconForGreeting(String greetingText) {
+      if (greetingText.contains('🌙')) {
+        return Icons.nights_stay_rounded; // Night
+      } else if (greetingText.contains('☀️')) {
+        return Icons.wb_sunny_rounded; // Morning
+      } else if (greetingText.contains('🌤️')) {
+        return Icons.wb_cloudy_rounded; // Day
+      } else if (greetingText.contains('🌆')) {
+        return Icons.nights_stay_rounded; // Evening
+      } else {
+        return Icons.wb_sunny_rounded; // Default
+      }
+    }
+
+    final iconData = greetingAsync.when(
+      data: (data) => getIconForGreeting(data),
+      loading: () => Icons.wb_sunny_rounded,
+      error: (_, _) => Icons.wb_sunny_rounded,
+    );
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 15),
       child: Row(
@@ -289,12 +310,11 @@ class _AppHeader extends ConsumerWidget {
                 width: 2,
               ),
             ),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 22,
               backgroundColor: AppColors.cardBackground,
-              // Заменили иконку на "Добрый вечер" (Луна)
               child: Icon(
-                Icons.nights_stay_rounded,
+                iconData,
                 color: AppColors.accent,
                 size: 20,
               ),

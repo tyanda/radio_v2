@@ -8,9 +8,7 @@ class ThemeState {
   ThemeState({required this.isDarkTheme});
 
   ThemeState copyWith({bool? isDarkTheme}) {
-    return ThemeState(
-      isDarkTheme: isDarkTheme ?? this.isDarkTheme,
-    );
+    return ThemeState(isDarkTheme: isDarkTheme ?? this.isDarkTheme);
   }
 }
 

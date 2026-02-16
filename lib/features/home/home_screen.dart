@@ -17,7 +17,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentTab = 0; // По умолчанию открываем Эфир (левая вкладка)
-  final PageController _pageController = PageController(initialPage: 0); // По умолчанию открываем Эфир (левая вкладка)
+  final PageController _pageController = PageController(
+    initialPage: 0,
+  ); // По умолчанию открываем Эфир (левая вкладка)
 
   @override
   void dispose() {
@@ -45,12 +47,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
                 children: [
                   // 0. Эфир (используй свой radio_view.dart)
-                  const RadioView(), 
+                  const RadioView(),
 
                   // 1. Погода (используй свои виджеты из weather_widgets.dart)
-                  WeatherScreen(), 
+                  WeatherScreen(),
 
-                  const HoroscopeView(), 
+                  const HoroscopeView(),
                 ],
               ),
             ),

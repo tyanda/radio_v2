@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:radio_v2/core/providers/providers.dart';
 import '../models/weather_model.dart';
 import '../models/weather_failure.dart';
+import '../../../core/utils/logger.dart';
 
 class WeatherNotifier extends AsyncNotifier<WeatherData?> {
   static const String _cachedWeatherKey = 'cached_weather_data';
@@ -46,7 +46,7 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
           position.longitude,
         );
       } catch (locationError) {
-        debugPrint('Ошибка получения местоположения: $locationError');
+        Logger.error('Ошибка получения местоположения: $locationError');
         data = await repository.getWeatherForecast("Yakutsk");
       }
 
@@ -79,7 +79,7 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
     if (!force && _lastFetchTime != null) {
       final difference = DateTime.now().difference(_lastFetchTime!);
       if (difference.inMinutes < 15) {
-        debugPrint(
+        Logger.log(
           'Weather data is fresh (updated ${difference.inMinutes} mins ago). Skipping refresh.',
         );
         return;
@@ -97,7 +97,7 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cachedWeatherKey, jsonEncode(data.toJson()));
     } catch (e) {
-      debugPrint('Ошибка кэширования данных погоды: $e');
+      Logger.error('Ошибка кэширования данных погоды: $e');
     }
   }
 
@@ -109,7 +109,7 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
         return WeatherData.fromJson(jsonDecode(cachedData));
       }
     } catch (e) {
-      debugPrint('Ошибка загрузки кэшированных данных погоды: $e');
+      Logger.error('Ошибка загрузки кэшированных данных погоды: $e');
     }
     return null;
   }

@@ -72,9 +72,7 @@ class _HoroscopeSelectorPageState extends State<HoroscopeSelectorPage> {
               }).toList(),
             ),
             const SizedBox(height: 24),
-            Expanded(
-              child: HoroscopePage(zodiacSign: _selectedZodiacSign),
-            ),
+            Expanded(child: HoroscopePage(zodiacSign: _selectedZodiacSign)),
           ],
         ),
       ),
@@ -114,14 +112,18 @@ class _HoroscopePageState extends State<HoroscopePage> {
   // Загружаем закэшированный гороскоп при запуске
   Future<void> _loadCachedHoroscope() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? cachedHoroscope = prefs.getString('${widget.zodiacSign.value}_horoscope');
+    String? cachedHoroscope = prefs.getString(
+      '${widget.zodiacSign.value}_horoscope',
+    );
     String? cacheDate = prefs.getString('${widget.zodiacSign.value}_date');
-    
+
     // Проверяем, что кэш не старше одного дня
     if (cachedHoroscope != null && cacheDate != null) {
       DateTime currentDate = DateTime.now();
-      DateTime cachedDateTime = DateTime.tryParse(cacheDate) ?? currentDate.add(const Duration(days: -1));
-      
+      DateTime cachedDateTime =
+          DateTime.tryParse(cacheDate) ??
+          currentDate.add(const Duration(days: -1));
+
       if (currentDate.difference(cachedDateTime).inHours < 24) {
         setState(() {
           _horoscopeText = cachedHoroscope;
@@ -134,12 +136,20 @@ class _HoroscopePageState extends State<HoroscopePage> {
   Future<void> _fetchHoroscope() async {
     try {
       // Генерируем заглушечный гороскоп для выбранного знака зодиака
-      final String horoscopeText = _generateSampleHoroscope(widget.zodiacSign.value);
+      final String horoscopeText = _generateSampleHoroscope(
+        widget.zodiacSign.value,
+      );
 
       // Сохраняем полученный гороскоп в кэш
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('${widget.zodiacSign.value}_horoscope', horoscopeText);
-      await prefs.setString('${widget.zodiacSign.value}_date', DateTime.now().toIso8601String());
+      await prefs.setString(
+        '${widget.zodiacSign.value}_horoscope',
+        horoscopeText,
+      );
+      await prefs.setString(
+        '${widget.zodiacSign.value}_date',
+        DateTime.now().toIso8601String(),
+      );
 
       setState(() {
         _horoscopeText = horoscopeText;
@@ -156,22 +166,35 @@ class _HoroscopePageState extends State<HoroscopePage> {
   String _generateSampleHoroscope(String sign) {
     // Создаем образцы текстов гороскопа для разных знаков зодиака
     Map<String, String> sampleHoroscopes = {
-      'aries': 'Сегодня Овнам стоит проявить инициативу. Возможны успехи в профессиональной сфере. Не бойтесь новых начинаний.',
-      'taurus': 'Благоприятный день для решения финансовых вопросов. Избегайте конфликтов, сохраняйте спокойствие.',
-      'gemini': 'Коммуникации будут на высоте. Отличное время для встреч и общения. Возможны интересные знакомства.',
-      'cancer': 'Эмоциональный день. Обратите внимание на семью и домашний уют. Интуиция особенно сильна.',
-      'leo': 'День приносит возможности для самореализации. Ваша харизма будет особенно заметна. Уверенно двигайтесь к цели.',
-      'virgo': 'Внимательность к деталям принесет пользу. Рационализируйте свои планы и подходы к работе.',
-      'libra': 'Баланс важен во всем. Сегодня отличный день для заключения соглашений и установления контактов.',
-      'scorpio': 'Интенсивный день. Глубокие эмоции и интуитивные прозрения помогут принять важные решения.',
-      'sagittarius': 'Приключения и путешествия в центре внимания. Отличное время для расширения кругозора.',
-      'capricorn': 'Практический подход к делам будет вознагражден. Сосредоточьтесь на долгосрочных целях.',
-      'aquarius': 'Необычные идеи и нестандартные решения принесут успех. Социальные связи окажутся полезными.',
-      'pisces': 'Творческие порывы и духовное развитие на первом плане. Интуиция особенно сильна сегодня.',
+      'aries':
+          'Сегодня Овнам стоит проявить инициативу. Возможны успехи в профессиональной сфере. Не бойтесь новых начинаний.',
+      'taurus':
+          'Благоприятный день для решения финансовых вопросов. Избегайте конфликтов, сохраняйте спокойствие.',
+      'gemini':
+          'Коммуникации будут на высоте. Отличное время для встреч и общения. Возможны интересные знакомства.',
+      'cancer':
+          'Эмоциональный день. Обратите внимание на семью и домашний уют. Интуиция особенно сильна.',
+      'leo':
+          'День приносит возможности для самореализации. Ваша харизма будет особенно заметна. Уверенно двигайтесь к цели.',
+      'virgo':
+          'Внимательность к деталям принесет пользу. Рационализируйте свои планы и подходы к работе.',
+      'libra':
+          'Баланс важен во всем. Сегодня отличный день для заключения соглашений и установления контактов.',
+      'scorpio':
+          'Интенсивный день. Глубокие эмоции и интуитивные прозрения помогут принять важные решения.',
+      'sagittarius':
+          'Приключения и путешествия в центре внимания. Отличное время для расширения кругозора.',
+      'capricorn':
+          'Практический подход к делам будет вознагражден. Сосредоточьтесь на долгосрочных целях.',
+      'aquarius':
+          'Необычные идеи и нестандартные решения принесут успех. Социальные связи окажутся полезными.',
+      'pisces':
+          'Творческие порывы и духовное развитие на первом плане. Интуиция особенно сильна сегодня.',
     };
 
     // Если для данного знака нет специфического гороскопа, возвращаем общий
-    return sampleHoroscopes[sign] ?? 'Сегодня благоприятный день для саморазвития и новых начинаний. Следуйте своим инстинктам.';
+    return sampleHoroscopes[sign] ??
+        'Сегодня благоприятный день для саморазвития и новых начинаний. Следуйте своим инстинктам.';
   }
 
   @override
@@ -207,7 +230,10 @@ class _HoroscopePageState extends State<HoroscopePage> {
                       const SizedBox(width: 12),
                       Text(
                         "${widget.zodiacSign.displayName} на сегодня",
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -228,12 +254,16 @@ class _HoroscopePageState extends State<HoroscopePage> {
                 ],
               ),
               const SizedBox(height: 16),
-              _isLoading 
-                ? const CircularProgressIndicator(color: Colors.yellow)
-                : Text(
-                    _horoscopeText,
-                    style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.white70),
-                  ),
+              _isLoading
+                  ? const CircularProgressIndicator(color: Colors.yellow)
+                  : Text(
+                      _horoscopeText,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: Colors.white70,
+                      ),
+                    ),
             ],
           ),
         ),

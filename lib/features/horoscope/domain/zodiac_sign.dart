@@ -2,10 +2,7 @@ class ZodiacSign {
   final String id;
   final String name;
 
-  const ZodiacSign({
-    required this.id,
-    required this.name,
-  });
+  const ZodiacSign({required this.id, required this.name});
 
   static const List<ZodiacSign> all = [
     ZodiacSign(id: 'aries', name: 'Овен'),

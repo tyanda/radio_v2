@@ -56,38 +56,28 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
     // Загружаем гороскоп для нового знака
     try {
       final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
-      state = state.copyWith(
-        horoscopeData: horoscopeData,
-        isLoading: false,
-      );
+      state = state.copyWith(horoscopeData: horoscopeData, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   // Метод для обновления гороскопа
   Future<void> refreshHoroscope() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-    
+
     try {
       final horoscopeData = await _repository.getHoroscope(
-        state.selectedSign.id, 
-        'today'
+        state.selectedSign.id,
+        'today',
       );
-      state = state.copyWith(
-        horoscopeData: horoscopeData,
-        isLoading: false,
-      );
+      state = state.copyWith(horoscopeData: horoscopeData, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 }
 
-final horoscopeProvider = NotifierProvider<HoroscopeNotifier, HoroscopeState>(HoroscopeNotifier.new);
+final horoscopeProvider = NotifierProvider<HoroscopeNotifier, HoroscopeState>(
+  HoroscopeNotifier.new,
+);

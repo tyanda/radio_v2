@@ -2,10 +2,14 @@
 // Конфигурация для веб-платформы
 
 class AppConfig {
-  static const String defaultOpenWeatherApiKey = '8a392c6308671b581410d09e97f6ecac';
-  static const String defaultFirebaseWebApiKey = 'AIzaSyCsP4btD3tfm9nOESW0YdCyVWYCJmmnBME';
-  static const String defaultFirebaseAndroidApiKey = 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
-  static const String defaultFirebaseIOSApiKey = 'AIzaSyBPB2X2ke21Smr0vqSczfwRtM-dolvyPyA';
+  static const String defaultOpenWeatherApiKey =
+      '8a392c6308671b581410d09e97f6ecac';
+  static const String defaultFirebaseWebApiKey =
+      'AIzaSyCsP4btD3tfm9nOESW0YdCyVWYCJmmnBME';
+  static const String defaultFirebaseAndroidApiKey =
+      'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
+  static const String defaultFirebaseIOSApiKey =
+      'AIzaSyBPB2X2ke21Smr0vqSczfwRtM-dolvyPyA';
   static const String defaultRssFeedUrl = 'https://ysia.ru/feed/';
 
   // Переменные, которые будут использоваться в приложении

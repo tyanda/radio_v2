@@ -21,11 +21,6 @@ class HoroscopeData {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'sign': sign,
-      'title': title,
-      'text': text,
-      'period': period,
-    };
+    return {'sign': sign, 'title': title, 'text': text, 'period': period};
   }
 }

@@ -11,6 +11,7 @@ import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
+import '../../../../../core/utils/logger.dart';
 
 @immutable
 class PlayerState {
@@ -64,7 +65,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       // Return file URI
       return file.uri;
     } catch (e) {
-      debugPrint('Error loading asset $assetPath: $e');
+      Logger.error('Error loading asset $assetPath: $e');
       return null;
     }
   }
@@ -138,14 +139,14 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           if (!kIsWeb) {
             await _player.play();
             initialPlaying = true;
-            debugPrint("Auto-playing favorite: ${station.name}");
+            Logger.log("Auto-playing favorite: ${station.name}");
           } else {
-            debugPrint("Auto-play skipped on web to prevent NotAllowedError");
+            Logger.log("Auto-play skipped on web to prevent NotAllowedError");
             // Station is set as current, but not playing. User must tap play manually.
           }
         }
       } catch (e) {
-        debugPrint("Auto-play failed: $e");
+        Logger.error("Auto-play failed: $e");
         // If play failed, we might still want to show the station as selected but paused?
         // If initialStation was set before error, it acts as selected.
       }
@@ -206,7 +207,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
       await _player.play();
     } catch (e) {
-      debugPrint("Error playing station: $e");
+      Logger.error("Error playing station: $e");
       // Revert to stopped if failed? Or keep selected but paused?
       state = AsyncData(
         (state.asData?.value ?? currentState).copyWith(isPlaying: false),

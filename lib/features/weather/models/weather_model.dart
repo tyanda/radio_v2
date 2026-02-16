@@ -2,10 +2,7 @@ class WeatherData {
   final CurrentWeather current;
   final List<ForecastWeather> forecast;
 
-  WeatherData({
-    required this.current,
-    required this.forecast,
-  });
+  WeatherData({required this.current, required this.forecast});
 
   factory WeatherData.fromJson(Map<String, dynamic> json) {
     final currentJson = json['current'];
@@ -71,23 +68,14 @@ class Wind {
   final double speed;
   final int deg;
 
-  Wind({
-    required this.speed,
-    required this.deg,
-  });
+  Wind({required this.speed, required this.deg});
 
   factory Wind.fromJson(Map<String, dynamic> json) {
-    return Wind(
-      speed: json['speed'].toDouble(),
-      deg: json['deg'],
-    );
+    return Wind(speed: json['speed'].toDouble(), deg: json['deg']);
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'speed': speed,
-      'deg': deg,
-    };
+    return {'speed': speed, 'deg': deg};
   }
 }
 
@@ -194,12 +182,7 @@ class WeatherDescription {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'main': main,
-      'description': description,
-      'icon': icon,
-    };
+    return {'id': id, 'main': main, 'description': description, 'icon': icon};
   }
 }
 
@@ -207,22 +190,13 @@ class Sys {
   final int sunrise;
   final int sunset;
 
-  Sys({
-    required this.sunrise,
-    required this.sunset,
-  });
+  Sys({required this.sunrise, required this.sunset});
 
   factory Sys.fromJson(Map<String, dynamic> json) {
-    return Sys(
-      sunrise: json['sunrise'],
-      sunset: json['sunset'],
-    );
+    return Sys(sunrise: json['sunrise'], sunset: json['sunset']);
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'sunrise': sunrise,
-      'sunset': sunset,
-    };
+    return {'sunrise': sunrise, 'sunset': sunset};
   }
 }

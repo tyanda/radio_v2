@@ -6,10 +6,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
-import 'home_screen.dart';
+import 'package:radio_v2/features/home/home_screen.dart';
 import 'core/config.dart';
 import 'core/providers.dart';
 import 'widgets/splash_screen.dart';
+import 'core/utils/logger.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +22,7 @@ Future<void> main() async {
   try {
     await initializeDateFormatting('ru_RU');
   } catch (e) {
-    debugPrint("Ошибка локализации: $e");
+    Logger.error("Ошибка локализации: $e");
   }
 
   // 2. Firebase
@@ -30,12 +31,12 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      debugPrint("Firebase initialized");
+      Logger.log("Firebase initialized");
     } else {
-      debugPrint("Firebase already initialized");
+      Logger.log("Firebase already initialized");
     }
   } catch (e) {
-    debugPrint("Firebase init error (ignored if already exists): $e");
+    Logger.error("Firebase init error (ignored if already exists): $e");
   }
 
   // 3. Audio Background
@@ -48,7 +49,7 @@ Future<void> main() async {
         androidStopForegroundOnPause: true,
       );
     } catch (e) {
-      debugPrint("AudioBackground init error: $e");
+      Logger.error("AudioBackground init error: $e");
     }
   }
 
@@ -65,7 +66,7 @@ class MyApp extends StatelessWidget {
         builder: (context, ref, child) {
           ref.watch(themeProvider); // Watch for rebuilds when theme changes
           final themeNotifier = ref.read(themeProvider.notifier);
-          
+
           return MaterialApp(
             title: 'Sakha Radio',
             debugShowCheckedModeBanner: false,
@@ -76,7 +77,8 @@ class MyApp extends StatelessWidget {
             ],
             supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
             theme: themeNotifier.themeData,
-            home: const AppInitializer(), // Используем виджет для инициализации приложения
+            home:
+                const AppInitializer(), // Используем виджет для инициализации приложения
           );
         },
       ),
@@ -103,7 +105,7 @@ class _AppInitializerState extends State<AppInitializer> {
   Future<void> _initializeAndNavigate() async {
     // Небольшая задержка для отображения сплеш-экрана (не более 2 секунд)
     await Future.delayed(const Duration(milliseconds: 1500));
-    
+
     // Переход к главному экрану
     if (mounted) {
       Navigator.of(context).pushReplacement(

@@ -174,7 +174,9 @@ class MiniPlayer extends ConsumerWidget {
                             boxShadow: playerState.isPlaying
                                 ? [
                                     BoxShadow(
-                                      color: Colors.redAccent.withValues(alpha: 0.6),
+                                      color: Colors.redAccent.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       blurRadius: 6,
                                       spreadRadius: 1,
                                     ),

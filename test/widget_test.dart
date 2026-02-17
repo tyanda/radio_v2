@@ -5,29 +5,25 @@ import 'package:radio_v2/features/radio/presentation/providers/radio_providers.d
 import 'package:radio_v2/main.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized(); // <--- ADDED THIS LINE
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('App starts and shows the main screen', (WidgetTester tester) async {
     // Mock the essential providers that are async or have external dependencies
-    // to ensure the app can boot up in a test environment without errors.
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           newsProvider.overrideWith((ref) => Future.value([])),
           tickerProvider.overrideWith((ref) => Stream.value("")),
-          greetingProvider.overrideWith((ref) => Stream.value("WELCOME")),
+          greetingProvider.overrideWith((ref) => Stream.value("ДОБРОЕ УТРО")),
         ],
         child: const MyApp(),
       ),
     );
 
-    // The app starts with a 1.5s splash screen. We need to advance the timer
-    // to trigger the navigation to the home screen.
+    // Wait for splash screen to complete and navigation to happen
     await tester.pump(const Duration(seconds: 2));
 
-    // The HomeScreen has infinite animations (Marquee), so pumpAndSettle will
-    // always time out. We use a try-catch to ignore the timeout but let other
-    // exceptions bubble up. This allows the UI to settle after navigation.
+    // Allow animations to settle (ignore timeout from infinite animations)
     try {
       await tester.pumpAndSettle();
     } on FlutterError catch (e) {
@@ -36,10 +32,14 @@ void main() {
       }
     }
 
-    // After the splash screen, we should be on the home screen.
-    // The most basic check is to verify that the main title is visible.
-    // The title is a RichText widget composed of "Sakha" and "Live".
-    expect(find.text('Sakha'), findsOneWidget);
-    expect(find.text('Live'), findsOneWidget);
+    // Verify we're on the home screen by checking for "SakhaLive" text
+    // The text is split into "Sakha" and "Live" in RichText
+    expect(find.textContaining('Sakha', findRichText: true), findsOneWidget);
+    
+    // Verify bottom navigation bar is present (indicates main screen)
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('ЭФИР'), findsOneWidget);
+    expect(find.text('ПОГОДА'), findsOneWidget);
+    expect(find.text('ГОРОСКОП'), findsOneWidget);
   });
 }

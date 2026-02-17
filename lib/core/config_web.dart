@@ -2,36 +2,22 @@
 // Конфигурация для веб-платформы
 
 class AppConfig {
-  static const String defaultOpenWeatherApiKey =
-      '8a392c6308671b581410d09e97f6ecac';
-  static const String defaultFirebaseWebApiKey =
-      'AIzaSyCsP4btD3tfm9nOESW0YdCyVWYCJmmnBME';
-  static const String defaultFirebaseAndroidApiKey =
-      'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
-  static const String defaultFirebaseIOSApiKey =
-      'AIzaSyBPB2X2ke21Smr0vqSczfwRtM-dolvyPyA';
-  static const String defaultRssFeedUrl = 'https://ysia.ru/feed/';
-  static const String defaultApiNinjasKey = 'v0cxsQQg1mMoA7YeEUNnxqgwSj8aE8qvgFUoImPV';
-
   // Переменные, которые будут использоваться в приложении
-  static String openWeatherApiKey = defaultOpenWeatherApiKey;
-  static String firebaseWebApiKey = defaultFirebaseWebApiKey;
-  static String firebaseAndroidApiKey = defaultFirebaseAndroidApiKey;
-  static String firebaseIOSApiKey = defaultFirebaseIOSApiKey;
-  static String rssFeedUrl = defaultRssFeedUrl;
-  static String apiNinjasKey = defaultApiNinjasKey;
+  static String openWeatherApiKey = '';
+  static String firebaseWebApiKey = '';
+  static String firebaseAndroidApiKey = '';
+  static String firebaseIOSApiKey = '';
+  static String rssFeedUrl = '';
+  static String apiNinjasKey = '';
 
   static Future<void> initialize() async {
-    _loadFromWeb();
-  }
-
-  static void _loadFromWeb() {
-    // В веб-версии используем значения по умолчанию
-    openWeatherApiKey = defaultOpenWeatherApiKey;
-    firebaseWebApiKey = defaultFirebaseWebApiKey;
-    firebaseAndroidApiKey = defaultFirebaseAndroidApiKey;
-    firebaseIOSApiKey = defaultFirebaseIOSApiKey;
-    rssFeedUrl = defaultRssFeedUrl;
-    apiNinjasKey = defaultApiNinjasKey;
+    // В веб-версии используем значения по умолчанию из .env (если доступен)
+    // или оставляем пустыми для ручной настройки
+    openWeatherApiKey = '';
+    firebaseWebApiKey = '';
+    firebaseAndroidApiKey = '';
+    firebaseIOSApiKey = '';
+    rssFeedUrl = 'https://ysia.ru/feed/';
+    apiNinjasKey = '';
   }
 }

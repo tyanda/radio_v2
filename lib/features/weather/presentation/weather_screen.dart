@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -100,125 +101,136 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final dfTime = DateFormat.Hm('ru');
     final dfDate = DateFormat('EEEE, d MMM', 'ru');
 
+    // Адаптивность для веба
+    final isWeb = kIsWeb;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = isWeb && screenWidth > 800 ? 80.0 : 20.0;
+    final maxCardWidth = isWeb && screenWidth > 600 ? 600.0 : double.infinity;
+
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
             SizedBox(height: MediaQuery.of(context).padding.top),
 
             // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: cardBackgroundColor,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(128),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+            Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxCardWidth),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: cardBackgroundColor,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(128),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                current.name.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: primaryTextColor,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              Text(
+                                dfDate.format(DateTime.now()),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: secondaryTextColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          _getWeatherIcon(current.weather[0].main, size: 48),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            current.name.toUpperCase(),
+                            '${current.main.temp.round()}°',
                             style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
+                              fontSize: 72,
+                              fontWeight: FontWeight.w200,
                               color: primaryTextColor,
-                              letterSpacing: -0.5,
+                              letterSpacing: -4,
                             ),
                           ),
-                          Text(
-                            dfDate.format(DateTime.now()),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: secondaryTextColor,
-                              fontWeight: FontWeight.w500,
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12, bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  current.weather[0].description.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: accentColor,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                Text(
+                                  'Ощущается как ${current.main.feelsLike.round()}°',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: secondaryTextColor,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      _getWeatherIcon(current.weather[0].main, size: 48),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${current.main.temp.round()}°',
-                        style: const TextStyle(
-                          fontSize: 72,
-                          fontWeight: FontWeight.w200,
-                          color: primaryTextColor,
-                          letterSpacing: -4,
+                      const SizedBox(height: 32),
+                      Container(
+                        padding: const EdgeInsets.only(top: 24),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: Colors.white.withAlpha(25)),
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12, bottom: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              current.weather[0].description.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: accentColor,
-                                letterSpacing: 1,
-                              ),
+                            _buildDetailItem(
+                              'ВЕТЕР',
+                              '${current.wind.speed.round()} м/с',
                             ),
-                            Text(
-                              'Ощущается как ${current.main.feelsLike.round()}°',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: secondaryTextColor,
-                              ),
+                            _buildDetailItem(
+                              'ВЛАЖНОСТЬ',
+                              '${current.main.humidity}%',
+                            ),
+                            _buildDetailItem(
+                              'ДАВЛЕНИЕ',
+                              '${current.main.pressure}',
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  Container(
-                    padding: const EdgeInsets.only(top: 24),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: Colors.white.withAlpha(25)),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildDetailItem(
-                          'ВЕТЕР',
-                          '${current.wind.speed.round()} м/с',
-                        ),
-                        _buildDetailItem(
-                          'ВЛАЖНОСТЬ',
-                          '${current.main.humidity}%',
-                        ),
-                        _buildDetailItem(
-                          'ДАВЛЕНИЕ',
-                          '${current.main.pressure}',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
 
@@ -252,77 +264,80 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
 
             // КАРТОЧКИ ПРОГНОЗА НА 7 ДНЕЙ
-            SizedBox(
-              height: 560, // 7 карточек по 80 пикселей каждая
-              child: ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 7,
-                itemBuilder: (context, index) {
-                  final dayOffset = index + 1; // Начинаем с завтра (offset = 1)
+            Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxCardWidth),
+                child: SizedBox(
+                  height: 560, // 7 карточек по 80 пикселей каждая
+                  child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 7,
+                    itemBuilder: (context, index) {
+                      final dayOffset = index + 1; // Начинаем с завтра (offset = 1)
 
-                  // Создаем дату для прогноза на каждый день недели
-                  final date = DateTime.now().add(Duration(days: dayOffset));
-                  final dayName = DateFormat(
-                    'EEEE',
-                    'ru',
-                  ).format(date).toUpperCase();
-                  final shortDayName = DateFormat(
-                    'E',
-                    'ru',
-                  ).format(date).toUpperCase();
+                      // Создаем дату для прогноза на каждый день недели
+                      final date = DateTime.now().add(Duration(days: dayOffset));
+                      final dayName = DateFormat(
+                        'EEEE',
+                        'ru',
+                      ).format(date).toUpperCase();
+                      final shortDayName = DateFormat(
+                        'E',
+                        'ru',
+                      ).format(date).toUpperCase();
 
-                  // Пытаемся найти соответствующий прогноз из доступных данных
-                  final forecastForDay = forecastList.firstWhere(
-                    (element) {
-                      final elementDate = DateTime.fromMillisecondsSinceEpoch(
-                        element.dt * 1000,
+                      // Пытаемся найти соответствующий прогноз из доступных данных
+                      final forecastForDay = forecastList.firstWhere(
+                        (element) {
+                          final elementDate = DateTime.fromMillisecondsSinceEpoch(
+                            element.dt * 1000,
+                          );
+                          return elementDate.day == date.day &&
+                              elementDate.month == date.month &&
+                              elementDate.year == date.year;
+                        },
+                        orElse: () => forecastList.length > dayOffset
+                            ? forecastList[dayOffset]
+                            : forecastList.isNotEmpty
+                            ? forecastList[forecastList.length - 1]
+                            : forecastList.first,
                       );
-                      return elementDate.day == date.day &&
-                          elementDate.month == date.month &&
-                          elementDate.year == date.year;
-                    },
-                    orElse: () => forecastList.length > dayOffset
-                        ? forecastList[dayOffset]
-                        : forecastList.isNotEmpty
-                        ? forecastList[forecastList.length - 1]
-                        : forecastList.first,
-                  );
 
-                  final tempMax = forecastForDay.main.temp.round();
-                  final tempMin = forecastForDay.main.tempMin.round();
+                      final tempMax = forecastForDay.main.temp.round();
+                      final tempMin = forecastForDay.main.tempMin.round();
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cardBackgroundColor,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withAlpha(20)),
-                    ),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            shortDayName,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: secondaryTextColor,
-                            ),
-                          ),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isWeb ? 16 : 20,
+                          vertical: 16,
                         ),
-                        Expanded(
-                          child: Text(
-                            dayName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: primaryTextColor,
+                        decoration: BoxDecoration(
+                          color: cardBackgroundColor,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white.withAlpha(20)),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 60,
+                              child: Text(
+                                shortDayName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: secondaryTextColor,
+                                ),
+                              ),
                             ),
+                            Expanded(
+                              child: Text(
+                                dayName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: primaryTextColor,
+                                ),
                           ),
                         ),
                         _getWeatherIcon(forecastForDay.weather[0].main),
@@ -348,6 +363,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     ),
                   );
                 },
+              ),
+                ),
               ),
             ),
 

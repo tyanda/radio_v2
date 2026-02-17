@@ -11,13 +11,12 @@ class AppConfig {
   static String apiNinjasKey = '';
 
   static Future<void> initialize() async {
-    // В веб-версии используем значения по умолчанию из .env (если доступен)
-    // или оставляем пустыми для ручной настройки
-    openWeatherApiKey = '';
+    // В веб-версии используем значения по умолчанию
+    openWeatherApiKey = '8a392c6308671b581410d09e97f6ecac';
     firebaseWebApiKey = '';
     firebaseAndroidApiKey = '';
     firebaseIOSApiKey = '';
     rssFeedUrl = 'https://ysia.ru/feed/';
-    apiNinjasKey = '';
+    apiNinjasKey = 'v0cxsQQg1mMoA7YeEUNnxqgwSj8aE8qvgFUoImPV';
   }
 }

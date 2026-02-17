@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:lottie/lottie.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
@@ -19,10 +20,16 @@ class RadioCardsView extends ConsumerWidget {
     final playerState = ref.watch(playerProvider).value;
     final currentStation = playerState?.currentStation;
 
+    // Адаптивность для веба
+    final isWeb = kIsWeb;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = isWeb && screenWidth > 600 ? 3 : 2;
+    final horizontalPadding = isWeb && screenWidth > 800 ? 48.0 : 16.0;
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -40,11 +47,11 @@ class RadioCardsView extends ConsumerWidget {
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.85,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: isWeb ? 16 : 12,
+                  mainAxisSpacing: isWeb ? 16 : 12,
+                  childAspectRatio: isWeb ? 0.75 : 0.85,
                 ),
                 itemCount: stations.length,
                 itemBuilder: (context, index) {

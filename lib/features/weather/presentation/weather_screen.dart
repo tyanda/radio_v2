@@ -100,18 +100,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final dfTime = DateFormat.Hm('ru');
     final dfDate = DateFormat('EEEE, d MMM', 'ru');
 
-    return RefreshIndicator(
-      color: backgroundColor,
-      backgroundColor: accentColor,
-      onRefresh: () async {
-        await ref.read(weatherProvider.notifier).refreshWeather();
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             SizedBox(height: MediaQuery.of(context).padding.top),
 
             // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
@@ -358,37 +352,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
 
             const SizedBox(height: 40),
-
-            // Кнопка обновления
-            Center(
-              child: SizedBox(
-                width: 160,
-                child: FilledButton(
-                  onPressed: () =>
-                      ref.read(weatherProvider.notifier).refreshWeather(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: accentColor,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    'ОБНОВИТЬ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 11,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   // Вспомогательный виджет для деталей в главной карточке

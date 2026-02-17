@@ -199,73 +199,67 @@ class _HoroscopePageState extends State<HoroscopePage> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Обновляем гороскоп при жесте pull-to-refresh
-        await _fetchHoroscope();
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            // Используем withValues вместо deprecated withOpacity
-            color: Colors.yellow.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.yellow.withValues(alpha: 0.5),
-              width: 1,
-            ),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          // Используем withValues вместо deprecated withOpacity
+          color: Colors.yellow.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.yellow.withValues(alpha: 0.5),
+            width: 1,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.menu_book, color: Colors.yellow),
-                      const SizedBox(width: 12),
-                      Text(
-                        "${widget.zodiacSign.displayName} на сегодня",
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final themeState = ref.watch(themeProvider);
-                      final themeNotifier = ref.read(themeProvider.notifier);
-                      return Switch(
-                        value: themeState.isDarkTheme,
-                        onChanged: (bool newValue) {
-                          themeNotifier.toggleTheme();
-                        },
-                        activeTrackColor: Colors.yellow.withValues(alpha: 0.5),
-                        activeThumbColor: Colors.yellow,
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _isLoading
-                  ? const CircularProgressIndicator(color: Colors.yellow)
-                  : Text(
-                      _horoscopeText,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.menu_book, color: Colors.yellow),
+                    const SizedBox(width: 12),
+                    Text(
+                      "${widget.zodiacSign.displayName} на сегодня",
                       style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: Colors.white70,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-            ],
-          ),
+                  ],
+                ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final themeState = ref.watch(themeProvider);
+                    final themeNotifier = ref.read(themeProvider.notifier);
+                    return Switch(
+                      value: themeState.isDarkTheme,
+                      onChanged: (bool newValue) {
+                        themeNotifier.toggleTheme();
+                      },
+                      activeTrackColor: Colors.yellow.withValues(alpha: 0.5),
+                      activeThumbColor: Colors.yellow,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _isLoading
+                ? const CircularProgressIndicator(color: Colors.yellow)
+                : Text(
+                    _horoscopeText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: Colors.white70,
+                    ),
+                  ),
+          ],
         ),
       ),
     );

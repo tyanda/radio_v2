@@ -16,10 +16,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentTab = 0; // По умолчанию открываем Эфир (левая вкладка)
-  final PageController _pageController = PageController(
-    initialPage: 0,
-  ); // По умолчанию открываем Эфир (левая вкладка)
+  int _currentTab = 0;
+  final PageController _pageController = PageController(initialPage: 0);
 
   @override
   void dispose() {
@@ -41,17 +39,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
-                    // Обновляем состояние для нижней навигации
                     _currentTab = index;
                   });
                 },
                 children: [
-                  // 0. Эфир (используй свой radio_view.dart)
                   const RadioView(),
-
-                  // 1. Погода (используй свои виджеты из weather_widgets.dart)
                   WeatherScreen(),
-
                   const HoroscopeView(),
                 ],
               ),
@@ -70,7 +63,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() {
           _currentTab = tabIndex;
         });
-        // Переключаем страницу в PageView
         _pageController.animateToPage(
           tabIndex,
           duration: const Duration(milliseconds: 300),
@@ -98,11 +90,9 @@ class MainNavBar extends StatefulWidget {
 class _MainNavBarState extends State<MainNavBar> {
   @override
   Widget build(BuildContext context) {
-    // Используем MediaQuery для адаптации под высоту челки/нижней полоски
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      // Динамический отступ: минимум 20, плюс высота системной полоски навигации
       padding: EdgeInsets.fromLTRB(
         16,
         12,
@@ -110,31 +100,26 @@ class _MainNavBarState extends State<MainNavBar> {
         bottomPadding > 0 ? bottomPadding : 20,
       ),
       decoration: BoxDecoration(
-        color: Colors.black.withAlpha(250),
+        color: Colors.black.withValues(alpha: 0.98),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(153),
+            color: Colors.black.withValues(alpha: 0.6),
             blurRadius: 40,
             offset: const Offset(0, -10),
           ),
         ],
       ),
       child: Column(
-        mainAxisSize:
-            MainAxisSize.min, // Важно: бар занимает только необходимое место
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Мини-плеер (сделан чуть ниже, чтобы освободить место экранам)
           const MiniPlayer(),
-
           const SizedBox(height: 12),
-
-          // Контейнер навигации
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(10),
+              color: Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -155,10 +140,8 @@ class _MainNavBarState extends State<MainNavBar> {
 
     return Expanded(
       child: Material(
-        // Добавлено для корректной обработки жестов в Flutter
         color: Colors.transparent,
         child: GestureDetector(
-          // "Невидимые границы": вся область Expanded реагирует на тап
           behavior: HitTestBehavior.opaque,
           onTap: () => widget.onTabChanged(index),
           child: Padding(
@@ -177,7 +160,7 @@ class _MainNavBarState extends State<MainNavBar> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.accent.withAlpha(102),
+                              color: AppColors.accent.withValues(alpha: 0.4),
                               blurRadius: 12,
                               spreadRadius: 2,
                             ),
@@ -192,7 +175,7 @@ class _MainNavBarState extends State<MainNavBar> {
                         icon,
                         color: active
                             ? AppColors.accent
-                            : Colors.white.withAlpha(51),
+                            : Colors.white.withValues(alpha: 0.2),
                         size: 24,
                       ),
                     ),
@@ -201,18 +184,17 @@ class _MainNavBarState extends State<MainNavBar> {
                 const SizedBox(height: 4),
                 Text(
                   label,
-                  maxLines: 1, // Защита от переноса текста
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: active
                         ? AppColors.primaryText
-                        : Colors.white.withAlpha(51),
+                        : Colors.white.withValues(alpha: 0.2),
                     fontSize: 10,
                     fontWeight: active ? FontWeight.w900 : FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
                 ),
-                // Компактный индикатор под активным пунктом
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.only(top: 4),
@@ -235,6 +217,20 @@ class _MainNavBarState extends State<MainNavBar> {
 class _AppHeader extends ConsumerWidget {
   const _AppHeader();
 
+  // Логика выбора иконки в зависимости от времени суток
+  IconData _getTimeBasedIcon() {
+    final hour = DateTime.now().hour;
+    if (hour >= 6 && hour < 12) {
+      return Icons.wb_twilight_rounded; // Утро
+    } else if (hour >= 12 && hour < 18) {
+      return Icons.wb_sunny_rounded; // День
+    } else if (hour >= 18 && hour < 22) {
+      return Icons.wb_cloudy_rounded; // Вечер
+    } else {
+      return Icons.nights_stay_rounded; // Ночь
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final greetingAsync = ref.watch(greetingProvider);
@@ -243,27 +239,6 @@ class _AppHeader extends ConsumerWidget {
       data: (data) => data.toUpperCase(),
       loading: () => "ЗАГРУЗКА...",
       error: (_, _) => "ДОБРО ПОЖАЛОВАТЬ",
-    );
-
-    // Extract the emoji from the greeting to determine the icon
-    IconData getIconForGreeting(String greetingText) {
-      if (greetingText.contains('🌙')) {
-        return Icons.nights_stay_rounded; // Night
-      } else if (greetingText.contains('☀️')) {
-        return Icons.wb_sunny_rounded; // Morning
-      } else if (greetingText.contains('🌤️')) {
-        return Icons.wb_cloudy_rounded; // Day
-      } else if (greetingText.contains('🌆')) {
-        return Icons.nights_stay_rounded; // Evening
-      } else {
-        return Icons.wb_sunny_rounded; // Default
-      }
-    }
-
-    final iconData = greetingAsync.when(
-      data: (data) => getIconForGreeting(data),
-      loading: () => Icons.wb_sunny_rounded,
-      error: (_, _) => Icons.wb_sunny_rounded,
     );
 
     return Padding(
@@ -302,11 +277,12 @@ class _AppHeader extends ConsumerWidget {
               ),
             ],
           ),
+          // Та самая большая иконка справа
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.accent.withAlpha(76),
+                color: AppColors.accent.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -314,7 +290,7 @@ class _AppHeader extends ConsumerWidget {
               radius: 22,
               backgroundColor: AppColors.cardBackground,
               child: Icon(
-                iconData,
+                _getTimeBasedIcon(), // Используем нашу новую логику времени
                 color: AppColors.accent,
                 size: 20,
               ),
@@ -353,7 +329,6 @@ class _MarqueeSection extends ConsumerWidget {
           fontSize: 12,
           letterSpacing: 1.0,
         ),
-        // Уменьшили скорость для комфортного чтения (было 45)
         velocity: 30,
         blankSpace: 100,
         accelerationDuration: const Duration(seconds: 1),

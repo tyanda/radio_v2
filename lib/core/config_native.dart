@@ -14,6 +14,7 @@ class AppConfig {
   static const String defaultFirebaseIOSApiKey =
       'AIzaSyBPB2X2ke21Smr0vqSczfwRtM-dolvyPyA';
   static const String defaultRssFeedUrl = 'https://ysia.ru/feed/';
+  static const String defaultApiNinjasKey = 'v0cxsQQg1mMoA7YeEUNnxqgwSj8aE8qvgFUoImPV';
 
   // Переменные, которые будут использоваться в приложении
   static String openWeatherApiKey = defaultOpenWeatherApiKey;
@@ -21,6 +22,7 @@ class AppConfig {
   static String firebaseAndroidApiKey = defaultFirebaseAndroidApiKey;
   static String firebaseIOSApiKey = defaultFirebaseIOSApiKey;
   static String rssFeedUrl = defaultRssFeedUrl;
+  static String apiNinjasKey = defaultApiNinjasKey;
 
   static Future<void> initialize() async {
     await _loadFromEnv();
@@ -40,6 +42,7 @@ class AppConfig {
       firebaseIOSApiKey =
           dotenv.env['FIREBASE_IOS_API_KEY'] ?? defaultFirebaseIOSApiKey;
       rssFeedUrl = dotenv.env['RSS_FEED_URL'] ?? defaultRssFeedUrl;
+      apiNinjasKey = dotenv.env['API_NINJAS_KEY'] ?? defaultApiNinjasKey;
     } catch (e) {
       // Если не удалось загрузить .env, используем значения по умолчанию
       Logger.warn('Could not load .env file: $e');

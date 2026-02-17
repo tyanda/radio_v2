@@ -43,7 +43,7 @@ class RadioCardsView extends ConsumerWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.35,
+                  childAspectRatio: 0.85,
                 ),
                 itemCount: stations.length,
                 itemBuilder: (context, index) {
@@ -130,69 +130,72 @@ class RadioCardsView extends ConsumerWidget {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         // Изображение радиостанции
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: Container(
-                                            width: 60,
-                                            height: 60,
-                                            decoration: BoxDecoration(
-                                              color: isActive
-                                                  ? Colors.black.withValues(
-                                                      alpha: 0.1,
-                                                    )
-                                                  : Colors.white.withValues(
-                                                      alpha: 0.03,
-                                                    ),
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
                                             ),
-                                            child: station.art.isNotEmpty
-                                                ? Image.asset(
-                                                    station.art,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (
-                                                          context,
-                                                          error,
-                                                          stackTrace,
-                                                        ) {
-                                                          return Container(
-                                                            color: isActive
-                                                                ? Colors.black
-                                                                      .withValues(
-                                                                        alpha:
-                                                                            0.1,
-                                                                      )
-                                                                : Colors.white
-                                                                      .withValues(
-                                                                        alpha:
-                                                                            0.03,
-                                                                      ),
-                                                            child: const Icon(
-                                                              Icons.radio,
-                                                              color:
-                                                                  Colors.grey,
-                                                              size: 20,
-                                                            ),
-                                                          );
-                                                        },
-                                                  )
-                                                : Container(
-                                                    color: isActive
-                                                        ? Colors.black
-                                                              .withValues(
-                                                                alpha: 0.1,
-                                                              )
-                                                        : Colors.white
-                                                              .withValues(
-                                                                alpha: 0.03,
-                                                              ),
-                                                    child: const Icon(
-                                                      Icons.radio,
-                                                      color: Colors.grey,
-                                                      size: 20,
-                                                    ),
-                                                  ),
+                                            child: AspectRatio(
+                                              aspectRatio: 1,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: isActive
+                                                      ? Colors.black.withValues(
+                                                          alpha: 0.1,
+                                                        )
+                                                      : Colors.white.withValues(
+                                                          alpha: 0.03,
+                                                        ),
+                                                ),
+                                                child: station.art.isNotEmpty
+                                                    ? Image.asset(
+                                                        station.art,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (
+                                                              context,
+                                                              error,
+                                                              stackTrace,
+                                                            ) {
+                                                              return Container(
+                                                                color: isActive
+                                                                    ? Colors.black
+                                                                          .withValues(
+                                                                            alpha:
+                                                                                0.1,
+                                                                          )
+                                                                    : Colors.white
+                                                                          .withValues(
+                                                                            alpha:
+                                                                                0.03,
+                                                                          ),
+                                                                child: const Icon(
+                                                                  Icons.radio,
+                                                                  color:
+                                                                      Colors.grey,
+                                                                  size: 20,
+                                                                ),
+                                                              );
+                                                            },
+                                                      )
+                                                    : Container(
+                                                        color: isActive
+                                                            ? Colors.black
+                                                                  .withValues(
+                                                                    alpha: 0.1,
+                                                                  )
+                                                            : Colors.white
+                                                                  .withValues(
+                                                                    alpha: 0.03,
+                                                                  ),
+                                                        child: const Icon(
+                                                          Icons.radio,
+                                                          color: Colors.grey,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                         // Кнопка избранного
@@ -235,7 +238,7 @@ class RadioCardsView extends ConsumerWidget {
                                             fontWeight: FontWeight.bold,
                                             fontSize: 13,
                                           ),
-                                          maxLines: 2,
+                                          maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
@@ -250,6 +253,8 @@ class RadioCardsView extends ConsumerWidget {
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),

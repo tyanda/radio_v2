@@ -170,18 +170,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                     ),
                   ),
                 const SizedBox(height: 24),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    _BuildSmallBadge('Прогноз на сегодня'),
-                    _BuildSmallBadge('Источник: horo.mail.ru'),
-                    if (horoscopeState.horoscopeData != null)
-                      _BuildSmallBadge(
-                        'Обновлено: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-                      ),
-                  ],
-                ),
+                _BuildSmallBadge('Прогноз на сегодня'),
               ],
             ),
           ),

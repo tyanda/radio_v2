@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/core/providers.dart';
+import 'package:radio_v2/core/providers/providers.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
 import '../core/utils/logger.dart';
 

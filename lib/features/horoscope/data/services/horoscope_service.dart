@@ -1,9 +1,21 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:html/parser.dart' as parser;
+import 'package:translator/translator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/config.dart';
 import '../../../../core/utils/logger.dart';
 import '../models/horoscope_data.dart';
 
+/// Результат с информацией об источнике
+class _HoroscopeResult {
+  final String text;
+  final String source;
+
+  _HoroscopeResult(this.text, this.source);
+}
+
 class HoroscopeService {
+  // Знаки зодиака: английский → русский
   static const Map<String, String> _zodiacMap = {
     'aries': 'Овен',
     'taurus': 'Телец',
@@ -19,106 +31,170 @@ class HoroscopeService {
     'pisces': 'Рыбы',
   };
 
-  Future<String> fetchHoroscope(String zodiacId) async {
-    Logger.log("Fetching horoscope for zodiac sign: $zodiacId");
-    try {
-      final url = Uri.parse('https://horo.mail.ru/prediction/$zodiacId/today/');
-      Logger.log("Horoscope URL: $url");
+  // Запасные короткие гороскопы (если API и перевод недоступны)
+  static const Map<String, String> _sampleHoroscopes = {
+    'aries':
+        'Сегодня Овнам стоит проявить инициативу. Возможны успехи в профессиональной сфере.',
+    'taurus':
+        'Благоприятный день для финансовых вопросов. Сохраняйте спокойствие.',
+    'gemini': 'Коммуникации на высоте. Отличное время для встреч и знакомств.',
+    'cancer': 'Эмоциональный день. Обратите внимание на семью и уют.',
+    'leo': 'Возможности для самореализации. Ваша харизма на пике.',
+    'virgo': 'Внимание к деталям принесёт пользу. Рационализируйте планы.',
+    'libra': 'Баланс во всём. Хороший день для соглашений и контактов.',
+    'scorpio': 'Интенсивный день. Интуиция поможет принять решения.',
+    'sagittarius': 'Приключения и новые горизонты в центре внимания.',
+    'capricorn': 'Практичность будет вознаграждена. Сосредоточьтесь на целях.',
+    'aquarius': 'Необычные идеи принесут успех. Будьте открыты новому.',
+    'pisces': 'Творчество и духовность на первом плане.',
+  };
 
-      final response = await http
-          .get(
-            url,
-            headers: {
-              'User-Agent':
-                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept':
-                  'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-              'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            },
-          )
-          .timeout(const Duration(seconds: 10));
+  final GoogleTranslator _translator = GoogleTranslator();
 
-      Logger.log("Horoscope response status: ${response.statusCode}");
-      if (response.statusCode == 200) {
-        Logger.log("Horoscope response body length: ${response.body.length}");
-        var document = parser.parse(response.body);
-        var mainElement = document.querySelector(
-          'main[data-qa="ArticleLayout"]',
-        );
-        if (mainElement != null) {
-          mainElement
-              .querySelectorAll('a')
-              .forEach((element) => element.remove());
-          String cleanText = mainElement.text.trim();
-          Logger.log("Horoscope text length: ${cleanText.length}");
-          if (cleanText.isNotEmpty) {
-            return cleanText;
-          }
-        } else {
-          Logger.warn(
-            "Horoscope: Could not find main element with selector 'main[data-qa=\"ArticleLayout\"]'",
-          );
-        }
-      } else {
-        Logger.warn("Horoscope response status: ${response.statusCode}");
-      }
-    } catch (e) {
-      Logger.warn("Ошибка загрузки гороскопа с сайта: $e");
+  /// Основной метод: возвращает гороскоп на сегодня (переведённый на русский)
+  Future<_HoroscopeResult> _fetchHoroscopeWithSource(String zodiacId) async {
+    Logger.log('Fetching horoscope for: $zodiacId');
+
+    // Шаг 1: кэш (самый быстрый путь)
+    final cached = await _getCached(zodiacId);
+    if (cached != null) {
+      Logger.log('From cache');
+      return _HoroscopeResult(cached, 'Кэш');
     }
 
-    // Если не удалось получить данные с сайта, возвращаем сгенерированный гороскоп
-    return _generateSampleHoroscope(zodiacId);
+    // Шаг 2: API Ninjas → английский текст
+    final english = await _fetchApiNinjas(zodiacId);
+    if (english == null || english.isEmpty) {
+      Logger.log('API failed → sample fallback');
+      final fallback =
+          _sampleHoroscopes[zodiacId] ?? 'Сегодня благоприятный день.';
+      await _saveCache(zodiacId, fallback); // кэшируем fallback тоже
+      return _HoroscopeResult(fallback, 'Примерный прогноз');
+    }
+
+    // Шаг 3: перевод на русский
+    final russian = await _translate(english);
+
+    // Шаг 4: сохранение в кэш
+    await _saveCache(zodiacId, russian);
+
+    return _HoroscopeResult(russian, 'API Ninjas (переведено)');
   }
 
-  String _generateSampleHoroscope(String sign) {
-    // Создаем образцы текстов гороскопа для разных знаков зодиака
-    Map<String, String> sampleHoroscopes = {
-      'aries':
-          'Сегодня Овнам стоит проявить инициативу. Возможны успехи в профессиональной сфере. Не бойтесь новых начинаний. Энергия на вашей стороне, используйте её с умом.',
-      'taurus':
-          'Благоприятный день для решения финансовых вопросов. Избегайте конфликтов, сохраняйте спокойствие. Вечером возможна приятная встреча с друзьями.',
-      'gemini':
-          'Коммуникации будут на высоте. Отличное время для встреч и общения. Возможны интересные знакомства, которые повлияют на ваше будущее.',
-      'cancer':
-          'Эмоциональный день. Обратите внимание на семью и домашний уют. Интуиция особенно сильна, доверьтесь своим чувствам при принятии решений.',
-      'leo':
-          'День приносит возможности для самореализации. Ваша харизма будет особенно заметна. Уверенно двигайтесь к цели, успех на вашей стороне.',
-      'virgo':
-          'Внимательность к деталям принесет пользу. Рационализируйте свои планы и подходы к работе. Важно не упустить мелочи в важных делах.',
-      'libra':
-          'Баланс важен во всем. Сегодня отличный день для заключения соглашений и установления контактов. Избегайте чрезмерной суеты.',
-      'scorpio':
-          'Интенсивный день. Глубокие эмоции и интуитивные прозрения помогут принять важные решения. Не бойтесь идти до конца.',
-      'sagittarius':
-          'Приключения и путешествия в центре внимания. Отличное время для расширения кругозора. Возможны неожиданные повороты судьбы.',
-      'capricorn':
-          'Практический подход к делам будет вознагражден. Сосредоточьтесь на долгосрочных целях. Карьерный рост в пределах возможностей.',
-      'aquarius':
-          'Необычные идеи и нестандартные решения принесут успех. Социальные связи окажутся полезными. Будьте открыты новому.',
-      'pisces':
-          'Творческие порывы и духовное развитие на первом плане. Интуиция особенно сильна сегодня. Следуйте своим инстинктам и чувствам.',
-    };
-
-    // Если для данного знака нет специфического гороскопа, возвращаем общий
-    return sampleHoroscopes[sign] ??
-        'Сегодня благоприятный день для саморазвития и новых начинаний. Следуйте своим инстинктам и не бойтесь перемен.';
+  /// Основной метод: возвращает гороскоп на сегодня (переведённый на русский)
+  Future<String> fetchHoroscope(String zodiacId) async {
+    final result = await _fetchHoroscopeWithSource(zodiacId);
+    return result.text;
   }
 
+  Future<String?> _getCached(String zodiacId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final key = 'horoscope_${zodiacId}_$today';
+    return prefs.getString(key);
+  }
+
+  Future<void> _saveCache(String zodiacId, String text) async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final key = 'horoscope_${zodiacId}_$today';
+    await prefs.setString(key, text);
+    Logger.log('Cached: $key');
+  }
+
+  Future<String?> _fetchApiNinjas(String zodiacId) async {
+    try {
+      final key = AppConfig.apiNinjasKey.trim();
+      if (key.isEmpty) {
+        Logger.warn('No API key in AppConfig');
+        return null;
+      }
+
+      final uri = Uri.parse(
+        'https://api.api-ninjas.com/v1/horoscope?zodiac=$zodiacId',
+      );
+
+      final res = await http
+          .get(uri, headers: {'X-Api-Key': key, 'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 10));
+
+      if (res.statusCode != 200) {
+        Logger.warn('API error ${res.statusCode}: ${res.body}');
+        return null;
+      }
+
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      final text = json['horoscope'] as String?;
+      if (text == null || text.isEmpty) {
+        Logger.warn('Empty horoscope field');
+        return null;
+      }
+
+      Logger.log('English text received');
+      return text;
+    } catch (e) {
+      Logger.warn('API exception: $e');
+      return null;
+    }
+  }
+
+  Future<String> _translate(String english) async {
+    try {
+      final trans = await _translator.translate(english, from: 'en', to: 'ru');
+      var result = trans.text.trim();
+      if (result.isNotEmpty) {
+        // Пост-обработка: нормализация текста
+        result = result
+            .replaceAll(' ,', ',')
+            .replaceAll(' .', '.')
+            .replaceAll(' !', '!')
+            .replaceAll(' ?', '?')
+            .replaceAll(' ;', ';')
+            .replaceAll(' :', ':')
+            .replaceAll(RegExp(r'\s+'), ' ');
+        Logger.log('Translated (${result.length} chars)');
+        return result;
+      }
+    } catch (e) {
+      Logger.warn('Translate error: $e');
+    }
+
+    Logger.warn('Translation failed → return English');
+    return english;
+  }
+
+  /// Для экрана: полный объект гороскопа
   Future<HoroscopeData> getHoroscope(String sign, String period) async {
-    Logger.log("Getting horoscope for sign: $sign, period: $period");
-    final horoscopeText = await fetchHoroscope(sign);
-    final signName = _zodiacMap[sign] ?? sign;
-    final title = "$signName - Гороскоп на сегодня";
+    final result = await _fetchHoroscopeWithSource(sign);
+    final ruName = _zodiacMap[sign] ?? sign;
+    final title = '$ruName — Гороскоп на сегодня';
 
     return HoroscopeData(
-      sign: signName,
+      sign: ruName,
       title: title,
-      text: horoscopeText,
+      text: result.text,
       period: period,
+      source: result.source,
     );
   }
 
-  static Map<String, String> getZodiacSigns() {
-    return _zodiacMap;
+  /// Список знаков для выбора в UI
+  static Map<String, String> getZodiacSigns() => _zodiacMap;
+
+  /// Очистка кэша гороскопов
+  static Future<void> clearCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().where((k) => k.startsWith('horoscope_'));
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+    Logger.log('Cache cleared');
+  }
+
+  /// Полная очистка кэша (один раз для миграции)
+  static Future<void> clearAllCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    Logger.log('All cache cleared');
   }
 }

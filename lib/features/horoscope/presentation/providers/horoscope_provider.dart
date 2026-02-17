@@ -42,7 +42,22 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
     final service = HoroscopeService();
     _repository = HoroscopeRepositoryImpl(service);
     final initialSign = ZodiacSign.all.first;
-    return HoroscopeState(selectedSign: initialSign);
+    // Загружаем гороскоп при инициализации
+    _loadHoroscope(initialSign);
+    return HoroscopeState(selectedSign: initialSign, isLoading: true);
+  }
+
+  Future<void> _loadHoroscope(ZodiacSign sign) async {
+    try {
+      final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
+      state = state.copyWith(
+        horoscopeData: horoscopeData,
+        isLoading: false,
+        errorMessage: null,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
   }
 
   void selectSign(ZodiacSign sign) async {
@@ -56,21 +71,6 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
     // Загружаем гороскоп для нового знака
     try {
       final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
-      state = state.copyWith(horoscopeData: horoscopeData, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-    }
-  }
-
-  // Метод для обновления гороскопа
-  Future<void> refreshHoroscope() async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    try {
-      final horoscopeData = await _repository.getHoroscope(
-        state.selectedSign.id,
-        'today',
-      );
       state = state.copyWith(horoscopeData: horoscopeData, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

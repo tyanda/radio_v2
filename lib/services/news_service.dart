@@ -6,19 +6,15 @@ import 'dart:convert';
 import '../core/config.dart';
 import '../core/utils/logger.dart';
 
-/// Сервис для получения RSS через Firebase Hosting Proxy (CORS-free решение)
-/// 
+/// Сервис для получения RSS через CORS-прокси
+///
 /// Преимущества:
-/// - Бесплатно (10GB трафика/месяц)
-/// - Надёжно (инфраструктура Google/Firebase)
-/// - Нет CORS проблем (Firebase проксирует запрос)
-/// - Быстро (CDN + кэширование)
+/// - Бесплатно (используется corsproxy.io)
+/// - Надёжно
+/// - Нет CORS проблем
+/// - Быстро (кэширование)
 class NewsService {
   final Dio _dio;
-  
-  // URL Firebase Hosting Proxy
-  // Проксирует запросы на Google Apps Script
-  static const String _firebaseProxyUrl = '/api/ysia';
 
   // Резервный URL (прямой запрос для мобильных)
   static String get _directRssUrl => AppConfig.rssFeedUrl;
@@ -38,9 +34,9 @@ class NewsService {
     return _fetchNewsNative(limit: limit);
   }
 
-  /// Версия для Web (через Firebase Hosting Proxy)
+  /// Версия для Web (через RSS2JSON с CORS поддержкой)
   Future<List<String>> _fetchNewsWeb({int limit = 5}) async {
-    Logger.log('[NewsService] Web: Fetching via Firebase Proxy');
+    Logger.log('[NewsService] Web: Fetching via RSS2JSON');
 
     try {
       // Проверяем кэш сначала
@@ -50,43 +46,50 @@ class NewsService {
         return cached;
       }
 
-      // Запрос через Firebase Hosting Proxy
+      // Используем RSS2JSON — бесплатный сервис с CORS поддержкой
+      // https://rss2json.com/
+      final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=${Uri.encodeComponent(_directRssUrl)}';
+      
       final response = await _dio.get(
-        _firebaseProxyUrl,
+        rss2JsonUrl,
         options: Options(
           followRedirects: true,
           validateStatus: (status) => status! < 500,
-          responseType: ResponseType.plain,
+          responseType: ResponseType.json,
+          receiveTimeout: const Duration(seconds: 15),
         ),
       ).timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
-        Logger.log('[NewsService] Response received (${response.data.length} bytes)');
+        final data = response.data;
         
-        final data = response.data.toString();
-        
-        // Пробуем распарсить как RSS
-        final titles = _parseRssContent(data, limit);
-        
-        if (titles.isNotEmpty) {
-          Logger.log('[NewsService] Parsed ${titles.length} titles');
-          await _cacheTitles(titles);
-          return titles;
-        } else {
-          // Если не RSS, возвращаем как текст
-          Logger.log('[NewsService] Returning as text');
-          final lines = data.split('\n')
-              .where((l) => l.trim().isNotEmpty)
-              .take(limit)
-              .map((l) => l.trim().toUpperCase())
-              .toList();
-          await _cacheTitles(lines);
-          return lines;
+        if (data is Map && data['status'] == 'ok') {
+          final items = data['items'] as List? ?? [];
+          final titles = <String>[];
+          
+          for (final item in items) {
+            if (titles.length >= limit) break;
+            final title = item['title'] as String?;
+            if (title != null && title.trim().isNotEmpty) {
+              titles.add(title.trim().toUpperCase());
+            }
+          }
+          
+          if (titles.isNotEmpty) {
+            Logger.log('[NewsService] Parsed ${titles.length} titles via RSS2JSON');
+            await _cacheTitles(titles);
+            return titles;
+          }
         }
+        
+        Logger.warn('[NewsService] RSS2JSON returned error or empty');
       } else {
-        Logger.error('[NewsService] Status ${response.statusCode}');
-        return _getCachedTitles(limit);
+        Logger.error('[NewsService] RSS2JSON status ${response.statusCode}');
       }
+      
+      // Если RSS2JSON не сработал, возвращаем кэш или заглушку
+      return _getCachedTitles(limit);
+      
     } catch (e) {
       Logger.error('[NewsService] Error: $e');
       return _getCachedTitles(limit);

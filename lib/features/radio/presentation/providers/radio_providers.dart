@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/providers/providers.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
+import 'package:radio_v2/services/news_service.dart';
 
 final stationListProvider = Provider<List<Station>>((ref) {
   return [
@@ -85,7 +86,7 @@ final greetingProvider = StreamProvider<String>((ref) async* {
   yield* Stream.periodic(const Duration(minutes: 1), (_) => getGreeting());
 });
 
-final newsProvider = FutureProvider<List<String>>((ref) {
+final newsProvider = FutureProvider<List<String>>((ref) async {
   // Keep alive for 15 minutes, then auto-dispose.
   final link = ref.keepAlive();
   final timer = Timer(const Duration(minutes: 15), () {
@@ -93,8 +94,9 @@ final newsProvider = FutureProvider<List<String>>((ref) {
   });
   ref.onDispose(() => timer.cancel());
 
-  final rssService = ref.watch(rssServiceProvider);
-  return rssService.fetchNewsTitles(limit: 10);
+  final dio = ref.watch(dioProvider);
+  final newsService = NewsService(dio);
+  return newsService.fetchNewsTitles(limit: 10);
 });
 
 final tickerProvider = StreamProvider<String>((ref) {

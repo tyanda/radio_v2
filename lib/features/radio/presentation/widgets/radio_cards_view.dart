@@ -128,7 +128,7 @@ class RadioCardsView extends ConsumerWidget {
                           ),
                           child: Stack(
                             children: [
-                              if (isActive)
+                              if (isActive && !kIsWeb)
                                 Positioned(
                                   right: -5,
                                   bottom: -5,
@@ -144,6 +144,17 @@ class RadioCardsView extends ConsumerWidget {
                                             return const SizedBox.shrink();
                                           },
                                     ),
+                                  ),
+                                ),
+                              // Для веба используем простую анимацию или иконку
+                              if (isActive && kIsWeb)
+                                Positioned(
+                                  right: -5,
+                                  bottom: -5,
+                                  child: Icon(
+                                    Icons.graphic_eq,
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    size: 60,
                                   ),
                                 ),
                               Padding(

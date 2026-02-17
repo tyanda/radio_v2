@@ -11,11 +11,11 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Современная иконка приложения
-            Icon(
-              Icons.music_note_rounded,
-              size: 100,
-              color: Colors.yellow[700],
+            // Логотип приложения
+            Image.asset(
+              'assets/images/load.png',
+              width: 120,
+              height: 120,
             ),
             const SizedBox(height: 24),
             Text(

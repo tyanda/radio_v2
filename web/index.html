@@ -38,6 +38,20 @@
       margin: 0;
       padding: 0;
     }
+    /* Запрет поворота экрана - строго вертикальная ориентация */
+    @media screen and (orientation: landscape) {
+      body {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        width: 100vh;
+        height: 100vw;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -50vh;
+        margin-left: -50vw;
+      }
+    }
   </style>
 </head>
 <body>

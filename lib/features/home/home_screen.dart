@@ -214,25 +214,43 @@ class _MainNavBarState extends State<MainNavBar> {
   }
 }
 
-class _AppHeader extends ConsumerWidget {
+class _AppHeader extends ConsumerStatefulWidget {
   const _AppHeader();
 
-  // Логика выбора иконки в зависимости от времени суток
-  IconData _getTimeBasedIcon() {
-    final hour = DateTime.now().hour;
-    if (hour >= 6 && hour < 12) {
-      return Icons.wb_twilight_rounded; // Утро
-    } else if (hour >= 12 && hour < 18) {
-      return Icons.wb_sunny_rounded; // День
-    } else if (hour >= 18 && hour < 22) {
-      return Icons.wb_cloudy_rounded; // Вечер
-    } else {
-      return Icons.nights_stay_rounded; // Ночь
-    }
+  @override
+  ConsumerState<_AppHeader> createState() => _AppHeaderState();
+}
+
+class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _blurAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _blurAnimation = Tween<double>(begin: 4.0, end: 16.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final greetingAsync = ref.watch(greetingProvider);
 
     final greeting = greetingAsync.when(
@@ -277,24 +295,42 @@ class _AppHeader extends ConsumerWidget {
               ),
             ],
           ),
-          // Та самая большая иконка справа
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.3),
-                width: 2,
-              ),
-            ),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: AppColors.cardBackground,
-              child: Icon(
-                _getTimeBasedIcon(), // Используем нашу новую логику времени
-                color: AppColors.accent,
-                size: 20,
-              ),
-            ),
+          // Анимированный логотип "Дыхание"
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.3),
+                        blurRadius: _blurAnimation.value,
+                        spreadRadius: _controller.value * 2,
+                      ),
+                    ],
+                    border: Border.all(
+                      color: AppColors.accent.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor: AppColors.cardBackground,
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/load.png',
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

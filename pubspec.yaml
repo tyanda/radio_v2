@@ -107,6 +107,7 @@ flutter:
     - assets/images/ir_radio.jpg
     - assets/images/europa_plus.jpg
     - assets/images/superdisco.jpg
+    - assets/images/load.png
 
   # Enable support for additional languages including Cyrillic script
   generate: true

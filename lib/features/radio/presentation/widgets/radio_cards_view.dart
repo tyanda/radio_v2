@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
+import 'package:radio_v2/core/theme/app_colors.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/providers/favorites_provider.dart';
@@ -83,17 +84,40 @@ class RadioCardsView extends ConsumerWidget {
                                   ? Colors.transparent
                                   : Colors.white.withValues(alpha: 0.05),
                             ),
+                            // СЛОЖНЫЕ ТЕНИ ДЛЯ ОБЪЕМА
                             boxShadow: isActive
                                 ? [
+                                    // Основная тень для активной станции
                                     BoxShadow(
-                                      color: const Color(
-                                        0xFFFFD700,
-                                      ).withValues(alpha: 0.2),
+                                      color: const Color(0xFFFFD700).withValues(alpha: 0.3),
                                       blurRadius: 20,
                                       offset: const Offset(0, 8),
+                                      spreadRadius: -2,
+                                    ),
+                                    // Цветное свечение
+                                    BoxShadow(
+                                      color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                                      blurRadius: 30,
+                                      offset: const Offset(0, 4),
+                                      spreadRadius: -5,
                                     ),
                                   ]
-                                : [],
+                                : [
+                                    // Основная черная тень под карточкой
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.5),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 10),
+                                      spreadRadius: -2,
+                                    ),
+                                    // Мягкое цветное свечение в тон акцента
+                                    BoxShadow(
+                                      color: AppColors.accent.withValues(alpha: 0.15),
+                                      blurRadius: 25,
+                                      offset: const Offset(0, 4),
+                                      spreadRadius: -5,
+                                    ),
+                                  ],
                           ),
                           child: Stack(
                             children: [

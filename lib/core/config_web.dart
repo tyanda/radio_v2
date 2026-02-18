@@ -9,6 +9,7 @@ class AppConfig {
   static String firebaseIOSApiKey = '';
   static String rssFeedUrl = '';
   static String apiNinjasKey = '';
+  static String apiVerveKey = 'apv_914d0f39-46fc-4212-bf06-d2d55acca8b5';
 
   static Future<void> initialize() async {
     // В веб-версии используем значения по умолчанию
@@ -18,5 +19,6 @@ class AppConfig {
     firebaseIOSApiKey = '';
     rssFeedUrl = 'https://ysia.ru/feed/';
     apiNinjasKey = 'v0cxsQQg1mMoA7YeEUNnxqgwSj8aE8qvgFUoImPV';
+    // apiVerveKey уже установлен выше
   }
 }

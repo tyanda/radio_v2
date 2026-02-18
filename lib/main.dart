@@ -7,7 +7,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'package:radio_v2/features/home/home_screen.dart';
-import 'package:radio_v2/features/horoscope/data/services/horoscope_service.dart';
 import 'core/config.dart';
 import 'core/providers.dart';
 import 'widgets/splash_screen.dart';
@@ -18,9 +17,6 @@ Future<void> main() async {
 
   // Загрузка конфигурации
   await AppConfig.initialize();
-
-  // Очистка старого кэша (один раз)
-  await HoroscopeService.clearAllCache();
 
   // 1. Локализация
   try {

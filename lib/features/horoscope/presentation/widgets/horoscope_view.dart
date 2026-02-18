@@ -151,16 +151,24 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                     ),
                   )
                 else if (horoscopeState.horoscopeData != null)
-                  Text(
-                    horoscopeState.horoscopeData!.text,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.90),
-                      fontSize: 16,
-                      height: 1.6,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
+                  horoscopeState.horoscopeData!.text.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Гороскоп не найден. Попробуйте другой знак.',
+                          style: const TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
+                      )
+                    : Text(
+                        horoscopeState.horoscopeData!.text,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.90),
+                          fontSize: 16,
+                          height: 1.6,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )
                 else
                   const Padding(
                     padding: EdgeInsets.all(16.0),
@@ -170,7 +178,16 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                     ),
                   ),
                 const SizedBox(height: 24),
-                _BuildSmallBadge('Прогноз на сегодня'),
+                Row(
+                  children: [
+                    _BuildSmallBadge('Прогноз на сегодня'),
+                    const SizedBox(width: 8),
+                    if (horoscopeState.horoscopeData?.source != null)
+                      _BuildSmallBadge(
+                        horoscopeState.horoscopeData!.source!,
+                      ),
+                  ],
+                ),
               ],
             ),
           ),

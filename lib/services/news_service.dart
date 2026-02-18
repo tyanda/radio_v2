@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:dart_rss/dart_rss.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../core/config.dart';
@@ -39,17 +38,13 @@ class NewsService {
     Logger.log('[NewsService] Web: Fetching via RSS2JSON');
 
     try {
-      // Проверяем кэш сначала
-      final cached = await _getCachedTitles(limit);
-      if (cached.isNotEmpty) {
-        Logger.log('[NewsService] Returning cached data');
-        return cached;
-      }
-
+      // Для веба не используем кэш (SharedPreferences не работает)
       // Используем RSS2JSON — бесплатный сервис с CORS поддержкой
       // https://rss2json.com/
       final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=${Uri.encodeComponent(_directRssUrl)}';
-      
+
+      Logger.log('[NewsService] Web URL: $rss2JsonUrl');
+
       final response = await _dio.get(
         rss2JsonUrl,
         options: Options(
@@ -62,11 +57,11 @@ class NewsService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        
+
         if (data is Map && data['status'] == 'ok') {
           final items = data['items'] as List? ?? [];
           final titles = <String>[];
-          
+
           for (final item in items) {
             if (titles.length >= limit) break;
             final title = item['title'] as String?;
@@ -74,83 +69,80 @@ class NewsService {
               titles.add(title.trim().toUpperCase());
             }
           }
-          
+
+          if (titles.isNotEmpty) {
+            Logger.log('[NewsService] Web: Parsed ${titles.length} titles via RSS2JSON');
+            return titles;
+          }
+        }
+
+        Logger.warn('[NewsService] Web: RSS2JSON returned error or empty: ${data?['message']}');
+      } else {
+        Logger.error('[NewsService] Web: RSS2JSON status ${response.statusCode}');
+      }
+
+      // Если RSS2JSON не сработал, возвращаем заглушку
+      return ["НЕТ НОВОСТЕЙ", "ОСТАВАЙТЕСЬ С НАМИ"];
+
+    } catch (e) {
+      Logger.error('[NewsService] Web Error: $e');
+      return ["ЗАГРУЗКА НОВОСТЕЙ...", "ПРОВЕРЬТЕ ИНТЕРНЕТ"];
+    }
+  }
+
+  /// Версия для мобильных (через RSS2JSON для надёжности)
+  Future<List<String>> _fetchNewsNative({int limit = 5}) async {
+    try {
+      // Используем RSS2JSON для надёжности
+      final encodedUrl = Uri.encodeQueryComponent(_directRssUrl);
+      final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=$encodedUrl';
+
+      Logger.log('[NewsService] Native: Fetching via RSS2JSON');
+      Logger.log('[NewsService] URL: $rss2JsonUrl');
+
+      final response = await _dio.get(
+        rss2JsonUrl,
+        options: Options(
+          followRedirects: true,
+          validateStatus: (status) => status! < 500,
+          responseType: ResponseType.json,
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      ).timeout(const Duration(seconds: 20));
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data is Map && data['status'] == 'ok') {
+          final items = data['items'] as List? ?? [];
+          final titles = <String>[];
+
+          for (final item in items) {
+            if (titles.length >= limit) break;
+            final title = item['title'] as String?;
+            if (title != null && title.trim().isNotEmpty) {
+              titles.add(title.trim().toUpperCase());
+            }
+          }
+
           if (titles.isNotEmpty) {
             Logger.log('[NewsService] Parsed ${titles.length} titles via RSS2JSON');
             await _cacheTitles(titles);
             return titles;
           }
         }
-        
-        Logger.warn('[NewsService] RSS2JSON returned error or empty');
+
+        Logger.warn('[NewsService] RSS2JSON returned error or empty: ${data?['message']}');
       } else {
         Logger.error('[NewsService] RSS2JSON status ${response.statusCode}');
       }
-      
-      // Если RSS2JSON не сработал, возвращаем кэш или заглушку
+
+      // Если RSS2JSON не сработал, возвращаем кэш
       return _getCachedTitles(limit);
-      
+
     } catch (e) {
-      Logger.error('[NewsService] Error: $e');
+      Logger.error('[NewsService] Native error: $e');
       return _getCachedTitles(limit);
-    }
-  }
-
-  /// Версия для мобильных (прямой запрос)
-  Future<List<String>> _fetchNewsNative({int limit = 5}) async {
-    try {
-      final response = await _dio.get(
-        _directRssUrl,
-        options: Options(
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; SakhaRadio/1.0)',
-          },
-        ),
-      ).timeout(const Duration(seconds: 15));
-
-      if (response.statusCode == 200) {
-        Logger.log('[NewsService] Native: RSS fetched (${response.data.length} bytes)');
-        return _parseRssContent(response.data.toString(), limit);
-      } else {
-        Logger.error('[NewsService] Native error: ${response.statusCode}');
-        return _getCachedTitles(limit);
-      }
-    } catch (e) {
-      Logger.error('[NewsService] Native fetch error: $e');
-      return _getCachedTitles(limit);
-    }
-  }
-
-  /// Парсинг RSS контента
-  List<String> _parseRssContent(String content, int limit) {
-    try {
-      if (content.trim().isEmpty) {
-        Logger.warn('[NewsService] Empty content');
-        return [];
-      }
-
-      // Проверяем, что это RSS/XML
-      if (!content.contains('<rss') && !content.contains('<feed')) {
-        Logger.warn('[NewsService] Not RSS/XML content');
-        return [];
-      }
-
-      final feed = RssFeed.parse(content);
-      final titles = <String>[];
-
-      for (final item in feed.items) {
-        if (titles.length >= limit) break;
-
-        if (item.title != null && item.title!.trim().isNotEmpty) {
-          titles.add(item.title!.trim().toUpperCase());
-        }
-      }
-
-      Logger.log('[NewsService] Parsed ${titles.length} titles');
-      return titles;
-    } catch (e) {
-      Logger.error('[NewsService] Parse error: $e');
-      return [];
     }
   }
 

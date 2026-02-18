@@ -9,7 +9,8 @@
         <domain includeSubdomains="true">icecast-saha.cdnvideo.ru</domain>
         <domain includeSubdomains="true">5.129.229.244.nip.io</domain>
         <domain includeSubdomains="true">ep256.hostingradio.ru</domain>
-        <!-- Разрешаем весь незашифрованный трафик (рекомендуется ограничить конкретными доменами для продакшена) -->
-        <!-- Android не поддерживает маску "*" в доменных именах -->
+        <!-- RSS лента новостей -->
+        <domain includeSubdomains="true">ysia.ru</domain>
+        <domain includeSubdomains="true">api.rss2json.com</domain>
     </domain-config>
 </network-security-config>

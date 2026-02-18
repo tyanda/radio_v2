@@ -1,6 +1,5 @@
 // Сервис для работы с погодными данными
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/config.dart';
 import '../models/weather_failure.dart';
@@ -8,16 +7,23 @@ import '../models/weather_failure.dart';
 class WeatherService {
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
   static String get _apiKey => AppConfig.openWeatherApiKey;
+  final Dio _dio;
+
+  WeatherService(this._dio);
 
   Future<Map<String, dynamic>> getCurrentWeather(String city) async {
-    final response = await http.get(
-      Uri.parse(
-        '$_baseUrl/weather?q=$city&appid=$_apiKey&units=metric&lang=ru',
-      ),
+    final response = await _dio.get(
+      '$_baseUrl/weather',
+      queryParameters: {
+        'q': city,
+        'appid': _apiKey,
+        'units': 'metric',
+        'lang': 'ru',
+      },
     );
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return response.data;
     } else if (response.statusCode == 404) {
       throw WeatherFailure('Город не найден: $city');
     } else if (response.statusCode == 401) {
@@ -32,14 +38,19 @@ class WeatherService {
     double lat,
     double lon,
   ) async {
-    final response = await http.get(
-      Uri.parse(
-        '$_baseUrl/weather?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=ru',
-      ),
+    final response = await _dio.get(
+      '$_baseUrl/weather',
+      queryParameters: {
+        'lat': lat,
+        'lon': lon,
+        'appid': _apiKey,
+        'units': 'metric',
+        'lang': 'ru',
+      },
     );
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return response.data;
     } else if (response.statusCode == 401) {
       throw WeatherFailure('Неверный API ключ');
     } else {
@@ -48,14 +59,18 @@ class WeatherService {
   }
 
   Future<Map<String, dynamic>> getForecast(String city) async {
-    final response = await http.get(
-      Uri.parse(
-        '$_baseUrl/forecast?q=$city&appid=$_apiKey&units=metric&lang=ru',
-      ),
+    final response = await _dio.get(
+      '$_baseUrl/forecast',
+      queryParameters: {
+        'q': city,
+        'appid': _apiKey,
+        'units': 'metric',
+        'lang': 'ru',
+      },
     );
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return response.data;
     } else if (response.statusCode == 404) {
       throw WeatherFailure('Город не найден: $city');
     } else if (response.statusCode == 401) {
@@ -70,14 +85,19 @@ class WeatherService {
     double lat,
     double lon,
   ) async {
-    final response = await http.get(
-      Uri.parse(
-        '$_baseUrl/forecast?lat=$lat&lon=$lon&appid=$_apiKey&units=metric&lang=ru',
-      ),
+    final response = await _dio.get(
+      '$_baseUrl/forecast',
+      queryParameters: {
+        'lat': lat,
+        'lon': lon,
+        'appid': _apiKey,
+        'units': 'metric',
+        'lang': 'ru',
+      },
     );
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return response.data;
     } else if (response.statusCode == 401) {
       throw WeatherFailure('Неверный API ключ');
     } else {

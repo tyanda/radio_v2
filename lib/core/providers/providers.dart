@@ -1,20 +1,30 @@
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-import 'package:radio_v2/services/rss_service.dart';
 import 'package:radio_v2/features/weather/data/weather_service.dart';
 import 'package:radio_v2/features/weather/data/weather_repository.dart';
+import 'dart:io';
 
-final dioProvider = Provider((ref) => Dio());
+final dioProvider = Provider((ref) {
+  final dio = Dio(BaseOptions(
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+    sendTimeout: const Duration(seconds: 10),
+  ));
 
-final httpClientProvider = Provider((ref) => http.Client());
+  // Настройка для Android/iOS
+  dio.httpClientAdapter = IOHttpClientAdapter(
+    createHttpClient: () {
+      final client = HttpClient();
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      return client;
+    },
+  );
 
-final rssServiceProvider = Provider((ref) {
-  final client = ref.watch(httpClientProvider);
-  return RssService(client);
+  return dio;
 });
 
-final weatherServiceProvider = Provider((ref) => WeatherService());
+final weatherServiceProvider = Provider((ref) => WeatherService(ref.watch(dioProvider)));
 
 final weatherRepositoryProvider = Provider(
   (ref) => WeatherRepositoryImpl(ref.watch(weatherServiceProvider)),

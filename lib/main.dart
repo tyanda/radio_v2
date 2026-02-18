@@ -64,7 +64,7 @@ class MyApp extends StatelessWidget {
     return ProviderScope(
       child: Consumer(
         builder: (context, ref, child) {
-          ref.watch(themeProvider); // Watch for rebuilds when theme changes
+          ref.watch(themeProvider);
           final themeNotifier = ref.read(themeProvider.notifier);
 
           return MaterialApp(
@@ -77,8 +77,7 @@ class MyApp extends StatelessWidget {
             ],
             supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
             theme: themeNotifier.themeData,
-            home:
-                const AppInitializer(), // Используем виджет для инициализации приложения
+            home: kIsWeb ? const AppInitializer() : const HomeScreen(),
           );
         },
       ),
@@ -86,7 +85,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Виджет для инициализации приложения и перехода к главному экрану
+// Виджет для инициализации и перехода к главному экрану (только для Web)
 class AppInitializer extends StatefulWidget {
   const AppInitializer({super.key});
 
@@ -98,15 +97,13 @@ class _AppInitializerState extends State<AppInitializer> {
   @override
   void initState() {
     super.initState();
-    // Запускаем инициализацию и переход к главному экрану
     _initializeAndNavigate();
   }
 
   Future<void> _initializeAndNavigate() async {
-    // Небольшая задержка для отображения сплеш-экрана (не более 2 секунд)
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // Задержка для загрузки веб-версии (2 секунды)
+    await Future.delayed(const Duration(seconds: 2));
 
-    // Переход к главному экрану
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -116,6 +113,6 @@ class _AppInitializerState extends State<AppInitializer> {
 
   @override
   Widget build(BuildContext context) {
-    return const SplashScreen(); // Показываем сплеш-экран до перехода
+    return const SplashScreen();
   }
 }

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1097107309921",
+    "firebase_url": "https://sakhalive-ticker-default-rtdb.firebaseio.com",
+    "project_id": "sakhalive-ticker",
+    "storage_bucket": "sakhalive-ticker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1097107309921:android:7a5c8b928ec2005c2d3120",
+        "android_client_info": {
+          "package_name": "com.yourname.sakha_radio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

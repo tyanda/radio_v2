@@ -108,16 +108,12 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       try {
         final station = stations.firstWhere(
           (s) => s.name == favoriteName,
-          orElse: () => stations
-              .first, // Fallback not needed if we check null, but firstWhere throws
+          orElse: () => stations.first,
         );
 
-        // Check if we actually found it (orElse handles missing, but let's be safe)
         if (stations.contains(station)) {
-          // Simple check
           initialStation = station;
 
-          // Prepare audio source
           final artUri = station.art.isNotEmpty
               ? await _getAssetUri(station.art)
               : null;
@@ -135,29 +131,29 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
             ),
           );
 
-          // Attempt to play
+          // Auto-play (non-blocking)
           if (!kIsWeb) {
-            await _player.play();
-            initialPlaying = true;
-            Logger.log("Auto-playing favorite: ${station.name}");
-          } else {
-            Logger.log("Auto-play skipped on web to prevent NotAllowedError");
-            // Station is set as current, but not playing. User must tap play manually.
+            Future.delayed(Duration.zero, () async {
+              try {
+                await _player.play();
+              } catch (e) {
+                Logger.error("Auto-play failed: $e");
+              }
+            });
           }
         }
       } catch (e) {
         Logger.error("Auto-play failed: $e");
-        // If play failed, we might still want to show the station as selected but paused?
-        // If initialStation was set before error, it acts as selected.
       }
     }
 
-    return PlayerState(
+    final result = PlayerState(
       volume: volume,
       showVolumeSlider: showVolume,
       currentStation: initialStation,
       isPlaying: initialPlaying,
     );
+    return result;
   }
 
   Future<void> playStation(Station station) async {
@@ -167,25 +163,19 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     // 1. Tapping the same station: Toggle Play/Pause
     if (currentState.currentStation?.name == station.name) {
       if (currentState.isPlaying) {
-        // If playing, pause it. Notification stays.
         await _player.pause();
-        // Listener will update state to isPlaying: false
       } else {
-        // If paused, play.
         await _player.play();
-        // Listener will update state to isPlaying: true
       }
       return;
     }
 
     // 2. Changing station
     try {
-      // Optimistic update: Show new station playing immediately
       state = AsyncData(
         currentState.copyWith(currentStation: station, isPlaying: true),
       );
 
-      // Stop previous (or pause?) - Stop is better for switching streams to release resources
       await _player.stop();
 
       final artUri = station.art.isNotEmpty
@@ -208,7 +198,6 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       await _player.play();
     } catch (e) {
       Logger.error("Error playing station: $e");
-      // Revert to stopped if failed? Or keep selected but paused?
       state = AsyncData(
         (state.asData?.value ?? currentState).copyWith(isPlaying: false),
       );

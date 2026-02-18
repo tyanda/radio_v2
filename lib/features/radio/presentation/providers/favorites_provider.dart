@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoritesNotifier extends Notifier<String?> {
   static const String _favoriteKey =
-      'favorite_station_v2'; // Changed key to avoid conflict
+      'favorite_station_v2';
 
   @override
   String? build() {
@@ -29,10 +29,8 @@ class FavoritesNotifier extends Notifier<String?> {
     String? newState;
 
     if (state == stationName) {
-      // If already favorite, remove it (toggle off)
       newState = null;
     } else {
-      // Set as new favorite (replacing any previous)
       newState = stationName;
     }
 

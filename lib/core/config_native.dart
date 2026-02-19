@@ -6,13 +6,14 @@ import 'utils/logger.dart';
 
 class AppConfig {
   // Переменные, которые будут использоваться в приложении
-  static String openWeatherApiKey = '8a392c6308671b581410d09e97f6ecac'; // Значение по умолчанию
+  // Все значения загружаются из .env файла
+  static String openWeatherApiKey = '';
   static String firebaseWebApiKey = '';
   static String firebaseAndroidApiKey = '';
   static String firebaseIOSApiKey = '';
-  static String rssFeedUrl = 'https://ysia.ru/feed/'; // Значение по умолчанию
-  static String apiNinjasKey = 'v0cxsQQg1mMoA7YeEUNnxqgwSj8aE8qvgFUoImPV'; // Значение по умолчанию
-  static String apiVerveKey = 'apv_914d0f39-46fc-4212-bf06-d2d55acca8b5'; // Значение по умолчанию
+  static String rssFeedUrl = '';
+  static String apiNinjasKey = '';
+  static String apiVerveKey = '';
 
   static Future<void> initialize() async {
     await _loadFromEnv();
@@ -20,15 +21,17 @@ class AppConfig {
 
   static Future<void> _loadFromEnv() async {
     try {
+      // flutter_dotenv 6.0.0 использует новый API
+      final dotenv = DotEnv();
       await dotenv.load(fileName: ".env");
 
-      openWeatherApiKey = dotenv.env['OPENWEATHER_API_KEY'] ?? openWeatherApiKey;
-      firebaseWebApiKey = dotenv.env['FIREBASE_WEB_API_KEY'] ?? firebaseWebApiKey;
-      firebaseAndroidApiKey = dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? firebaseAndroidApiKey;
-      firebaseIOSApiKey = dotenv.env['FIREBASE_IOS_API_KEY'] ?? firebaseIOSApiKey;
-      rssFeedUrl = dotenv.env['RSS_FEED_URL'] ?? rssFeedUrl;
-      apiNinjasKey = dotenv.env['API_NINJAS_KEY'] ?? apiNinjasKey;
-      apiVerveKey = dotenv.env['API_VERVE_KEY'] ?? apiVerveKey;
+      openWeatherApiKey = dotenv.env['OPENWEATHER_API_KEY'] ?? '';
+      firebaseWebApiKey = dotenv.env['FIREBASE_WEB_API_KEY'] ?? '';
+      firebaseAndroidApiKey = dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? '';
+      firebaseIOSApiKey = dotenv.env['FIREBASE_IOS_API_KEY'] ?? '';
+      rssFeedUrl = dotenv.env['RSS_FEED_URL'] ?? 'https://ysia.ru/feed/';
+      apiNinjasKey = dotenv.env['API_NINJAS_KEY'] ?? '';
+      apiVerveKey = dotenv.env['API_VERVE_KEY'] ?? '';
 
       // Проверка на пустые значения
       if (openWeatherApiKey.isEmpty) {
@@ -40,12 +43,16 @@ class AppConfig {
       if (apiVerveKey.isEmpty) {
         Logger.warn('API_VERVE_KEY is empty (опционально)');
       }
-      if (rssFeedUrl == 'https://ysia.ru/feed/') {
+      if (rssFeedUrl.isEmpty) {
+        rssFeedUrl = 'https://ysia.ru/feed/';
         Logger.log('RSS_FEED_URL: используется значение по умолчанию');
       }
+      
+      Logger.log('AppConfig initialized from .env file');
     } catch (e) {
       Logger.error('Could not load .env file: $e');
-      Logger.log('RSS_FEED_URL: используется значение по умолчанию');
+      Logger.log('Using default values for configuration');
+      rssFeedUrl = 'https://ysia.ru/feed/';
     }
   }
 }

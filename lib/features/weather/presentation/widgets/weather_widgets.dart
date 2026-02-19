@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../models/weather_model.dart';
 
@@ -204,7 +205,8 @@ class WeatherForecastList extends StatelessWidget {
         SizedBox(
           height: 140,
           child: ListView.builder(
-            scrollDirection: Axis.horizontal,
+            scrollDirection: kIsWeb ? Axis.vertical : Axis.horizontal,
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: forecast.length,
             itemBuilder: (context, i) {
               final day = forecast[i];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class ThemeState {
   final bool isDarkTheme;
@@ -30,6 +31,18 @@ class ThemeNotifier extends Notifier<ThemeState> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_dark_theme', state.isDarkTheme);
+  }
+
+  ShadThemeData get shadcnTheme {
+    return state.isDarkTheme 
+        ? ShadThemeData(
+            brightness: Brightness.dark,
+            colorScheme: const ShadZincColorScheme.dark(),
+          )
+        : ShadThemeData(
+            brightness: Brightness.light,
+            colorScheme: const ShadZincColorScheme.light(),
+          );
   }
 
   ThemeData get themeData {

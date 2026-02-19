@@ -5,6 +5,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'firebase_options.dart';
 import 'package:radio_v2/features/home/home_screen.dart';
 import 'core/config.dart';
@@ -33,10 +34,19 @@ Future<void> main() async {
       );
       Logger.log("Firebase initialized");
     } else {
-      Logger.log("Firebase already initialized");
+      Logger.log("Firebase already initialized (skipped)");
+    }
+  } on FirebaseException catch (e) {
+    if (e.code == 'duplicate-app') {
+      // Игнорируем ошибку дублирования - Firebase уже инициализирован
+      Logger.log("Firebase duplicate-app (ignored)");
+    } else {
+      Logger.error("Firebase init error: $e");
+      rethrow;
     }
   } catch (e) {
-    Logger.error("Firebase init error (ignored if already exists): $e");
+    Logger.error("Firebase unexpected error: $e");
+    rethrow;
   }
 
   // 3. Audio Background
@@ -67,16 +77,20 @@ class MyApp extends StatelessWidget {
           ref.watch(themeProvider);
           final themeNotifier = ref.read(themeProvider.notifier);
 
-          return MaterialApp(
+          return ShadApp(
             title: 'Sakha Radio',
             debugShowCheckedModeBanner: false,
+            theme: themeNotifier.shadcnTheme,
+            darkTheme: ShadThemeData(
+              brightness: Brightness.dark,
+              colorScheme: const ShadZincColorScheme.dark(),
+            ),
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
-            theme: themeNotifier.themeData,
             home: kIsWeb ? const AppInitializer() : const HomeScreen(),
           );
         },

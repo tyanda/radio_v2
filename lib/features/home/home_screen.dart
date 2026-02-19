@@ -90,15 +90,7 @@ class MainNavBar extends StatefulWidget {
 class _MainNavBarState extends State<MainNavBar> {
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        bottomPadding > 0 ? bottomPadding : 20,
-      ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.98),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -111,26 +103,33 @@ class _MainNavBarState extends State<MainNavBar> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const MiniPlayer(),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(24),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const MiniPlayer(),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Row(
+                    children: [
+                      _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0),
+                      _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1),
+                      _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            child: Row(
-              children: [
-                _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0),
-                _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1),
-                _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -141,11 +140,11 @@ class _MainNavBarState extends State<MainNavBar> {
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
+        child: InkWell(
           onTap: () => widget.onTabChanged(index),
+          borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -170,18 +169,18 @@ class _MainNavBarState extends State<MainNavBar> {
                     AnimatedScale(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutBack,
-                      scale: active ? 1.1 : 1.0,
+                      scale: active ? 1.05 : 1.0,
                       child: Icon(
                         icon,
                         color: active
                             ? AppColors.accent
                             : Colors.white.withValues(alpha: 0.2),
-                        size: 24,
+                        size: 22,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   label,
                   maxLines: 1,
@@ -190,14 +189,14 @@ class _MainNavBarState extends State<MainNavBar> {
                     color: active
                         ? AppColors.primaryText
                         : Colors.white.withValues(alpha: 0.2),
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: active ? FontWeight.w900 : FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
                 ),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(top: 4),
+                  margin: const EdgeInsets.only(top: 3),
                   height: 3,
                   width: active ? 3 : 0,
                   decoration: const BoxDecoration(

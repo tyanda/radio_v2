@@ -133,11 +133,20 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
           // Auto-play (non-blocking)
           if (!kIsWeb) {
-            Future.delayed(Duration.zero, () async {
+            Future.microtask(() async {
               try {
+                Logger.log("Auto-play: attempting to play ${station.name}");
                 await _player.play();
+                Logger.log("Auto-play: successfully playing ${station.name}");
               } catch (e) {
-                Logger.error("Auto-play failed: $e");
+                Logger.error("Auto-play failed for ${station.name}: $e");
+                // Reset state on error
+                state = AsyncData(PlayerState(
+                  volume: volume,
+                  showVolumeSlider: showVolume,
+                  currentStation: station,
+                  isPlaying: false,
+                ));
               }
             });
           }
@@ -158,14 +167,21 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
   Future<void> playStation(Station station) async {
     final currentState = state.asData?.value;
-    if (currentState == null) return;
+    if (currentState == null) {
+      Logger.error("playStation(): state is null (not ready yet)");
+      return;
+    }
 
     // 1. Tapping the same station: Toggle Play/Pause
     if (currentState.currentStation?.name == station.name) {
       if (currentState.isPlaying) {
         await _player.pause();
       } else {
-        await _player.play();
+        try {
+          await _player.play();
+        } catch (e) {
+          Logger.error("playStation(): play failed: $e");
+        }
       }
       return;
     }
@@ -195,9 +211,18 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         ),
       );
 
-      await _player.play();
+      try {
+        await _player.play();
+        Logger.log("playStation(): playing ${station.name}");
+      } catch (e) {
+        Logger.error("playStation(): play failed: $e");
+        // Reset to paused state on play error
+        state = AsyncData(
+          currentState.copyWith(currentStation: station, isPlaying: false),
+        );
+      }
     } catch (e) {
-      Logger.error("Error playing station: $e");
+      Logger.error("playStation(): error setting up station: $e");
       state = AsyncData(
         (state.asData?.value ?? currentState).copyWith(isPlaying: false),
       );

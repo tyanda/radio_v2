@@ -50,7 +50,7 @@ final stationListProvider = Provider<List<Station>>((ref) {
       id: '5',
       name: 'Супердискотека 90-х',
       desc: 'Хиты 90-х годов',
-      art: 'assets/images/superdisco.jpg', // Изображение для новой радиостанции
+      art: 'assets/images/superdisco.jpg',
       icon: 'S',
       url: 'https://radiorecord.hostingradio.ru/sd9096.aacp',
       frequency: '106.7 FM',

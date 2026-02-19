@@ -5,12 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
+import 'package:radio_v2/features/radio/data/radio_player.dart';
 import '../../../../../core/utils/logger.dart';
 
 @immutable
@@ -43,7 +42,7 @@ class PlayerState {
 }
 
 class PlayerNotifier extends AsyncNotifier<PlayerState> {
-  late final AudioPlayer _player;
+  late final RadioPlayer _radioPlayer;
   StreamSubscription? _playerStateSubscription;
 
   Future<Uri?> _getAssetUri(String assetPath) async {
@@ -58,8 +57,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       final fileName = Uri.parse(assetPath).pathSegments.last;
       final file = File('${tempDir.path}/$fileName');
 
-      // Write bytes to temporary file if it doesn't exist or just overwrite checks?
-      // Overwriting is safer for updates.
+      // Write bytes to temporary file
       await file.writeAsBytes(bytes);
 
       // Return file URI
@@ -72,13 +70,12 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
   @override
   Future<PlayerState> build() async {
-    _player = AudioPlayer();
+    _radioPlayer = RadioPlayer();
 
     // Listen to player state changes
-    _playerStateSubscription = _player.playerStateStream.listen((playerState) {
+    _playerStateSubscription = _radioPlayer.playerStateStream.listen((playerState) {
       final currentState = state.asData?.value;
       if (currentState != null) {
-        // Update isPlaying state based on actual player status
         if (currentState.isPlaying != playerState.playing) {
           state = AsyncData(
             currentState.copyWith(isPlaying: playerState.playing),
@@ -89,14 +86,14 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
     ref.onDispose(() {
       _playerStateSubscription?.cancel();
-      _player.dispose();
+      _radioPlayer.dispose();
     });
 
     final prefs = await SharedPreferences.getInstance();
     final volume = prefs.getDouble('volume') ?? 0.65;
     final showVolume = prefs.getBool('showVolume') ?? false;
 
-    await _player.setVolume(volume);
+    await _radioPlayer.setVolume(volume);
 
     // Auto-play logic
     Station? initialStation;
@@ -118,17 +115,12 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
               ? await _getAssetUri(station.art)
               : null;
 
-          await _player.setAudioSource(
-            AudioSource.uri(
-              Uri.parse(station.url),
-              tag: MediaItem(
-                id: station.url,
-                album: 'Sakha Radio',
-                title: station.name,
-                artist: station.desc,
-                artUri: artUri,
-              ),
-            ),
+          await _radioPlayer.playStream(
+            url: station.url,
+            title: station.name,
+            artist: station.desc,
+            album: 'Sakha Radio',
+            artUri: artUri?.toString(),
           );
 
           // Auto-play (non-blocking)
@@ -136,11 +128,10 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
             Future.microtask(() async {
               try {
                 Logger.log("Auto-play: attempting to play ${station.name}");
-                await _player.play();
+                await _radioPlayer.play();
                 Logger.log("Auto-play: successfully playing ${station.name}");
               } catch (e) {
                 Logger.error("Auto-play failed for ${station.name}: $e");
-                // Reset state on error
                 state = AsyncData(PlayerState(
                   volume: volume,
                   showVolumeSlider: showVolume,
@@ -175,10 +166,10 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     // 1. Tapping the same station: Toggle Play/Pause
     if (currentState.currentStation?.name == station.name) {
       if (currentState.isPlaying) {
-        await _player.pause();
+        await _radioPlayer.pause();
       } else {
         try {
-          await _player.play();
+          await _radioPlayer.play();
         } catch (e) {
           Logger.error("playStation(): play failed: $e");
         }
@@ -192,31 +183,25 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         currentState.copyWith(currentStation: station, isPlaying: true),
       );
 
-      await _player.stop();
+      await _radioPlayer.stop();
 
       final artUri = station.art.isNotEmpty
           ? await _getAssetUri(station.art)
           : null;
 
-      await _player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(station.url),
-          tag: MediaItem(
-            id: station.url,
-            album: 'Sakha Radio',
-            title: station.name,
-            artist: station.desc,
-            artUri: artUri,
-          ),
-        ),
+      await _radioPlayer.playStream(
+        url: station.url,
+        title: station.name,
+        artist: station.desc,
+        album: 'Sakha Radio',
+        artUri: artUri?.toString(),
       );
 
       try {
-        await _player.play();
+        await _radioPlayer.play();
         Logger.log("playStation(): playing ${station.name}");
       } catch (e) {
         Logger.error("playStation(): play failed: $e");
-        // Reset to paused state on play error
         state = AsyncData(
           currentState.copyWith(currentStation: station, isPlaying: false),
         );
@@ -234,7 +219,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     if (currentState == null) return;
 
     state = await AsyncValue.guard(() async {
-      await _player.stop();
+      await _radioPlayer.stop();
       return currentState.copyWith(isPlaying: false);
     });
   }
@@ -244,7 +229,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     if (currentState == null) return;
 
     state = await AsyncValue.guard(() async {
-      await _player.setVolume(volume);
+      await _radioPlayer.setVolume(volume);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('volume', volume);
       return currentState.copyWith(volume: volume);

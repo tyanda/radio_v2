@@ -108,6 +108,17 @@ flutter:
     - assets/images/superdisco.jpg
     - assets/images/load.png
 
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-BoldItalic.ttf
+          weight: 700
+          style: italic
+
   # Enable support for additional languages including Cyrillic script
   generate: true
 

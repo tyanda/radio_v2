@@ -266,15 +266,6 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                greeting,
-                style: const TextStyle(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                ),
-              ),
               RichText(
                 text: const TextSpan(
                   style: TextStyle(
@@ -290,6 +281,17 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                       style: TextStyle(color: AppColors.accent),
                     ),
                   ],
+                ),
+              ),
+              Text(
+                greeting,
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.bold,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 10,
+                  letterSpacing: 4,
                 ),
               ),
             ],

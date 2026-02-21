@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
-import 'package:radio_v2/core/theme/app_padding.dart';
+import 'package:radio_v2/core/theme/figma_design.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
@@ -33,8 +33,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: Column(
         children: [
           const _AppHeader(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           const _MarqueeSection(),
+          const SizedBox(height: 16),
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -45,7 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
               children: [
                 const RadioView(),
-                WeatherScreen(),
+                const WeatherScreen(),
                 const HoroscopeView(),
               ],
             ),
@@ -93,15 +94,9 @@ class _MainNavBarState extends State<MainNavBar> {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(FigmaDesign.navBarRadius)),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 40,
-            offset: const Offset(0, -10),
-          ),
-        ],
+        boxShadow: FigmaDesign.navBarShadow,
       ),
       child: SafeArea(
         child: Column(
@@ -111,9 +106,9 @@ class _MainNavBarState extends State<MainNavBar> {
             const SizedBox(height: 12),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                AppPadding.horizontal,
+                FigmaDesign.horizontalPadding,
                 0,
-                AppPadding.horizontal,
+                FigmaDesign.horizontalPadding,
                 16,
               ),
               child: Container(
@@ -144,7 +139,7 @@ class _MainNavBarState extends State<MainNavBar> {
     bool active = widget.currentTab == index;
 
     return SizedBox(
-      height: 58,
+      height: FigmaDesign.navActiveHeight,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -153,11 +148,11 @@ class _MainNavBarState extends State<MainNavBar> {
             duration: const Duration(milliseconds: 200),
             opacity: active ? 1.0 : 0.0,
             child: Container(
-              width: 80,
-              height: 50,
+              width: FigmaDesign.navActiveWidth,
+              height: FigmaDesign.navActiveHeight,
               decoration: BoxDecoration(
-                color: const Color(0xFFF2C94C),
-                borderRadius: BorderRadius.circular(40),
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(FigmaDesign.buttonRadius),
               ),
             ),
           ),
@@ -175,7 +170,7 @@ class _MainNavBarState extends State<MainNavBar> {
                     color: active
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.2),
-                    size: 24,
+                    size: FigmaDesign.navIconSize,
                   ),
                 ),
               ),
@@ -234,8 +229,8 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
 
     return Padding(
       padding: EdgeInsets.only(
-        left: AppPadding.horizontal,
-        right: AppPadding.horizontal,
+        left: FigmaDesign.horizontalPadding,
+        right: FigmaDesign.horizontalPadding,
         top: 50.0,
         bottom: 8.0,
       ),
@@ -250,7 +245,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                 text: const TextSpan(
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 30,
+                    fontSize: FigmaDesign.headerTitleSize,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
                     height: 1.0,
@@ -277,10 +272,10 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   color: AppColors.accent,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   fontStyle: FontStyle.italic,
-                  fontSize: 10,
-                  letterSpacing: 4,
+                  fontSize: FigmaDesign.fontSizeGreeting,
+                  letterSpacing: 4.0,
                   height: 1.0,
                 ),
                 textHeightBehavior: const TextHeightBehavior(
@@ -312,7 +307,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                     ),
                   ),
                   child: CircleAvatar(
-                    radius: 22,
+                    radius: FigmaDesign.headerLogoSize / 2,
                     backgroundColor: AppColors.cardBackground,
                     child: ClipOval(
                       child: Image.asset(
@@ -340,7 +335,7 @@ class _MarqueeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
-      height: 33,
+      height: FigmaDesign.marqueeHeight,
       decoration: const BoxDecoration(
         color: AppColors.accent,
         boxShadow: [

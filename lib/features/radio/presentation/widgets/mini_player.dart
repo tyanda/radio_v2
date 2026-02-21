@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/theme/figma_design.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
@@ -79,26 +80,15 @@ class MiniPlayer extends ConsumerWidget {
             ),
           ),
         ),
-        // Основной контейнер мини-плеера
+        // Основной контейнер мини-плеера (345x80 по Figma)
         Container(
+          height: FigmaDesign.miniPlayerHeight,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
             color: const Color(0xFF121212).withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(FigmaDesign.miniPlayerRadius),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 40,
-                offset: const Offset(0, 20),
-                spreadRadius: 10,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            boxShadow: FigmaDesign.miniPlayerShadow,
           ),
           child: Row(
             children: [
@@ -112,8 +102,8 @@ class MiniPlayer extends ConsumerWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: SizedBox(
-                        width: 52,
-                        height: 52,
+                        width: FigmaDesign.miniPlayerArtSize,
+                        height: FigmaDesign.miniPlayerArtSize,
                         child: Image.asset(
                           currentStation.art,
                           fit: BoxFit.cover,
@@ -158,9 +148,10 @@ class MiniPlayer extends ConsumerWidget {
                       currentStation.name,
                       style: const TextStyle(
                         fontFamily: 'Inter',
+                        fontStyle: FontStyle.italic,
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
-                        fontSize: 14,
+                        fontSize: FigmaDesign.fontSizeMiniPlayerTitle,
                         letterSpacing: -0.5,
                         height: 1.0,
                       ),
@@ -175,7 +166,7 @@ class MiniPlayer extends ConsumerWidget {
                         color: playerState.isPlaying
                             ? AppColors.accent
                             : Colors.white60,
-                        fontSize: 9,
+                        fontSize: FigmaDesign.fontSizeMiniPlayerStatus,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 2.0,
                         height: 1.0,
@@ -197,8 +188,8 @@ class MiniPlayer extends ConsumerWidget {
                   }
                 },
                 child: Container(
-                  width: 52,
-                  height: 52,
+                  width: FigmaDesign.miniPlayerButtonSize,
+                  height: FigmaDesign.miniPlayerButtonSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.accent,

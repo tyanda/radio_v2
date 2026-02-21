@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/theme/figma_design.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/providers/favorites_provider.dart';
@@ -37,9 +38,9 @@ class RadioCardsView extends ConsumerWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 156 / 179,
+                  crossAxisSpacing: FigmaDesign.gridSpacing,
+                  mainAxisSpacing: FigmaDesign.gridSpacing,
+                  childAspectRatio: FigmaDesign.cardWidth / FigmaDesign.cardHeight,
                 ),
                 itemCount: stations.length,
                 itemBuilder: (context, index) {
@@ -102,41 +103,17 @@ class _RadioCard extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
+      width: FigmaDesign.cardWidth,
+      height: FigmaDesign.cardHeight,
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFF2C94C) : const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(24),
+        color: isActive ? AppColors.accent : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
         border: Border.all(
           color: isActive ? Colors.transparent : Colors.white.withValues(alpha: 0.05),
         ),
         boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFF2C94C).withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                  spreadRadius: -2,
-                ),
-                BoxShadow(
-                  color: const Color(0xFFF2C94C).withValues(alpha: 0.15),
-                  blurRadius: 30,
-                  offset: const Offset(0, 4),
-                  spreadRadius: -5,
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 15,
-                  offset: const Offset(0, 10),
-                  spreadRadius: -2,
-                ),
-                BoxShadow(
-                  color: AppColors.accent.withValues(alpha: 0.15),
-                  blurRadius: 25,
-                  offset: const Offset(0, 4),
-                  spreadRadius: -5,
-                ),
-              ],
+            ? FigmaDesign.cardActiveShadow
+            : FigmaDesign.cardShadow,
       ),
       child: Stack(
         children: [
@@ -187,7 +164,7 @@ class _RadioCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w800,
-                    fontSize: 20,
+                    fontSize: FigmaDesign.fontSizeStationFrequency,
                     color: isActive ? Colors.white : const Color(0xFF808080),
                   ),
                   maxLines: 1,
@@ -200,7 +177,7 @@ class _RadioCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontWeight: FontWeight.w400,
-                    fontSize: 14,
+                    fontSize: FigmaDesign.fontSizeStationName,
                     color: isActive ? const Color(0xFF2A2A2A) : const Color(0xFFB6B6B6),
                   ),
                   maxLines: 1,

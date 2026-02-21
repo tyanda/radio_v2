@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/theme/figma_design.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
@@ -31,11 +32,12 @@ class FullPlayer extends ConsumerWidget {
   ) {
     return Container(
       margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+      height: FigmaDesign.fullPlayerHeight,
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
         border: Border.all(
-          color: const Color(0xFF1A1A1A),
+          color: AppColors.cardBackground,
           width: 1,
         ),
         boxShadow: [
@@ -53,12 +55,12 @@ class FullPlayer extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Обложка альбома
+                // Обложка альбома (107x93 по Figma)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    width: 107,
-                    height: 93,
+                    width: FigmaDesign.fullPlayerArtWidth,
+                    height: FigmaDesign.fullPlayerArtHeight,
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
@@ -98,7 +100,7 @@ class FullPlayer extends ConsumerWidget {
                           fontFamily: 'Inter',
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
-                          fontSize: 18,
+                          fontSize: FigmaDesign.fontSizeFullPlayerTitle,
                           letterSpacing: -0.5,
                         ),
                         maxLines: 1,
@@ -113,13 +115,13 @@ class FullPlayer extends ConsumerWidget {
                           color: playerState.isPlaying
                               ? AppColors.accent
                               : Colors.white60,
-                          fontSize: 9,
+                          fontSize: FigmaDesign.fontSizeMiniPlayerStatus,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 2.0,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // Кнопка Play/Pause
+                      // Кнопка Play/Pause (58x58 по Figma)
                       GestureDetector(
                         onTap: () {
                           if (playerState.isPlaying) {
@@ -131,8 +133,8 @@ class FullPlayer extends ConsumerWidget {
                           }
                         },
                         child: Container(
-                          width: 58,
-                          height: 58,
+                          width: FigmaDesign.fullPlayerButtonSize,
+                          height: FigmaDesign.fullPlayerButtonSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppColors.accent,

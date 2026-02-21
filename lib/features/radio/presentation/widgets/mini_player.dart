@@ -206,7 +206,7 @@ class MiniPlayer extends ConsumerWidget {
                     playerState.isPlaying
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
-                    color: Colors.black,
+                    color: Colors.white,
                     size: 28,
                   ),
                 ),

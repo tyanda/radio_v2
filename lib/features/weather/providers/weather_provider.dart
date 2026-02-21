@@ -4,70 +4,73 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:radio_v2/core/providers/providers.dart';
 import '../models/weather_model.dart';
 import '../models/weather_failure.dart';
+import '../data/weather_repository.dart';
+import '../data/weather_service.dart';
 import '../../../core/utils/logger.dart';
 
-class WeatherNotifier extends AsyncNotifier<WeatherData?> {
+class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
   static const String _cachedWeatherKey = 'cached_weather_data';
   DateTime? _lastFetchTime;
+  late WeatherRepositoryImpl _repository;
+  late WeatherService _service;
 
   @override
-  Future<WeatherData?> build() async {
+  AsyncValue<WeatherData?> build() {
+    _service = WeatherService(ref.read(dioProvider));
+    _repository = WeatherRepositoryImpl(_service);
+    
     // Пытаемся загрузить из кэша сразу при создании
-    final cached = await _loadCachedWeatherData();
-    if (cached != null) {
-      // Запускаем фоновое обновление, если данные устарели (> 15 мин)
-      // или если это первый запуск
-      _refreshInBackground();
-      return cached;
-    }
-
-    // Если в кэше пусто, загружаем
-    return _fetchWeather();
+    _loadCachedWeatherData().then((cached) {
+      if (cached != null) {
+        state = AsyncData(cached);
+        _refreshInBackground();
+      } else {
+        _fetchWeather();
+      }
+    });
+    
+    return const AsyncLoading();
   }
 
   void _refreshInBackground() async {
     try {
-      await refreshWeather(
-        isSilent: true,
-      ); // Use public method which checks time
+      await refreshWeather(isSilent: true);
     } catch (_) {}
   }
 
-  Future<WeatherData?> _fetchWeather() async {
-    final repository = ref.read(weatherRepositoryProvider);
-    final service = ref.read(weatherServiceProvider);
-
+  Future<void> _fetchWeather() async {
     try {
       WeatherData data;
       try {
-        final position = await service.getCurrentLocation();
-        data = await repository.getWeatherForecastByCoords(
+        final position = await _service.getCurrentLocation();
+        data = await _repository.getWeatherForecastByCoords(
           position.latitude,
           position.longitude,
         );
       } catch (locationError) {
         Logger.error('Ошибка получения местоположения: $locationError');
-        data = await repository.getWeatherForecast("Yakutsk");
+        data = await _repository.getWeatherForecast("Yakutsk");
       }
 
-      _cacheWeatherData(data);
-      _lastFetchTime = DateTime.now(); // Update timestamp
+      await _cacheWeatherData(data);
+      _lastFetchTime = DateTime.now();
       state = AsyncData(data);
-      return data;
-    } on WeatherFailure catch (_) {
+    } on WeatherFailure catch (e) {
       final cached = await _loadCachedWeatherData();
       if (cached != null) {
         state = AsyncData(cached);
-        return cached;
+      } else {
+        Logger.error('Ошибка получения погоды: $e');
+        state = AsyncError(e, StackTrace.current);
       }
-      rethrow;
     } catch (e) {
       final cached = await _loadCachedWeatherData();
       if (cached != null) {
         state = AsyncData(cached);
-        return cached;
+      } else {
+        Logger.error('Произошла ошибка: ${e.toString()}');
+        state = AsyncError(e, StackTrace.current);
       }
-      throw WeatherFailure('Произошла ошибка: ${e.toString()}');
     }
   }
 
@@ -75,7 +78,6 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
     bool force = false,
     bool isSilent = false,
   }) async {
-    // Check if we need to update
     if (!force && _lastFetchTime != null) {
       final difference = DateTime.now().difference(_lastFetchTime!);
       if (difference.inMinutes < 15) {
@@ -87,7 +89,7 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
     }
 
     if (!isSilent) {
-      state = const AsyncLoading(); // Show loading indicator only if not silent
+      state = const AsyncLoading();
     }
     await _fetchWeather();
   }
@@ -115,6 +117,6 @@ class WeatherNotifier extends AsyncNotifier<WeatherData?> {
   }
 }
 
-final weatherProvider = AsyncNotifierProvider<WeatherNotifier, WeatherData?>(
+final weatherProvider = NotifierProvider<WeatherNotifier, AsyncValue<WeatherData?>>(
   WeatherNotifier.new,
 );

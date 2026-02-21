@@ -34,11 +34,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  
+
   # Additional dependencies
-  http: ^1.2.2
-  intl: ^0.19.0
-  shared_preferences: ^2.3.0
+  http: ^1.4.0
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
   shadcn_ui: ^0.46.1
   firebase_core: ^4.4.0
   firebase_database: ^12.1.2
@@ -49,16 +49,14 @@ dependencies:
     sdk: flutter
   geolocator: ^14.0.2
   flutter_riverpod: ^3.2.1
-  path_provider: ^2.1.4
+  path_provider: ^2.1.5
   flutter_dotenv: ^6.0.0
-  lottie: ^3.1.2
-  dio: ^5.4.3+1
+  lottie: ^3.3.0
+  dio: ^5.8.0+1
   translator: ^1.0.0
   audio_session: ^0.2.2
   web: ^1.1.0
-
-dependency_overrides:
-  intl: ^0.20.2
+  flutter_svg: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +69,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
+  build_runner: ^2.4.15
 
 flutter_launcher_icons:
   image_path: "assets/images/icon.png"
@@ -107,6 +106,8 @@ flutter:
     - assets/images/europa_plus.jpg
     - assets/images/superdisco.jpg
     - assets/images/load.png
+    - assets/icon/Icon - Heart.svg
+    - .env
 
   fonts:
     - family: Inter
@@ -118,6 +119,24 @@ flutter:
         - asset: assets/fonts/Inter-BoldItalic.ttf
           weight: 700
           style: italic
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Inter-BlackItalic.ttf
+          weight: 900
+          style: italic
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
 
   # Enable support for additional languages including Cyrillic script
   generate: true

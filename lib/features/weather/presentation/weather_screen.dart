@@ -338,9 +338,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                   fontWeight: FontWeight.w700,
                                   color: primaryTextColor,
                                 ),
-                          ),
-                        ),
-                        _getWeatherIcon(forecastForDay.weather[0].main),
+                              ),
+                            ),
+                            _getWeatherIcon(forecastForDay.weather[0].main),
                         const SizedBox(width: 12),
                         Text(
                           '$tempMin°',

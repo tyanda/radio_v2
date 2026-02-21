@@ -33,6 +33,7 @@ class MiniPlayer extends ConsumerWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Слайдер громкости (анимация)
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 280),
           crossFadeState: playerState.showVolumeSlider
@@ -42,7 +43,7 @@ class MiniPlayer extends ConsumerWidget {
           secondChild: Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
@@ -78,23 +79,30 @@ class MiniPlayer extends ConsumerWidget {
             ),
           ),
         ),
+        // Основной контейнер мини-плеера
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            color: const Color(0xFF121212).withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 20,
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+                spreadRadius: 10,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Row(
             children: [
+              // Обложка альбома
               GestureDetector(
                 onTap: () =>
                     ref.read(playerProvider.notifier).toggleVolumeSlider(),
@@ -104,11 +112,24 @@ class MiniPlayer extends ConsumerWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: SizedBox(
-                        width: 56,
-                        height: 56,
+                        width: 52,
+                        height: 52,
                         child: Image.asset(
                           currentStation.art,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade800,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.music_note,
+                                color: Colors.white54,
+                                size: 24,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -120,87 +141,51 @@ class MiniPlayer extends ConsumerWidget {
                             color: Colors.black.withValues(alpha: 0.40),
                           ),
                           child: const Center(
-                            child: EqualizerAnimation(isActive: true, size: 32),
+                            child: EqualizerAnimation(isActive: true, size: 28),
                           ),
                         ),
                       ),
-                    Positioned(
-                      right: -4,
-                      bottom: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        child: const Icon(
-                          Icons.volume_up_rounded,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
+              // Информация о станции
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      currentStation.name.toUpperCase(),
+                      currentStation.name,
                       style: const TextStyle(
+                        fontFamily: 'Inter',
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
-                        fontSize: 15,
-                        letterSpacing: 0.5,
+                        fontSize: 14,
+                        letterSpacing: -0.5,
+                        height: 1.0,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: playerState.isPlaying
-                                ? Colors.redAccent
-                                : Colors.grey,
-                            shape: BoxShape.circle,
-                            boxShadow: playerState.isPlaying
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.redAccent.withValues(
-                                        alpha: 0.6,
-                                      ),
-                                      blurRadius: 6,
-                                      spreadRadius: 1,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          playerState.isPlaying ? "В ЭФИРЕ" : "ПАУЗА",
-                          style: TextStyle(
-                            color: playerState.isPlaying
-                                ? AppColors.accent
-                                : Colors.white60,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 2),
+                    Text(
+                      playerState.isPlaying ? "ПРЯМОЙ ЭФИР" : "ПАУЗА",
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: playerState.isPlaying
+                            ? AppColors.accent
+                            : Colors.white60,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.0,
+                        height: 1.0,
+                      ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              // Кнопка Play/Pause
               GestureDetector(
                 onTap: () {
                   if (playerState.isPlaying) {
@@ -212,16 +197,16 @@ class MiniPlayer extends ConsumerWidget {
                   }
                 },
                 child: Container(
-                  width: 58,
-                  height: 58,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.accent,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.45),
+                        color: AppColors.accent.withValues(alpha: 0.4),
                         blurRadius: 16,
-                        offset: const Offset(0, 8),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -230,7 +215,7 @@ class MiniPlayer extends ConsumerWidget {
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
                     color: Colors.black,
-                    size: 32,
+                    size: 28,
                   ),
                 ),
               ),

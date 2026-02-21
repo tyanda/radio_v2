@@ -219,7 +219,7 @@ class WeatherForecastList extends StatelessWidget {
                   width: 105,
                   padding: const EdgeInsets.symmetric(
                     vertical: 20,
-                    horizontal: 15,
+                    horizontal: 16,
                   ),
                   decoration: BoxDecoration(
                     color: cardColor,

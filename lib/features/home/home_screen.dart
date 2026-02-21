@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/theme/app_padding.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
@@ -29,28 +30,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const _AppHeader(),
-            const _MarqueeSection(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentTab = index;
-                  });
-                },
-                children: [
-                  const RadioView(),
-                  WeatherScreen(),
-                  const HoroscopeView(),
-                ],
-              ),
+      body: Column(
+        children: [
+          const _AppHeader(),
+          const SizedBox(height: 16),
+          const _MarqueeSection(),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentTab = index;
+                });
+              },
+              children: [
+                const RadioView(),
+                WeatherScreen(),
+                const HoroscopeView(),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: _buildBottomBar(),
     );
@@ -92,7 +92,7 @@ class _MainNavBarState extends State<MainNavBar> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.98),
+        color: const Color(0xFF1A1A1A),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
@@ -110,7 +110,12 @@ class _MainNavBarState extends State<MainNavBar> {
             const MiniPlayer(),
             const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(
+                AppPadding.horizontal,
+                0,
+                AppPadding.horizontal,
+                16,
+              ),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.04),
@@ -119,10 +124,11 @@ class _MainNavBarState extends State<MainNavBar> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0),
-                      _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1),
-                      _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2),
+                      Expanded(child: _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0)),
+                      Expanded(child: _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1)),
+                      Expanded(child: _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2)),
                     ],
                   ),
                 ),
@@ -137,77 +143,45 @@ class _MainNavBarState extends State<MainNavBar> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     bool active = widget.currentTab == index;
 
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => widget.onTabChanged(index),
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (active)
-                      Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.accent.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    AnimatedScale(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutBack,
-                      scale: active ? 1.05 : 1.0,
-                      child: Icon(
-                        icon,
-                        color: active
-                            ? AppColors.accent
-                            : Colors.white.withValues(alpha: 0.2),
-                        size: 22,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: active
-                        ? AppColors.primaryText
-                        : Colors.white.withValues(alpha: 0.2),
-                    fontSize: 9,
-                    fontWeight: active ? FontWeight.w900 : FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(top: 3),
-                  height: 3,
-                  width: active ? 3 : 0,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+    return SizedBox(
+      height: 58,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Фон для активной вкладки
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: active ? 1.0 : 0.0,
+            child: Container(
+              width: 80,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2C94C),
+                borderRadius: BorderRadius.circular(40),
+              ),
             ),
           ),
-        ),
+          // Иконка
+          Positioned(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => widget.onTabChanged(index),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                  child: Icon(
+                    icon,
+                    color: active
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.2),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -259,11 +233,17 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 15),
+      padding: EdgeInsets.only(
+        left: AppPadding.horizontal,
+        right: AppPadding.horizontal,
+        top: 50.0,
+        bottom: 8.0,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               RichText(
@@ -273,16 +253,25 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
+                    height: 1.0,
                   ),
                   children: [
                     TextSpan(text: "Sakha"),
                     TextSpan(
                       text: "Live",
-                      style: TextStyle(color: AppColors.accent),
+                      style: TextStyle(
+                        color: AppColors.accent,
+                        height: 1.0,
+                      ),
                     ),
                   ],
                 ),
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                ),
               ),
+              const SizedBox(height: 2.0),
               Text(
                 greeting,
                 style: const TextStyle(
@@ -292,6 +281,11 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                   fontStyle: FontStyle.italic,
                   fontSize: 10,
                   letterSpacing: 4,
+                  height: 1.0,
+                ),
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
                 ),
               ),
             ],
@@ -346,7 +340,7 @@ class _MarqueeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
-      height: 36,
+      height: 33,
       decoration: const BoxDecoration(
         color: AppColors.accent,
         boxShadow: [
@@ -361,10 +355,10 @@ class _MarqueeSection extends ConsumerWidget {
         text:
             "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
         style: const TextStyle(
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
           color: Colors.black,
-          fontWeight: FontWeight.w900,
-          fontSize: 12,
-          letterSpacing: 1.0,
         ),
         velocity: 30,
         blankSpace: 100,

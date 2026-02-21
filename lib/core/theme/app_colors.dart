@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color accent = Color(0xFFFFD700); // Золотой
-  static const Color background = Colors.black;
-  static const Color cardBackground = Color(0xFF111111);
+  // Цвета из Figma дизайна
+  static const Color accent = Color(0xFFF2C94C); // Акцентный жёлтый
+  static const Color brand = Color(0xFFC9A53A); // Золотой бренд
+  static const Color background = Color(0xFF0D0D0D); // Основной фон
+  static const Color cardBackground = Color(0xFF1A1A1A); // Фон карточек
+  static const Color cardBackgroundDark = Color(0xFF1A1A1A);
   static const Color error = Color(0xFFEF4444);
   static const Color subText = Color(0xFFA3A3A3);
 
-  // Дополнительные цвета для улучшенной UI
+  // Дополнительные цвета из Figma
   static const Color primaryText = Colors.white;
   static const Color secondaryText = Color(0xFFA3A3A3);
   static const Color divider = Color(0xFF222222);
+  static const Color textName = Color(0xFF2A2A2A);
+  static const Color shadowYellow = Color(0xFFFFE9A7);
+  static const Color iconGrey = Color(0xFFA7B0B8);
 }

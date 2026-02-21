@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 /// Константы дизайна из Figma
 /// Экран: iPhone 14 & 15 Pro (393x852)
@@ -59,31 +60,30 @@ class FigmaDesign {
   // Тени
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Color(0x80000000),
-      blurRadius: 15,
-      offset: Offset(0, 10),
-      spreadRadius: -2,
-    ),
-    BoxShadow(
-      color: Color(0x26F2C94C),
-      blurRadius: 25,
+      color: Colors.black,
+      blurRadius: 10,
       offset: Offset(0, 4),
-      spreadRadius: -5,
     ),
   ];
-  
-  static const List<BoxShadow> cardActiveShadow = [
+
+  static List<BoxShadow> cardActiveShadow = [
     BoxShadow(
-      color: Color(0x4DF2C94C),
+      color: AppColors.accent.withValues(alpha: 0.3),
       blurRadius: 20,
-      offset: Offset(0, 8),
-      spreadRadius: -2,
+      spreadRadius: 2,
+      offset: const Offset(0, 0),
     ),
     BoxShadow(
-      color: Color(0x26F2C94C),
-      blurRadius: 30,
-      offset: Offset(0, 4),
-      spreadRadius: -5,
+      color: AppColors.accent.withValues(alpha: 0.15),
+      blurRadius: 40,
+      spreadRadius: 5,
+      offset: const Offset(0, 0),
+    ),
+    BoxShadow(
+      color: AppColors.accent.withValues(alpha: 0.05),
+      blurRadius: 60,
+      spreadRadius: 10,
+      offset: const Offset(0, 0),
     ),
   ];
   

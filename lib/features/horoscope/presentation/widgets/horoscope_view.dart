@@ -21,14 +21,12 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
-        padding: AppPadding.screenPadding,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Сетка знаков зодиака
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: GridView.builder(
+            GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -59,8 +57,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: AppColors.accent.withValues(alpha: 0.3),
-                                  blurRadius: 8,
+                                  color: AppColors.accent.withValues(alpha: 0.15),
+                                  blurRadius: 4,
+                                  spreadRadius: -1,
                                 ),
                               ]
                             : null,
@@ -81,7 +80,6 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                   );
                 },
               ),
-            ),
             const SizedBox(height: 32),
             // Карточка с текстом гороскопа на сегодня
             Container(
@@ -196,7 +194,6 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                 ],
               ),
             ),
-            const SizedBox(height: 40),
           ],
         ),
       ),

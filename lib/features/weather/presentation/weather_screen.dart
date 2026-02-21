@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:radio_v2/core/theme/app_colors.dart';
 import '../providers/weather_provider.dart';
 import '../models/weather_model.dart';
 
@@ -22,7 +23,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
   // Константы дизайна, соответствующие вашему MyApp (main.dart)
   static const Color accentColor = Color(0xFFFFD700); // Золотой
-  static const Color backgroundColor = Color(0xFF000000); // Чистый черный
   static const Color cardBackgroundColor = Color(
     0xFF111111,
   ); // Глубокий серый для карточек
@@ -71,7 +71,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final weatherAsync = ref.watch(weatherProvider);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColors.background,
       body: weatherAsync.when(
         data: (weatherData) => weatherData != null
             ? _buildWeatherContent(weatherData)
@@ -109,7 +109,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 40),
+      padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 200),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

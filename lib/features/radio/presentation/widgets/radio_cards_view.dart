@@ -21,7 +21,7 @@ class RadioCardsView extends ConsumerWidget {
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -77,7 +77,6 @@ class RadioCardsView extends ConsumerWidget {
                   );
                 },
               ),
-            const SizedBox(height: 120),
           ],
         ),
       ),

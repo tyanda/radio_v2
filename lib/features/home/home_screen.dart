@@ -36,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Column(
             children: [
               const _AppHeader(),
+              const SizedBox(height: 25),
               const _MarqueeSection(),
               // Контент начинается сразу после полосы
               Expanded(

@@ -104,7 +104,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     // Адаптивность для веба
     final isWeb = kIsWeb;
     final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = isWeb && screenWidth > 800 ? 80.0 : 20.0;
+    final horizontalPadding = isWeb && screenWidth > 800 ? 80.0 : 16.0;
     final maxCardWidth = isWeb && screenWidth > 600 ? 600.0 : double.infinity;
 
     return SingleChildScrollView(
@@ -113,166 +113,167 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
+          const SizedBox(height: 20),
 
-            // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
-            Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxCardWidth),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: cardBackgroundColor,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(128),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
+          // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxCardWidth),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: cardBackgroundColor,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(128),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              current.name.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: primaryTextColor,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            Text(
+                              dfDate.format(DateTime.now()),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: secondaryTextColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        _getWeatherIconWithGlow(current.weather[0].main, size: 56),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${current.main.temp.round()}°',
+                          style: const TextStyle(
+                            fontSize: 110,
+                            fontWeight: FontWeight.w900,
+                            color: primaryTextColor,
+                            letterSpacing: -4,
+                            height: 1.0,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 12, bottom: 12),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                current.name.toUpperCase(),
+                                current.weather[0].description.toUpperCase(),
                                 style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  color: primaryTextColor,
-                                  letterSpacing: -0.5,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentColor,
+                                  letterSpacing: 1,
                                 ),
                               ),
                               Text(
-                                dfDate.format(DateTime.now()),
+                                'Ощущается как ${current.main.feelsLike.round()}°',
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   color: secondaryTextColor,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
-                          _getWeatherIcon(current.weather[0].main, size: 48),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      padding: const EdgeInsets.only(top: 24),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Colors.white.withAlpha(25)),
+                        ),
                       ),
-                      const SizedBox(height: 32),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${current.main.temp.round()}°',
-                            style: const TextStyle(
-                              fontSize: 72,
-                              fontWeight: FontWeight.w200,
-                              color: primaryTextColor,
-                              letterSpacing: -4,
-                            ),
+                          _buildDetailItem(
+                            'ВЕТЕР',
+                            '${current.wind.speed.round()} м/с',
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12, bottom: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  current.weather[0].description.toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: accentColor,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                Text(
-                                  'Ощущается как ${current.main.feelsLike.round()}°',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: secondaryTextColor,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          _buildDetailItem(
+                            'ВЛАЖНОСТЬ',
+                            '${current.main.humidity}%',
+                          ),
+                          _buildDetailItem(
+                            'ДАВЛЕНИЕ',
+                            '${current.main.pressure}',
                           ),
                         ],
                       ),
-                      const SizedBox(height: 32),
-                      Container(
-                        padding: const EdgeInsets.only(top: 24),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: Colors.white.withAlpha(25)),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildDetailItem(
-                              'ВЕТЕР',
-                              '${current.wind.speed.round()} м/с',
-                            ),
-                            _buildDetailItem(
-                              'ВЛАЖНОСТЬ',
-                              '${current.main.humidity}%',
-                            ),
-                            _buildDetailItem(
-                              'ДАВЛЕНИЕ',
-                              '${current.main.pressure}',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 20),
 
-            // Тонкий разделитель
-            Divider(color: Colors.white.withAlpha(31), height: 1),
+          // Тонкий разделитель
+          Divider(color: Colors.white.withAlpha(31), height: 1),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildSunInfo('ВОСХОД', dfTime.format(sunrise)),
-                  _buildSunInfo('ЗАКАТ', dfTime.format(sunset)),
-                ],
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildSunInfo('ВОСХОД', dfTime.format(sunrise)),
+                _buildSunInfo('ЗАКАТ', dfTime.format(sunset)),
+              ],
+            ),
+          ),
+
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 16),
+            child: Text(
+              'ПРОГНОЗ НА НЕДЕЛЮ',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: secondaryTextColor,
+                letterSpacing: 2.0,
               ),
             ),
+          ),
 
-            const Padding(
-              padding: EdgeInsets.only(left: 4, bottom: 16),
-              child: Text(
-                'ПРОГНОЗ НА НЕДЕЛЮ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: secondaryTextColor,
-                  letterSpacing: 2.0,
-                ),
-              ),
-            ),
-
-            // КАРТОЧКИ ПРОГНОЗА НА 7 ДНЕЙ
-            Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxCardWidth),
-                child: SizedBox(
-                  height: 560, // 7 карточек по 80 пикселей каждая
-                  child: ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 7,
-                    itemBuilder: (context, index) {
+          // КАРТОЧКИ ПРОГНОЗА НА 7 ДНЕЙ
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxCardWidth),
+              child: SizedBox(
+                height: 560, // 7 карточек по 80 пикселей каждая
+                child: ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 7,
+                  itemBuilder: (context, index) {
                       final dayOffset = index + 1; // Начинаем с завтра (offset = 1)
 
                       // Создаем дату для прогноза на каждый день недели
@@ -419,6 +420,40 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         iconData = Icons.wb_cloudy_outlined;
     }
     return Icon(iconData, color: accentColor, size: size);
+  }
+
+  // Возвращает иконку с мягким внешним свечением
+  Widget _getWeatherIconWithGlow(String main, {double size = 28}) {
+    IconData iconData;
+    switch (main.toLowerCase()) {
+      case 'clear':
+        iconData = Icons.wb_sunny_outlined;
+        break;
+      case 'clouds':
+        iconData = Icons.wb_cloudy_outlined;
+        break;
+      case 'rain':
+        iconData = Icons.umbrella_outlined;
+        break;
+      case 'snow':
+        iconData = Icons.ac_unit_outlined;
+        break;
+      default:
+        iconData = Icons.wb_cloudy_outlined;
+    }
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.2),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: const Offset(0, 0),
+          ),
+        ],
+      ),
+      child: Icon(iconData, color: accentColor, size: size),
+    );
   }
 
   Widget _buildSunInfo(String label, String time) {

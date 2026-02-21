@@ -82,6 +82,7 @@ class MiniPlayer extends ConsumerWidget {
         ),
         // Основной контейнер мини-плеера (345x80 по Figma)
         Container(
+          width: 345,
           height: FigmaDesign.miniPlayerHeight,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(

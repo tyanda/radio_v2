@@ -30,46 +30,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
+      body: Stack(
         children: [
-          const _AppHeader(),
-          const SizedBox(height: 8),
-          const _MarqueeSection(),
-          const SizedBox(height: 16),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentTab = index;
-                });
-              },
-              children: [
-                const RadioView(),
-                const WeatherScreen(),
-                const HoroscopeView(),
-              ],
-            ),
+          // Основной контент
+          Column(
+            children: [
+              const _AppHeader(),
+              const _MarqueeSection(),
+              // Контент начинается сразу после полосы
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentTab = index;
+                    });
+                  },
+                  children: [
+                    const RadioView(),
+                    const WeatherScreen(),
+                    const HoroscopeView(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Плавающая нижняя панель
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildBottomBar(),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(),
     );
   }
 
   Widget _buildBottomBar() {
-    return MainNavBar(
-      currentTab: _currentTab,
-      onTabChanged: (int tabIndex) {
-        setState(() {
-          _currentTab = tabIndex;
-        });
-        _pageController.animateToPage(
-          tabIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      },
+    return Container(
+      color: Colors.transparent,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Мини-плеер (спереди, «парящий»)
+          const MiniPlayer(),
+          const SizedBox(height: 8),
+          // Навигационная панель (с фоном)
+          MainNavBar(
+            currentTab: _currentTab,
+            onTabChanged: (int tabIndex) {
+              setState(() {
+                _currentTab = tabIndex;
+              });
+              _pageController.animateToPage(
+                tabIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
     );
   }
 }
@@ -92,45 +116,20 @@ class _MainNavBarState extends State<MainNavBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(FigmaDesign.navBarRadius)),
+        color: AppColors.cardBackground.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(FigmaDesign.navBarRadius),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: FigmaDesign.navBarShadow,
       ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const MiniPlayer(),
-            const SizedBox(height: 12),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                FigmaDesign.horizontalPadding,
-                0,
-                FigmaDesign.horizontalPadding,
-                16,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(child: _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0)),
-                      Expanded(child: _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1)),
-                      Expanded(child: _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(child: _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0)),
+          Expanded(child: _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1)),
+          Expanded(child: _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2)),
+        ],
       ),
     );
   }
@@ -232,7 +231,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
         left: FigmaDesign.horizontalPadding,
         right: FigmaDesign.horizontalPadding,
         top: 50.0,
-        bottom: 8.0,
+        bottom: 0.0,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -338,13 +337,6 @@ class _MarqueeSection extends ConsumerWidget {
       height: FigmaDesign.marqueeHeight,
       decoration: const BoxDecoration(
         color: AppColors.accent,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 12,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Marquee(
         text:

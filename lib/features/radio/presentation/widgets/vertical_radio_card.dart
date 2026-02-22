@@ -38,6 +38,7 @@ class VerticalRadioCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
+        clipBehavior: Clip.none,
         decoration: BoxDecoration(
           color: isActive ? AppColors.accent : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(24.0),
@@ -57,6 +58,7 @@ class VerticalRadioCard extends StatelessWidget {
               : null,
         ),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             // Анимация для активной станции
             if (isActive)

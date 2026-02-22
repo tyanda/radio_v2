@@ -42,13 +42,23 @@ dependencies:
   shadcn_ui: ^0.46.1
   firebase_core: ^4.4.0
   firebase_database: ^12.1.2
+  
+  # --- ФУНКЦИОНАЛ РАДИО ---
   just_audio: ^0.10.5
-  just_audio_background: ^0.0.1-beta.11
-  marquee: ^2.3.0
+  audio_service: ^0.18.17
+  
+  marquee: ^2.2.3
   flutter_localizations:
     sdk: flutter
   geolocator: ^14.0.2
-  flutter_riverpod: ^3.2.1
+  
+  # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
+  flutter_riverpod: ^2.5.1
+  
+  # --- ПРОИЗВОДИТЕЛЬНОСТЬ И UX ---
+  cached_network_image: ^3.4.1
+  connectivity_plus: ^6.1.1
+  
   path_provider: ^2.1.5
   flutter_dotenv: ^6.0.0
   lottie: ^3.3.0
@@ -57,6 +67,9 @@ dependencies:
   audio_session: ^0.2.2
   web: ^1.1.0
   flutter_svg: ^2.2.0
+  
+  # --- ШРИФТЫ ---
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

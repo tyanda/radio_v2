@@ -1,10 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
-import 'package:radio_v2/core/theme/figma_design.dart';
+import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/widgets/equalizer_animation.dart';
 
 class MiniPlayer extends ConsumerWidget {
@@ -54,7 +54,7 @@ class MiniPlayer extends ConsumerWidget {
                 children: [
                   const Icon(
                     Icons.volume_mute_rounded,
-                    color: Colors.white70,
+                    color: Colors.white,
                     size: 18,
                   ),
                   Expanded(
@@ -64,7 +64,7 @@ class MiniPlayer extends ConsumerWidget {
                       max: 1.0,
                       divisions: 20,
                       activeColor: AppColors.accent,
-                      inactiveColor: Colors.white24,
+                      inactiveColor: Colors.white.withValues(alpha: 0.3),
                       thumbColor: AppColors.accent,
                       onChanged: (v) =>
                           ref.read(playerProvider.notifier).setVolume(v),
@@ -72,7 +72,7 @@ class MiniPlayer extends ConsumerWidget {
                   ),
                   const Icon(
                     Icons.volume_up_rounded,
-                    color: Colors.white70,
+                    color: Colors.white,
                     size: 18,
                   ),
                 ],
@@ -80,138 +80,166 @@ class MiniPlayer extends ConsumerWidget {
             ),
           ),
         ),
-        // Основной контейнер мини-плеера (345x80 по Figma)
-        Container(
-          width: 345,
-          height: FigmaDesign.miniPlayerHeight,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF121212).withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(FigmaDesign.miniPlayerRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            boxShadow: FigmaDesign.miniPlayerShadow,
-          ),
-          child: Row(
-            children: [
-              // Обложка альбома
-              GestureDetector(
-                onTap: () =>
-                    ref.read(playerProvider.notifier).toggleVolumeSlider(),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: SizedBox(
-                        width: FigmaDesign.miniPlayerArtSize,
-                        height: FigmaDesign.miniPlayerArtSize,
-                        child: Image.asset(
-                          currentStation.art,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade800,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(
-                                Icons.music_note,
-                                color: Colors.white54,
-                                size: 24,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    if (playerState.isPlaying)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: Colors.black.withValues(alpha: 0.40),
-                          ),
-                          child: const Center(
-                            child: EqualizerAnimation(isActive: true, size: 28),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Информация о станции
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      currentStation.name,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontStyle: FontStyle.italic,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: FigmaDesign.fontSizeMiniPlayerTitle,
-                        letterSpacing: -0.5,
-                        height: 1.0,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      playerState.isPlaying ? "ПРЯМОЙ ЭФИР" : "ПАУЗА",
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        color: playerState.isPlaying
-                            ? AppColors.accent
-                            : Colors.white60,
-                        fontSize: FigmaDesign.fontSizeMiniPlayerStatus,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.0,
-                        height: 1.0,
-                      ),
+        // Основной контейнер мини-плеера
+        ClipRRect(
+          borderRadius: BorderRadius.circular(32.0),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 280),
+              child: Container(
+                height: 64.0,
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(32.0),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              // Кнопка Play/Pause
-              GestureDetector(
-                onTap: () {
-                  if (playerState.isPlaying) {
-                    ref.read(playerProvider.notifier).stop();
-                  } else {
-                    ref
-                        .read(playerProvider.notifier)
-                        .playStation(currentStation);
-                  }
-                },
-                child: Container(
-                  width: FigmaDesign.miniPlayerButtonSize,
-                  height: FigmaDesign.miniPlayerButtonSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.accent,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Логотип
+                    GestureDetector(
+                      onTap: () =>
+                          ref.read(playerProvider.notifier).toggleVolumeSlider(),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12.0),
+                            child: SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Image.asset(
+                                currentStation.art,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade800,
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                    child: const Icon(
+                                      Icons.music_note,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          if (playerState.isPlaying)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  color: Colors.black.withValues(alpha: 0.40),
+                                ),
+                                child: const Center(
+                                  child: EqualizerAnimation(isActive: true, size: 20),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    playerState.isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Информация о станции
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            currentStation.name,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13.0,
+                              letterSpacing: -0.5,
+                              height: 1.0,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Индикатор эфира (точка)
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                "ПРЯМОЙ ЭФИР",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: AppColors.accent,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Кнопка Play/Pause
+                    GestureDetector(
+                      onTap: () {
+                        if (playerState.isPlaying) {
+                          ref.read(playerProvider.notifier).stop();
+                        } else {
+                          ref
+                              .read(playerProvider.notifier)
+                              .playStation(currentStation);
+                        }
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.accent,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accent.withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          playerState.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ],

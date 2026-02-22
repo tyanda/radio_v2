@@ -22,14 +22,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
   Timer? _refreshTimer;
 
-  // Константы дизайна, соответствующие вашему MyApp (main.dart)
-  static const Color accentColor = Color(0xFFFFD700); // Золотой
-  static const Color cardBackgroundColor = Color(
-    0xFF111111,
-  ); // Глубокий серый для карточек
-  static const Color primaryTextColor = Colors.white;
-  static const Color secondaryTextColor = Color(0xFFA3A3A3);
-
   @override
   void initState() {
     super.initState();
@@ -110,7 +102,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 200),
+      padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 140),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -121,7 +113,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: cardBackgroundColor,
+                  color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
@@ -146,7 +138,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 fontFamily: 'Inter',
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
-                                color: primaryTextColor,
+                                color: AppColors.primaryText,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -156,7 +148,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 fontFamily: 'Inter',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: secondaryTextColor,
+                                color: AppColors.secondaryText,
                               ),
                             ),
                           ],
@@ -174,7 +166,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             fontSize: 110,
                             fontWeight: FontWeight.w300,
                             fontFamily: 'Inter',
-                            color: primaryTextColor,
+                            color: AppColors.primaryText,
                             letterSpacing: -4,
                             height: 1.0,
                           ),
@@ -192,7 +184,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                     fontFamily: 'Inter',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: accentColor,
+                                    color: AppColors.accent,
                                     letterSpacing: 1,
                                   ),
                                   maxLines: 2,
@@ -205,7 +197,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                     fontFamily: 'Inter',
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: secondaryTextColor,
+                                    color: AppColors.secondaryText,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -274,7 +266,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                 fontFamily: 'Inter',
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
-                color: secondaryTextColor,
+                color: AppColors.secondaryText,
                 letterSpacing: 2.0,
               ),
             ),
@@ -330,7 +322,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: cardBackgroundColor,
+                        color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                       ),
@@ -344,7 +336,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 fontFamily: 'Inter',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: secondaryTextColor,
+                                color: AppColors.secondaryText,
                               ),
                             ),
                           ),
@@ -355,7 +347,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 fontFamily: 'Inter',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: primaryTextColor,
+                                color: AppColors.primaryText,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -372,7 +364,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 fontFamily: 'Inter',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: secondaryTextColor,
+                                color: AppColors.secondaryText,
                               ),
                             ),
                           ),
@@ -386,7 +378,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 fontFamily: 'Inter',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: primaryTextColor,
+                                color: AppColors.primaryText,
                               ),
                             ),
                           ),
@@ -414,7 +406,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             fontFamily: 'Inter',
             fontSize: 10,
             fontWeight: FontWeight.w700,
-            color: secondaryTextColor,
+            color: AppColors.secondaryText,
           ),
         ),
         const SizedBox(height: 4),
@@ -424,7 +416,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             fontFamily: 'Inter',
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: primaryTextColor,
+            color: AppColors.primaryText,
           ),
         ),
       ],
@@ -450,7 +442,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       default:
         iconData = Icons.wb_cloudy_outlined;
     }
-    return Icon(iconData, color: accentColor, size: size);
+    return Icon(iconData, color: AppColors.accent, size: size);
   }
 
   // Возвращает иконку с мягким внешним свечением
@@ -476,14 +468,14 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.2),
+            color: AppColors.accent.withValues(alpha: 0.2),
             blurRadius: 20,
             spreadRadius: 5,
             offset: const Offset(0, 0),
           ),
         ],
       ),
-      child: Icon(iconData, color: accentColor, size: size),
+      child: Icon(iconData, color: AppColors.accent, size: size),
     );
   }
 
@@ -496,7 +488,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             fontFamily: 'Inter',
             fontSize: 10,
             fontWeight: FontWeight.w800,
-            color: secondaryTextColor,
+            color: AppColors.secondaryText,
             letterSpacing: 1.0,
           ),
         ),
@@ -507,7 +499,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             fontFamily: 'Inter',
             fontWeight: FontWeight.w700,
             fontSize: 18,
-            color: primaryTextColor,
+            color: AppColors.primaryText,
           ),
         ),
       ],
@@ -515,7 +507,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   }
 
   Widget _buildLoadingView() {
-    return const Center(child: CircularProgressIndicator(color: accentColor));
+    return const Center(child: CircularProgressIndicator(color: AppColors.accent));
   }
 
   Widget _buildErrorView(String error) {
@@ -523,7 +515,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_outlined, color: accentColor, size: 48),
+          const Icon(Icons.wifi_off_outlined, color: AppColors.accent, size: 48),
           const SizedBox(height: 16),
           const Text(
             'ОШИБКА СЕТИ',
@@ -537,7 +529,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           FilledButton(
             onPressed: () =>
                 ref.read(weatherProvider.notifier).refreshWeather(),
-            style: FilledButton.styleFrom(backgroundColor: accentColor),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
             child: const Text(
               'ПОВТОРИТЬ',
               style: TextStyle(

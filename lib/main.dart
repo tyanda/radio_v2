@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,20 +46,6 @@ Future<void> main() async {
   } catch (e) {
     Logger.error("Firebase unexpected error: $e");
     rethrow;
-  }
-
-  // 3. Audio Background
-  if (!kIsWeb) {
-    try {
-      await JustAudioBackground.init(
-        androidNotificationChannelId: 'com.sakha.radio.channel',
-        androidNotificationChannelName: 'Sakha Radio Playback',
-        androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
-      );
-    } catch (e) {
-      Logger.error("AudioBackground init error: $e");
-    }
   }
 
   runApp(const MyApp());

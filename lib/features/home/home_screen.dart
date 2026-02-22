@@ -71,116 +71,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildBottomBar() {
     return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            AppColors.background.withValues(alpha: 0.8),
+            AppColors.background,
+          ],
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Мини-плеер (спереди, «парящий»)
           const MiniPlayer(),
-          const SizedBox(height: 8),
-          // Навигационная панель (с фоном)
-          MainNavBar(
-            currentTab: _currentTab,
-            onTabChanged: (int tabIndex) {
-              HapticFeedback.lightImpact();
-              setState(() {
-                _currentTab = tabIndex;
-              });
-              _pageController.animateToPage(
-                tabIndex,
-                duration: const Duration(milliseconds: 450),
-                curve: Curves.easeInOutCubic,
-              );
-            },
+          const SizedBox(height: 12),
+          // Основной контейнер навигации
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground.withValues(alpha: 0.98),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(Icons.sensors_rounded, 0),
+                _buildNavItem(Icons.filter_drama_rounded, 1),
+                _buildNavItem(Icons.auto_awesome_rounded, 2),
+              ],
+            ),
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-        ],
-      ),
-    );
-  }
-}
-
-class MainNavBar extends StatefulWidget {
-  final int currentTab;
-  final Function(int) onTabChanged;
-
-  const MainNavBar({
-    super.key,
-    required this.currentTab,
-    required this.onTabChanged,
-  });
-
-  @override
-  State<MainNavBar> createState() => _MainNavBarState();
-}
-
-class _MainNavBarState extends State<MainNavBar> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(FigmaDesign.navBarRadius),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        boxShadow: FigmaDesign.navBarShadow,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Expanded(child: _buildNavItem(Icons.sensors_rounded, "ЭФИР", 0)),
-          Expanded(child: _buildNavItem(Icons.filter_drama_rounded, "ПОГОДА", 1)),
-          Expanded(child: _buildNavItem(Icons.auto_awesome_rounded, "ГОРОСКОП", 2)),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    bool active = widget.currentTab == index;
-
-    return SizedBox(
-      height: FigmaDesign.navActiveHeight,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Фон для активной вкладки
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: active ? 1.0 : 0.0,
-            child: Container(
-              width: FigmaDesign.navActiveWidth,
-              height: FigmaDesign.navActiveHeight,
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(FigmaDesign.buttonRadius),
-              ),
-            ),
-          ),
-          // Иконка
-          Positioned(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  widget.onTabChanged(index);
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                  child: Icon(
-                    icon,
-                    color: active
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.2),
-                    size: FigmaDesign.navIconSize,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+  Widget _buildNavItem(IconData icon, int index) {
+    final bool active = _currentTab == index;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _currentTab = index;
+        });
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+        );
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+        decoration: BoxDecoration(
+          color: active ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Icon(
+          icon,
+          size: 26,
+          color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+        ),
       ),
     );
   }

@@ -16,6 +16,8 @@ class RadioCardsView extends ConsumerStatefulWidget {
 class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
+  final ScrollController _scrollController = ScrollController();
+  int? _lastActiveIndex;
 
   @override
   void initState() {
@@ -25,12 +27,45 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       duration: const Duration(milliseconds: 600),
     );
     _animationController.forward();
+    
+    // Авто-скролл после загрузки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToActiveStation();
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToActiveStation() {
+    final playerState = ref.read(playerProvider).value;
+    final stations = ref.read(stationListProvider);
+    final currentStation = playerState?.currentStation;
+
+    if (currentStation == null || stations.isEmpty) return;
+
+    final activeIndex = stations.indexWhere((s) => s.id == currentStation.id);
+    if (activeIndex < 0 || activeIndex == _lastActiveIndex) return;
+
+    _lastActiveIndex = activeIndex;
+
+    // Вычисляем позицию для скролла
+    // Каждая карточка имеет высоту ~180px + 16px отступ = 196px
+    final row = (activeIndex / 2).floor();
+    final rowHeight = 196.0;
+
+    // Целевая позиция: карточка должна остановиться ровно над мини-плеером (зазор 10-15px)
+    final targetOffset = (row * rowHeight) - 30.0;
+
+    _scrollController.animateTo(
+      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -38,12 +73,26 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     final stations = ref.watch(stationListProvider);
     final playerState = ref.watch(playerProvider).value;
     final currentStation = playerState?.currentStation;
+    final hasActiveStation = currentStation != null;
+    final isActiveChanged = currentStation != null &&
+        _lastActiveIndex != stations.indexWhere((s) => s.id == currentStation.id);
+
+    // Слушаем изменения активной станции
+    if (isActiveChanged) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveStation();
+      });
+    }
+
+    // Динамический отступ: если есть активная станция — больше места для скролла
+    final bottomPadding = hasActiveStation ? 120.0 : 60.0;
 
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
+        controller: _scrollController,
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
+        padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,7 +100,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
               const Center(
                 child: Padding(
                   padding: EdgeInsets.only(top: 40),
-                  child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+                  child: CircularProgressIndicator(color: Color(0xFFF2C94C)),
                 ),
               )
             else
@@ -62,8 +111,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                   crossAxisCount: 2,
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: 0.88,
                 ),
+                clipBehavior: Clip.none,
                 itemCount: stations.length,
                 itemBuilder: (context, index) {
                   final station = stations[index];

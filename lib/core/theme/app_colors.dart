@@ -4,7 +4,7 @@ class AppColors {
   // Цвета из Figma дизайна
   static const Color accent = Color(0xFFF2C94C); // Акцентный жёлтый
   static const Color brand = Color(0xFFC9A53A); // Золотой бренд
-  static const Color background = Color(0xFF0D0D0D); // Основной фон
+  static const Color background = Color(0xFF0F0F0F); // Основной фон (BG / Primary)
   static const Color cardBackground = Color(0xFF1A1A1A); // Фон карточек
   static const Color cardBackgroundDark = Color(0xFF1A1A1A);
   static const Color error = Color(0xFFEF4444);

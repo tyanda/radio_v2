@@ -37,7 +37,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Column(
             children: [
               const _AppHeader(),
-              const SizedBox(height: 25),
               const _MarqueeSection(),
               // Контент начинается сразу после полосы
               Expanded(
@@ -236,7 +235,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
         left: FigmaDesign.horizontalPadding,
         right: FigmaDesign.horizontalPadding,
         top: 50.0,
-        bottom: 0.0,
+        bottom: 12.0,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -339,7 +338,7 @@ class _MarqueeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
-      height: FigmaDesign.marqueeHeight,
+      height: 32.0,
       decoration: const BoxDecoration(
         color: AppColors.accent,
       ),

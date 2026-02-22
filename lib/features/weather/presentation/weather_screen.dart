@@ -255,6 +255,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           // Тонкий разделитель
           Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
 
+          // БЛОК ВОСХОДА/ЗАКАТА
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Row(
@@ -266,10 +267,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
           ),
 
-          const SizedBox(height: 12),
-
+          // ЗАГОЛОВОК (Минимальные отступы для плотности)
           const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 12),
+            padding: EdgeInsets.only(left: 4, bottom: 4),
             child: Text(
               'ПРОГНОЗ НА НЕДЕЛЮ',
               style: TextStyle(
@@ -282,128 +282,125 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
           ),
 
-          // КАРТОЧКИ ПРОГНОЗА НА 7 ДНЕЙ
+          // СПИСОК ПРОГНОЗА (Уплотненный)
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxCardWidth),
-              child: SizedBox(
-                height: 560, // 7 карточек по 80 пикселей каждая
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 7,
-                  itemBuilder: (context, index) {
-                      final dayOffset = index + 1; // Начинаем с завтра (offset = 1)
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 7,
+                itemBuilder: (context, index) {
+                  final dayOffset = index + 1;
 
-                      // Создаем дату для прогноза на каждый день недели
-                      final date = DateTime.now().add(Duration(days: dayOffset));
-                      final dayName = DateFormat(
-                        'EEEE',
-                        'ru',
-                      ).format(date).toUpperCase();
-                      final shortDayName = DateFormat(
-                        'E',
-                        'ru',
-                      ).format(date).toUpperCase();
+                  final date = DateTime.now().add(Duration(days: dayOffset));
+                  final dayName = DateFormat(
+                    'EEEE',
+                    'ru',
+                  ).format(date).toUpperCase();
+                  final shortDayName = DateFormat(
+                    'E',
+                    'ru',
+                  ).format(date).toUpperCase();
 
-                      // Пытаемся найти соответствующий прогноз из доступных данных
-                      final forecastForDay = forecastList.firstWhere(
-                        (element) {
-                          final elementDate = DateTime.fromMillisecondsSinceEpoch(
-                            element.dt * 1000,
-                          );
-                          return elementDate.day == date.day &&
-                              elementDate.month == date.month &&
-                              elementDate.year == date.year;
-                        },
-                        orElse: () => forecastList.length > dayOffset
-                            ? forecastList[dayOffset]
-                            : forecastList.isNotEmpty
-                            ? forecastList[forecastList.length - 1]
-                            : forecastList.first,
+                  final forecastForDay = forecastList.firstWhere(
+                    (element) {
+                      final elementDate = DateTime.fromMillisecondsSinceEpoch(
+                        element.dt * 1000,
                       );
-
-                      final tempMax = forecastForDay.main.temp.round();
-                      final tempMin = forecastForDay.main.tempMin.round();
-
-                      return ScrollScaleCard(
-                        onTap: () {},
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isWeb ? 16 : 20,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cardBackgroundColor,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                          ),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 45.0,
-                                child: Text(
-                                  shortDayName,
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: secondaryTextColor,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  dayName,
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: primaryTextColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              _getWeatherIcon(forecastForDay.weather[0].main),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                width: 35.0,
-                                child: Text(
-                                  '$tempMin°',
-                                  textAlign: TextAlign.right,
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: secondaryTextColor,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 35.0,
-                                child: Text(
-                                  '$tempMax°',
-                                  textAlign: TextAlign.right,
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: primaryTextColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                      return elementDate.day == date.day &&
+                          elementDate.month == date.month &&
+                          elementDate.year == date.year;
                     },
-                  ),
-                ),
+                    orElse: () => forecastList.length > dayOffset
+                        ? forecastList[dayOffset]
+                        : forecastList.isNotEmpty
+                        ? forecastList[forecastList.length - 1]
+                        : forecastList.first,
+                  );
+
+                  final tempMax = forecastForDay.main.temp.round();
+                  final tempMin = forecastForDay.main.tempMin.round();
+
+                  return ScrollScaleCard(
+                    onTap: () {},
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isWeb ? 16 : 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cardBackgroundColor,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 45.0,
+                            child: Text(
+                              shortDayName,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: secondaryTextColor,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              dayName,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: primaryTextColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          _getWeatherIcon(forecastForDay.weather[0].main),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 35.0,
+                            child: Text(
+                              '$tempMin°',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: secondaryTextColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 35.0,
+                            child: Text(
+                              '$tempMax°',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: primaryTextColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 40),
+          ),
+          const SizedBox(height: 40),
           ],
         ),
       );

@@ -7,13 +7,38 @@ import 'package:radio_v2/core/theme/figma_design.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/providers/favorites_provider.dart';
+import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RadioCardsView extends ConsumerWidget {
+class RadioCardsView extends ConsumerStatefulWidget {
   const RadioCardsView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RadioCardsView> createState() => _RadioCardsViewState();
+}
+
+class _RadioCardsViewState extends ConsumerState<RadioCardsView>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final stations = ref.watch(stationListProvider);
     final playerState = ref.watch(playerProvider).value;
     final currentStation = playerState?.currentStation;
@@ -21,6 +46,7 @@ class RadioCardsView extends ConsumerWidget {
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,22 +81,31 @@ class RadioCardsView extends ConsumerWidget {
                         ),
                       );
 
-                      return GestureDetector(
+                      return ScrollScaleCard(
                         onTap: () {
                           ref.read(playerProvider.notifier).playStation(station);
                         },
-                        onLongPress: () {
-                          HapticFeedback.mediumImpact();
-                          ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
-                        },
-                        child: _RadioCard(
-                          station: station,
-                          isActive: isActive,
-                          isFavorite: isFavorite,
-                          onFavoriteToggle: () {
-                            HapticFeedback.mediumImpact();
-                            ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
-                          },
+                        child: _AnimatedCard(
+                          index: index,
+                          controller: _animationController,
+                          child: GestureDetector(
+                            onTap: () {
+                              ref.read(playerProvider.notifier).playStation(station);
+                            },
+                            onLongPress: () {
+                              HapticFeedback.mediumImpact();
+                              ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                            },
+                            child: _RadioCard(
+                              station: station,
+                              isActive: isActive,
+                              isFavorite: isFavorite,
+                              onFavoriteToggle: () {
+                                HapticFeedback.mediumImpact();
+                                ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                              },
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -80,6 +115,45 @@ class RadioCardsView extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedCard extends StatelessWidget {
+  final int index;
+  final AnimationController controller;
+  final Widget child;
+
+  const _AnimatedCard({
+    required this.index,
+    required this.controller,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final delay = index * 0.08;
+    final beginTime = delay.clamp(0.0, 1.0);
+    final tween = Tween(begin: 0.0, end: 1.0).chain(
+      CurveTween(curve: Curves.easeOutCubic),
+    );
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        final animationValue = controller.value;
+        final progress = ((animationValue - beginTime) * (1 / (1 - beginTime))).clamp(0.0, 1.0);
+        final value = tween.transform(progress);
+
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

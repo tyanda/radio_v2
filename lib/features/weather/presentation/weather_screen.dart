@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import '../providers/weather_provider.dart';
 import '../models/weather_model.dart';
 
@@ -108,7 +109,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final maxCardWidth = isWeb && screenWidth > 600 ? 600.0 : double.infinity;
 
     return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 200),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +127,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(128),
+                      color: Colors.black.withValues(alpha: 0.5),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -144,6 +145,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             Text(
                               current.name.toUpperCase(),
                               style: const TextStyle(
+                                fontFamily: 'Inter',
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
                                 color: primaryTextColor,
@@ -153,9 +155,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             Text(
                               dfDate.format(DateTime.now()),
                               style: const TextStyle(
+                                fontFamily: 'Inter',
                                 fontSize: 14,
-                                color: secondaryTextColor,
                                 fontWeight: FontWeight.w500,
+                                color: secondaryTextColor,
                               ),
                             ),
                           ],
@@ -171,34 +174,46 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                           '${current.main.temp.round()}°',
                           style: const TextStyle(
                             fontSize: 110,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w300,
+                            fontFamily: 'Inter',
                             color: primaryTextColor,
                             letterSpacing: -4,
                             height: 1.0,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 12, bottom: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                current.weather[0].description.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: accentColor,
-                                  letterSpacing: 1,
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 12, bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  current.weather[0].description.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: accentColor,
+                                    letterSpacing: 1,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              Text(
-                                'Ощущается как ${current.main.feelsLike.round()}°',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: secondaryTextColor,
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Ощущается как ${current.main.feelsLike.round()}°',
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: secondaryTextColor,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -208,7 +223,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       padding: const EdgeInsets.only(top: 24),
                       decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: Colors.white.withAlpha(25)),
+                          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                       ),
                       child: Row(
@@ -238,7 +253,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           const SizedBox(height: 20),
 
           // Тонкий разделитель
-          Divider(color: Colors.white.withAlpha(31), height: 1),
+          Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
 
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
@@ -251,11 +266,14 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
           ),
 
+          const SizedBox(height: 12),
+
           const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 16),
+            padding: EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
               'ПРОГНОЗ НА НЕДЕЛЮ',
               style: TextStyle(
+                fontFamily: 'Inter',
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 color: secondaryTextColor,
@@ -307,68 +325,84 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       final tempMax = forecastForDay.main.temp.round();
                       final tempMin = forecastForDay.main.tempMin.round();
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isWeb ? 16 : 20,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: cardBackgroundColor,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white.withAlpha(20)),
-                        ),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 60,
-                              child: Text(
-                                shortDayName,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                  color: secondaryTextColor,
+                      return ScrollScaleCard(
+                        onTap: () {},
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isWeb ? 16 : 20,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cardBackgroundColor,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 45.0,
+                                child: Text(
+                                  shortDayName,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: secondaryTextColor,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                dayName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: primaryTextColor,
+                              Expanded(
+                                child: Text(
+                                  dayName,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: primaryTextColor,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            ),
-                            _getWeatherIcon(forecastForDay.weather[0].main),
-                        const SizedBox(width: 12),
-                        Text(
-                          '$tempMin°',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: secondaryTextColor,
+                              _getWeatherIcon(forecastForDay.weather[0].main),
+                              const SizedBox(width: 12),
+                              SizedBox(
+                                width: 35.0,
+                                child: Text(
+                                  '$tempMin°',
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: secondaryTextColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 35.0,
+                                child: Text(
+                                  '$tempMax°',
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: primaryTextColor,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '$tempMax°',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: primaryTextColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
-
             const SizedBox(height: 40),
           ],
         ),
@@ -382,8 +416,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           label,
           style: const TextStyle(
+            fontFamily: 'Inter',
             fontSize: 10,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             color: secondaryTextColor,
           ),
         ),
@@ -391,8 +426,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           value,
           style: const TextStyle(
+            fontFamily: 'Inter',
             fontSize: 14,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: primaryTextColor,
           ),
         ),
@@ -462,6 +498,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           label,
           style: const TextStyle(
+            fontFamily: 'Inter',
             fontSize: 10,
             fontWeight: FontWeight.w800,
             color: secondaryTextColor,
@@ -472,6 +509,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         Text(
           time,
           style: const TextStyle(
+            fontFamily: 'Inter',
             fontWeight: FontWeight.w700,
             fontSize: 18,
             color: primaryTextColor,
@@ -494,7 +532,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           const SizedBox(height: 16),
           const Text(
             'ОШИБКА СЕТИ',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 16),
           FilledButton(
@@ -503,7 +545,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             style: FilledButton.styleFrom(backgroundColor: accentColor),
             child: const Text(
               'ПОВТОРИТЬ',
-              style: TextStyle(color: Colors.black),
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

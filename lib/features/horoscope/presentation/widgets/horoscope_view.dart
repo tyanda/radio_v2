@@ -4,6 +4,7 @@ import 'package:radio_v2/core/theme/app_colors.dart';
 import 'package:radio_v2/core/theme/app_padding.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/features/horoscope/presentation/providers/horoscope_provider.dart';
+import 'package:radio_v2/widgets/scroll_scale_card.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
   const HoroscopeView({super.key});
@@ -12,7 +13,26 @@ class HoroscopeView extends ConsumerStatefulWidget {
   ConsumerState<HoroscopeView> createState() => _HoroscopeViewState();
 }
 
-class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
+class _HoroscopeViewState extends ConsumerState<HoroscopeView>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final horoscopeState = ref.watch(horoscopeProvider);
@@ -21,6 +41,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,40 +61,50 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
                   final zodiac = zodiacSigns[index];
                   final isSelected = zodiac.id == horoscopeState.selectedSign.id;
 
-                  return GestureDetector(
-                    onTap: () =>
-                        ref.read(horoscopeProvider.notifier).selectSign(zodiac),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.accent
-                            : AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? AppColors.accent : Colors.transparent,
-                          width: 2,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.accent.withValues(alpha: 0.15),
-                                  blurRadius: 4,
-                                  spreadRadius: -1,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(
-                          zodiac.name,
-                          style: TextStyle(
-                            color: isSelected ? Colors.black : Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.1,
+                  return ScrollScaleCard(
+                    onTap: () {
+                      ref.read(horoscopeProvider.notifier).selectSign(zodiac);
+                    },
+                    child: _AnimatedCard(
+                      index: index,
+                      controller: _animationController,
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(horoscopeProvider.notifier).selectSign(zodiac);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.accent
+                                : AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? AppColors.accent : Colors.transparent,
+                              width: 2,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.accent.withValues(alpha: 0.15),
+                                      blurRadius: 4,
+                                      spreadRadius: -1,
+                                    ),
+                                  ]
+                                : null,
                           ),
-                          textAlign: TextAlign.center,
+                          child: Center(
+                            child: Text(
+                              zodiac.name,
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.1,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -197,6 +228,45 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedCard extends StatelessWidget {
+  final int index;
+  final AnimationController controller;
+  final Widget child;
+
+  const _AnimatedCard({
+    required this.index,
+    required this.controller,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final delay = index * 0.08;
+    final beginTime = delay.clamp(0.0, 1.0);
+    final tween = Tween(begin: 0.0, end: 1.0).chain(
+      CurveTween(curve: Curves.easeOutCubic),
+    );
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        final animationValue = controller.value;
+        final progress = ((animationValue - beginTime) * (1 / (1 - beginTime))).clamp(0.0, 1.0);
+        final value = tween.transform(progress);
+
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

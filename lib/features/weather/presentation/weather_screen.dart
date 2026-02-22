@@ -110,12 +110,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 200),
+      padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 200),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-
           // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
           Center(
             child: ConstrainedBox(

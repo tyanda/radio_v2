@@ -37,8 +37,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Column(
             children: [
               const _AppHeader(),
+              // Убрали SizedBox(height: 25), теперь строка прижата к хедеру
               const _MarqueeSection(),
-              // Контент начинается сразу после полосы
+              // Контент начинается сразу после полосы без зазоров
               Expanded(
                 child: PageView(
                   controller: _pageController,

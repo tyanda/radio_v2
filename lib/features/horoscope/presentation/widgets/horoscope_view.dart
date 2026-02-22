@@ -48,7 +48,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       bottom: false,
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 180),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

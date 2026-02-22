@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,12 +19,14 @@ class PlayerState {
   final Station? currentStation;
   final double volume;
   final bool showVolumeSlider;
+  final bool isBuffering;
 
   const PlayerState({
     this.isPlaying = false,
     this.currentStation,
     this.volume = 0.65,
     this.showVolumeSlider = false,
+    this.isBuffering = false,
   });
 
   PlayerState copyWith({
@@ -31,12 +34,14 @@ class PlayerState {
     Station? currentStation,
     double? volume,
     bool? showVolumeSlider,
+    bool? isBuffering,
   }) {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
       currentStation: currentStation ?? this.currentStation,
       volume: volume ?? this.volume,
       showVolumeSlider: showVolumeSlider ?? this.showVolumeSlider,
+      isBuffering: isBuffering ?? this.isBuffering,
     );
   }
 }
@@ -44,6 +49,7 @@ class PlayerState {
 class PlayerNotifier extends AsyncNotifier<PlayerState> {
   late final RadioPlayer _radioPlayer;
   StreamSubscription? _playerStateSubscription;
+  StreamSubscription? _processingStateSubscription;
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
@@ -84,8 +90,23 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       }
     });
 
+    // Listen to processing state changes (buffering)
+    _processingStateSubscription = _radioPlayer.processingStateStream.listen((processingState) {
+      final currentState = state.asData?.value;
+      if (currentState != null) {
+        final isBuffering = processingState == ProcessingState.buffering ||
+                           processingState == ProcessingState.loading;
+        if (currentState.isBuffering != isBuffering) {
+          state = AsyncData(
+            currentState.copyWith(isBuffering: isBuffering),
+          );
+        }
+      }
+    });
+
     ref.onDispose(() {
       _playerStateSubscription?.cancel();
+      _processingStateSubscription?.cancel();
       _radioPlayer.dispose();
     });
 
@@ -179,8 +200,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
     // 2. Changing station
     try {
+      // Set buffering state
       state = AsyncData(
-        currentState.copyWith(currentStation: station, isPlaying: true),
+        currentState.copyWith(currentStation: station, isPlaying: true, isBuffering: true),
       );
 
       await _radioPlayer.stop();

@@ -2,23 +2,37 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/widgets/equalizer_animation.dart';
+import 'package:radio_v2/widgets/shimmer_widget.dart';
 
-class MiniPlayer extends ConsumerWidget {
+class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MiniPlayer> createState() => _MiniPlayerState();
+}
+
+class _MiniPlayerState extends ConsumerState<MiniPlayer> {
+  @override
+  Widget build(BuildContext context) {
     final playerAsync = ref.watch(playerProvider);
-    final stations = ref.watch(stationListProvider);
 
     return playerAsync.when(
       data: (playerState) {
-        final currentStation = playerState.currentStation ?? stations.first;
-        return _buildPlayerUI(context, ref, playerState, currentStation);
+        // Условие видимости: станция выбрана И (играет ИЛИ буферизуется)
+        final isVisible = playerState.currentStation != null &&
+            (playerState.isPlaying || playerState.isBuffering);
+
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          opacity: isVisible ? 1.0 : 0.0,
+          child: isVisible
+              ? _buildPlayerUI(context, ref, playerState, playerState.currentStation!)
+              : const SizedBox.shrink(),
+        );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
@@ -31,6 +45,8 @@ class MiniPlayer extends ConsumerWidget {
     PlayerState playerState,
     Station currentStation,
   ) {
+    final isBuffering = playerState.isBuffering;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -117,26 +133,47 @@ class MiniPlayer extends ConsumerWidget {
                             child: SizedBox(
                               width: 44,
                               height: 44,
-                              child: Image.asset(
-                                currentStation.art,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade800,
-                                      borderRadius: BorderRadius.circular(12.0),
+                              child: isBuffering
+                                  ? Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.cardBackground,
+                                        borderRadius: BorderRadius.circular(12.0),
+                                      ),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                              Colors.white.withValues(alpha: 0.5),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      currentStation.art,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade800,
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          child: const Icon(
+                                            Icons.music_note,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        );
+                                      },
                                     ),
-                                    child: const Icon(
-                                      Icons.music_note,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  );
-                                },
-                              ),
                             ),
                           ),
-                          if (playerState.isPlaying)
+                          if (playerState.isPlaying && !isBuffering)
                             Positioned.fill(
                               child: Container(
                                 decoration: BoxDecoration(
@@ -144,7 +181,8 @@ class MiniPlayer extends ConsumerWidget {
                                   color: Colors.black.withValues(alpha: 0.40),
                                 ),
                                 child: const Center(
-                                  child: EqualizerAnimation(isActive: true, size: 20),
+                                  child: EqualizerAnimation(
+                                      isActive: true, size: 20),
                                 ),
                               ),
                             ),
@@ -158,60 +196,77 @@ class MiniPlayer extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            currentStation.name,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 13.0,
-                              letterSpacing: -0.5,
-                              height: 1.0,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          isBuffering
+                              ? ShimmerWidget.text(
+                                  width: 120,
+                                  height: 14,
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13.0,
+                                    letterSpacing: -0.5,
+                                  ),
+                                )
+                              : Text(
+                                  currentStation.name,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13.0,
+                                    letterSpacing: -0.5,
+                                    height: 1.0,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                           const SizedBox(height: 3),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Индикатор эфира (точка)
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: AppColors.accent,
-                                  shape: BoxShape.circle,
+                          isBuffering
+                              ? ShimmerWidget.text(
+                                  width: 80,
+                                  height: 10,
+                                  textStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: AppColors.accent,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Индикатор эфира (точка)
+                                    Container(
+                                      width: 5,
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      "ПРЯМОЙ ЭФИР",
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        color: AppColors.accent,
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.2,
+                                        height: 1.0,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                "ПРЯМОЙ ЭФИР",
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  color: AppColors.accent,
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                  height: 1.0,
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Кнопка Play/Pause
+                    // Кнопка Play/Pause/Loading
                     GestureDetector(
                       onTap: () {
-                        if (playerState.isPlaying) {
-                          ref.read(playerProvider.notifier).stop();
-                        } else {
-                          ref
-                              .read(playerProvider.notifier)
-                              .playStation(currentStation);
-                        }
+                        ref.read(playerProvider.notifier).stop();
                       },
                       child: Container(
                         width: 40,
@@ -227,13 +282,22 @@ class MiniPlayer extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        child: Icon(
-                          playerState.isPlaying
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
+                        child: isBuffering
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.pause_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                       ),
                     ),
                   ],

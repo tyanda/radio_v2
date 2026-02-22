@@ -103,6 +103,9 @@ class RadioPlayer {
   /// Поток изменений состояния плеера
   Stream<PlayerState> get playerStateStream => player.playerStateStream;
 
+  /// Поток изменений состояния обработки (буферизация)
+  Stream<ProcessingState> get processingStateStream => player.processingStateStream;
+
   /// Очистка ресурсов
   Future<void> dispose() async {
     try {

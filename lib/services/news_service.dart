@@ -38,8 +38,20 @@ class NewsService {
     Logger.log('Web: Fetching via RSS2JSON', tag: 'NewsService');
 
     try {
-      // Для веба не используем кэш (SharedPreferences не работает)
-      // Используем RSS2JSON — бесплатный сервис с CORS поддержкой
+      // Сначала пробуем загрузить из кэша
+      final cached = await _getCachedTitles(limit);
+      if (cached.isNotEmpty) {
+        Logger.log('Web: Using cached titles', tag: 'NewsService');
+        // Возвращаем кэш, но в фоне обновляем
+        _fetchNewsWeb(limit: limit).then((titles) {
+          if (titles.isNotEmpty) {
+            _cacheTitles(titles);
+          }
+        });
+        return cached;
+      }
+
+      // Кэша нет — загружаем через RSS2JSON
       // https://rss2json.com/
       final rss2JsonUrl =
           'https://api.rss2json.com/v1/api.json?rss_url=${Uri.encodeComponent(_directRssUrl)}';
@@ -78,6 +90,8 @@ class NewsService {
               'Web: Parsed ${titles.length} titles via RSS2JSON',
               tag: 'NewsService',
             );
+            // Кэшируем успешный результат
+            _cacheTitles(titles);
             return titles;
           }
         }
@@ -233,6 +247,10 @@ class NewsService {
 
     if (kIsWeb) {
       final titles = await _fetchNewsWeb(limit: limit);
+      // Кэшируем результат
+      if (titles.isNotEmpty) {
+        await _cacheTitles(titles);
+      }
       return titles;
     } else {
       final titles = await _fetchNewsNative(limit: limit);

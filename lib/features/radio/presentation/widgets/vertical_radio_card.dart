@@ -170,8 +170,9 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.4),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(

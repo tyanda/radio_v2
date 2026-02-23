@@ -76,7 +76,10 @@ class _ScrollScaleCardState extends State<ScrollScaleCard> {
     final distanceFromCenter = (centerY - screenCenterY).abs();
     final maxDistance = screenHeight / 2;
 
-    final normalizedDistance = (distanceFromCenter / maxDistance).clamp(0.0, 1.0);
+    final normalizedDistance = (distanceFromCenter / maxDistance).clamp(
+      0.0,
+      1.0,
+    );
     final scale = widget.maxScale - (normalizedDistance * widget.sensitivity);
     final clampedScale = scale.clamp(widget.minScale, widget.maxScale);
 

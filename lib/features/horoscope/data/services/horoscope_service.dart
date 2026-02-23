@@ -70,14 +70,20 @@ class HoroscopeService {
     if (!kIsWeb) {
       final apiVerveEnglish = await _fetchApiVerve(zodiacId);
       if (apiVerveEnglish != null && apiVerveEnglish.isNotEmpty) {
-        Logger.log('APIVerve returned English text, translating...', tag: 'Horoscope');
+        Logger.log(
+          'APIVerve returned English text, translating...',
+          tag: 'Horoscope',
+        );
         final apiVerveRussian = await _translate(apiVerveEnglish);
         await _saveCache(zodiacId, apiVerveRussian);
         return _HoroscopeResult(apiVerveRussian, 'APIVerve');
       }
       Logger.log('APIVerve failed, trying API Ninjas...', tag: 'Horoscope');
     } else {
-      Logger.log('Web platform: skipping APIVerve (CORS restriction)', tag: 'Horoscope');
+      Logger.log(
+        'Web platform: skipping APIVerve (CORS restriction)',
+        tag: 'Horoscope',
+      );
     }
 
     // Шаг 3: API Ninjas → английский текст
@@ -85,13 +91,17 @@ class HoroscopeService {
     if (english == null || english.isEmpty) {
       Logger.log('API Ninjas failed, using sample horoscope', tag: 'Horoscope');
       // Используем запасной гороскоп
-      final sample = _sampleHoroscopes[zodiacId] ?? 'Сегодня благоприятный день.';
+      final sample =
+          _sampleHoroscopes[zodiacId] ?? 'Сегодня благоприятный день.';
       await _saveCache(zodiacId, sample);
       return _HoroscopeResult(sample, 'Прогноз');
     }
 
     // Шаг 4: перевод на русский
-    Logger.log('API Ninjas returned English text, translating...', tag: 'Horoscope');
+    Logger.log(
+      'API Ninjas returned English text, translating...',
+      tag: 'Horoscope',
+    );
     final russian = await _translate(english);
 
     // Шаг 5: сохранение в кэш
@@ -122,7 +132,10 @@ class HoroscopeService {
   Future<String?> _fetchApiVerve(String zodiacId) async {
     try {
       final key = AppConfig.apiVerveKey.trim();
-      Logger.log('APIVerve key length: ${key.length}, empty: ${key.isEmpty}', tag: 'Horoscope');
+      Logger.log(
+        'APIVerve key length: ${key.length}, empty: ${key.isEmpty}',
+        tag: 'Horoscope',
+      );
 
       if (key.isEmpty) {
         Logger.warn('APIVerve key not configured', tag: 'Horoscope');
@@ -135,20 +148,23 @@ class HoroscopeService {
       Logger.log('APIVerve request URL: $uri', tag: 'Horoscope');
 
       // Заголовки
-      final headers = {
-        'x-api-key': key,
-        'Accept': 'application/json',
-      };
+      final headers = {'x-api-key': key, 'Accept': 'application/json'};
 
       final res = await http
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 10));
 
-      Logger.log('APIVerve response status: ${res.statusCode}', tag: 'Horoscope');
+      Logger.log(
+        'APIVerve response status: ${res.statusCode}',
+        tag: 'Horoscope',
+      );
       Logger.log('APIVerve response body: ${res.body}', tag: 'Horoscope');
 
       if (res.statusCode != 200) {
-        Logger.warn('APIVerve error ${res.statusCode}: ${res.body}', tag: 'Horoscope');
+        Logger.warn(
+          'APIVerve error ${res.statusCode}: ${res.body}',
+          tag: 'Horoscope',
+        );
         return null;
       }
 
@@ -172,14 +188,20 @@ class HoroscopeService {
       }
 
       final text = data['horoscope'] as String?;
-      Logger.log('APIVerve horoscope length: ${text?.length}', tag: 'Horoscope');
+      Logger.log(
+        'APIVerve horoscope length: ${text?.length}',
+        tag: 'Horoscope',
+      );
 
       if (text == null || text.isEmpty) {
         Logger.warn('APIVerve: empty horoscope', tag: 'Horoscope');
         return null;
       }
 
-      Logger.log('✓ APIVerve: horoscope received (${text.length} chars)', tag: 'Horoscope');
+      Logger.log(
+        '✓ APIVerve: horoscope received (${text.length} chars)',
+        tag: 'Horoscope',
+      );
       return text;
     } catch (e) {
       Logger.error('APIVerve exception: $e', tag: 'Horoscope');
@@ -204,7 +226,10 @@ class HoroscopeService {
           .timeout(const Duration(seconds: 10));
 
       if (res.statusCode != 200) {
-        Logger.warn('API error ${res.statusCode}: ${res.body}', tag: 'Horoscope');
+        Logger.warn(
+          'API error ${res.statusCode}: ${res.body}',
+          tag: 'Horoscope',
+        );
         return null;
       }
 
@@ -279,9 +304,7 @@ class HoroscopeService {
   /// Очистка кэша гороскопов
   static Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) =>
-      k.startsWith('horoscope_')
-    );
+    final keys = prefs.getKeys().where((k) => k.startsWith('horoscope_'));
     for (final key in keys) {
       await prefs.remove(key);
     }

@@ -14,7 +14,12 @@ class Logger {
     }
   }
 
-  static void error(String message, {String? tag, Object? error, StackTrace? stackTrace}) {
+  static void error(
+    String message, {
+    String? tag,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     if (kDebugMode) {
       final prefix = tag != null ? '[$tag]' : '[ERROR]';
       debugPrint('$prefix $message');

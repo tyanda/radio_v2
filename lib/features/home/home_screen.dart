@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
+
 import 'package:radio_v2/core/theme/app_colors.dart';
 import 'package:radio_v2/core/theme/figma_design.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
-import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
-import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
 import 'package:radio_v2/features/horoscope/presentation/widgets/horoscope_view.dart';
+import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/mini_player.dart';
+import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
+import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -62,11 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: SafeArea(
-              top: false,
-              bottom: true,
-              child: _buildBottomBar(),
-            ),
+            child: SafeArea(top: false, bottom: true, child: _buildBottomBar()),
           ),
         ],
       ),
@@ -76,9 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
-      ),
+      decoration: const BoxDecoration(color: Colors.transparent),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -144,7 +140,8 @@ class _AppHeader extends ConsumerStatefulWidget {
   ConsumerState<_AppHeader> createState() => _AppHeaderState();
 }
 
-class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProviderStateMixin {
+class _AppHeaderState extends ConsumerState<_AppHeader>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _blurAnimation;
@@ -157,13 +154,15 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _blurAnimation = Tween<double>(begin: 4.0, end: 16.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _blurAnimation = Tween<double>(
+      begin: 4.0,
+      end: 16.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -209,10 +208,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader> with SingleTickerProvide
                     TextSpan(text: "Sakha"),
                     TextSpan(
                       text: "Live",
-                      style: TextStyle(
-                        color: AppColors.accent,
-                        height: 1.0,
-                      ),
+                      style: TextStyle(color: AppColors.accent, height: 1.0),
                     ),
                   ],
                 ),
@@ -291,9 +287,7 @@ class _MarqueeSection extends ConsumerWidget {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
       height: 32.0,
-      decoration: const BoxDecoration(
-        color: AppColors.accent,
-      ),
+      decoration: const BoxDecoration(color: AppColors.accent),
       child: Marquee(
         text:
             "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",

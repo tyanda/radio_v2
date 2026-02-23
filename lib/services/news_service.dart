@@ -41,19 +41,22 @@ class NewsService {
       // Для веба не используем кэш (SharedPreferences не работает)
       // Используем RSS2JSON — бесплатный сервис с CORS поддержкой
       // https://rss2json.com/
-      final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=${Uri.encodeComponent(_directRssUrl)}';
+      final rss2JsonUrl =
+          'https://api.rss2json.com/v1/api.json?rss_url=${Uri.encodeComponent(_directRssUrl)}';
 
       Logger.log('Web URL: $rss2JsonUrl', tag: 'NewsService');
 
-      final response = await _dio.get(
-        rss2JsonUrl,
-        options: Options(
-          followRedirects: true,
-          validateStatus: (status) => status! < 500,
-          responseType: ResponseType.json,
-          receiveTimeout: const Duration(seconds: 15),
-        ),
-      ).timeout(const Duration(seconds: 20));
+      final response = await _dio
+          .get(
+            rss2JsonUrl,
+            options: Options(
+              followRedirects: true,
+              validateStatus: (status) => status! < 500,
+              responseType: ResponseType.json,
+              receiveTimeout: const Duration(seconds: 15),
+            ),
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -71,19 +74,27 @@ class NewsService {
           }
 
           if (titles.isNotEmpty) {
-            Logger.log('Web: Parsed ${titles.length} titles via RSS2JSON', tag: 'NewsService');
+            Logger.log(
+              'Web: Parsed ${titles.length} titles via RSS2JSON',
+              tag: 'NewsService',
+            );
             return titles;
           }
         }
 
-        Logger.warn('Web: RSS2JSON returned error or empty: ${data?['message']}', tag: 'NewsService');
+        Logger.warn(
+          'Web: RSS2JSON returned error or empty: ${data?['message']}',
+          tag: 'NewsService',
+        );
       } else {
-        Logger.error('Web: RSS2JSON status ${response.statusCode}', tag: 'NewsService');
+        Logger.error(
+          'Web: RSS2JSON status ${response.statusCode}',
+          tag: 'NewsService',
+        );
       }
 
       // Если RSS2JSON не сработал, возвращаем заглушку
       return ["НЕТ НОВОСТЕЙ", "ОСТАВАЙТЕСЬ С НАМИ"];
-
     } catch (e) {
       Logger.error('Web Error: $e', tag: 'NewsService');
       return ["ЗАГРУЗКА НОВОСТЕЙ...", "ПРОВЕРЬТЕ ИНТЕРНЕТ"];
@@ -95,20 +106,23 @@ class NewsService {
     try {
       // Используем RSS2JSON для надёжности
       final encodedUrl = Uri.encodeQueryComponent(_directRssUrl);
-      final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=$encodedUrl';
+      final rss2JsonUrl =
+          'https://api.rss2json.com/v1/api.json?rss_url=$encodedUrl';
 
       Logger.log('Native: Fetching via RSS2JSON', tag: 'NewsService');
       Logger.log('URL: $rss2JsonUrl', tag: 'NewsService');
 
-      final response = await _dio.get(
-        rss2JsonUrl,
-        options: Options(
-          followRedirects: true,
-          validateStatus: (status) => status! < 500,
-          responseType: ResponseType.json,
-          receiveTimeout: const Duration(seconds: 15),
-        ),
-      ).timeout(const Duration(seconds: 20));
+      final response = await _dio
+          .get(
+            rss2JsonUrl,
+            options: Options(
+              followRedirects: true,
+              validateStatus: (status) => status! < 500,
+              responseType: ResponseType.json,
+              receiveTimeout: const Duration(seconds: 15),
+            ),
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -126,20 +140,28 @@ class NewsService {
           }
 
           if (titles.isNotEmpty) {
-            Logger.log('Parsed ${titles.length} titles via RSS2JSON', tag: 'NewsService');
+            Logger.log(
+              'Parsed ${titles.length} titles via RSS2JSON',
+              tag: 'NewsService',
+            );
             await _cacheTitles(titles);
             return titles;
           }
         }
 
-        Logger.warn('RSS2JSON returned error or empty: ${data?['message']}', tag: 'NewsService');
+        Logger.warn(
+          'RSS2JSON returned error or empty: ${data?['message']}',
+          tag: 'NewsService',
+        );
       } else {
-        Logger.error('RSS2JSON status ${response.statusCode}', tag: 'NewsService');
+        Logger.error(
+          'RSS2JSON status ${response.statusCode}',
+          tag: 'NewsService',
+        );
       }
 
       // Если RSS2JSON не сработал, возвращаем кэш
       return _getCachedTitles(limit);
-
     } catch (e) {
       Logger.error('Native error: $e', tag: 'NewsService');
       return _getCachedTitles(limit);
@@ -182,7 +204,10 @@ class NewsService {
       }
 
       final titles = (jsonDecode(cachedJson) as List).cast<String>();
-      Logger.log('Returning ${titles.length} cached titles', tag: 'NewsService');
+      Logger.log(
+        'Returning ${titles.length} cached titles',
+        tag: 'NewsService',
+      );
       return titles.take(limit).toList();
     } catch (e) {
       Logger.warn('Cache read error: $e', tag: 'NewsService');

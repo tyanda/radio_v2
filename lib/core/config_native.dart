@@ -45,7 +45,10 @@ class AppConfig {
       }
       if (rssFeedUrl.isEmpty) {
         rssFeedUrl = 'https://ysia.ru/feed/';
-        Logger.log('RSS_FEED_URL: используется значение по умолчанию', tag: 'Config');
+        Logger.log(
+          'RSS_FEED_URL: используется значение по умолчанию',
+          tag: 'Config',
+        );
       }
 
       Logger.log('AppConfig initialized from .env file', tag: 'Config');

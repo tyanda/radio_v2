@@ -34,7 +34,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 
   ShadThemeData get shadcnTheme {
-    return state.isDarkTheme 
+    return state.isDarkTheme
         ? ShadThemeData(
             brightness: Brightness.dark,
             colorScheme: const ShadZincColorScheme.dark(),

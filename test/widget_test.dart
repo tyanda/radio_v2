@@ -7,7 +7,9 @@ import 'package:radio_v2/main.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('App starts and shows the main screen', (WidgetTester tester) async {
+  testWidgets('App starts and shows the main screen', (
+    WidgetTester tester,
+  ) async {
     // Mock the essential providers that are async or have external dependencies
     await tester.pumpWidget(
       ProviderScope(

@@ -18,7 +18,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
   AsyncValue<WeatherData?> build() {
     _service = WeatherService(ref.read(dioProvider));
     _repository = WeatherRepositoryImpl(_service);
-    
+
     // Пытаемся загрузить из кэша сразу при создании
     _loadCachedWeatherData().then((cached) {
       if (cached != null) {
@@ -28,7 +28,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
         _fetchWeather();
       }
     });
-    
+
     return const AsyncLoading();
   }
 
@@ -48,7 +48,10 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
           position.longitude,
         );
       } catch (locationError) {
-        Logger.error('Ошибка получения местоположения: $locationError', tag: 'Weather');
+        Logger.error(
+          'Ошибка получения местоположения: $locationError',
+          tag: 'Weather',
+        );
         data = await _repository.getWeatherForecast("Yakutsk");
       }
 
@@ -112,12 +115,16 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
         return WeatherData.fromJson(jsonDecode(cachedData));
       }
     } catch (e) {
-      Logger.error('Ошибка загрузки кэшированных данных погоды: $e', tag: 'Weather');
+      Logger.error(
+        'Ошибка загрузки кэшированных данных погоды: $e',
+        tag: 'Weather',
+      );
     }
     return null;
   }
 }
 
-final weatherProvider = NotifierProvider<WeatherNotifier, AsyncValue<WeatherData?>>(
-  WeatherNotifier.new,
-);
+final weatherProvider =
+    NotifierProvider<WeatherNotifier, AsyncValue<WeatherData?>>(
+      WeatherNotifier.new,
+    );

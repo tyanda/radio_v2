@@ -186,9 +186,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.accent,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
                   ),
                 ),
             ],
@@ -261,9 +259,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               _BuildSmallBadge('Прогноз на сегодня'),
               const SizedBox(width: 8),
               if (horoscopeState.horoscopeData?.source != null)
-                _BuildSmallBadge(
-                  horoscopeState.horoscopeData!.source!,
-                ),
+                _BuildSmallBadge(horoscopeState.horoscopeData!.source!),
             ],
           ),
         ],
@@ -287,23 +283,22 @@ class _AnimatedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final delay = index * 0.08;
     final beginTime = delay.clamp(0.0, 1.0);
-    final tween = Tween(begin: 0.0, end: 1.0).chain(
-      CurveTween(curve: Curves.easeOutCubic),
-    );
+    final tween = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).chain(CurveTween(curve: Curves.easeOutCubic));
 
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
         final animationValue = controller.value;
-        final progress = ((animationValue - beginTime) * (1 / (1 - beginTime))).clamp(0.0, 1.0);
+        final progress = ((animationValue - beginTime) * (1 / (1 - beginTime)))
+            .clamp(0.0, 1.0);
         final value = tween.transform(progress);
 
         return Transform.translate(
           offset: Offset(0, 30 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: child,

@@ -20,7 +20,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
 
     return playerAsync.when(
       data: (playerState) {
-        final isVisible = playerState.currentStation != null &&
+        final isVisible =
+            playerState.currentStation != null &&
             (playerState.isPlaying || playerState.isBuffering);
 
         return AnimatedOpacity(
@@ -28,7 +29,12 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
           curve: Curves.easeInOut,
           opacity: isVisible ? 1.0 : 0.0,
           child: isVisible
-              ? _buildPlayerUI(context, ref, playerState, playerState.currentStation!)
+              ? _buildPlayerUI(
+                  context,
+                  ref,
+                  playerState,
+                  playerState.currentStation!,
+                )
               : const SizedBox.shrink(),
         );
       },
@@ -141,13 +147,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                             : Image.asset(
                                 currentStation.art,
                                 fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) {
+                                errorBuilder: (context, error, stackTrace) {
                                   return Container(
                                     decoration: BoxDecoration(
                                       color: Colors.grey.shade800,
-                                      borderRadius:
-                                          BorderRadius.circular(12.0),
+                                      borderRadius: BorderRadius.circular(12.0),
                                     ),
                                     child: const Icon(
                                       Icons.music_note,
@@ -167,8 +171,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                             color: Colors.black.withValues(alpha: 0.40),
                           ),
                           child: const Center(
-                            child: EqualizerAnimation(
-                                isActive: true, size: 20),
+                            child: EqualizerAnimation(isActive: true, size: 20),
                           ),
                         ),
                       ),
@@ -254,7 +257,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                   if (playerState.isPlaying) {
                     ref.read(playerProvider.notifier).stop();
                   } else {
-                    ref.read(playerProvider.notifier).playStation(currentStation);
+                    ref
+                        .read(playerProvider.notifier)
+                        .playStation(currentStation);
                   }
                 },
                 child: Container(

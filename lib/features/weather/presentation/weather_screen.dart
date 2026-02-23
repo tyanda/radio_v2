@@ -102,7 +102,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(horizontalPadding, 0, horizontalPadding, 140),
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        0,
+        horizontalPadding,
+        140,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -153,7 +158,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             ),
                           ],
                         ),
-                        _getWeatherIconWithGlow(current.weather[0].main, size: 56),
+                        _getWeatherIconWithGlow(
+                          current.weather[0].main,
+                          size: 56,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -173,7 +181,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                         ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 12, bottom: 12),
+                            padding: const EdgeInsets.only(
+                              left: 12,
+                              bottom: 12,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
@@ -213,7 +224,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       padding: const EdgeInsets.only(top: 24),
                       decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                          top: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
                         ),
                       ),
                       child: Row(
@@ -324,7 +337,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       decoration: BoxDecoration(
                         color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -391,9 +406,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
           ),
           const SizedBox(height: 40),
-          ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 
   // Вспомогательный виджет для деталей в главной карточке
@@ -507,7 +522,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   }
 
   Widget _buildLoadingView() {
-    return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+    return const Center(
+      child: CircularProgressIndicator(color: AppColors.accent),
+    );
   }
 
   Widget _buildErrorView(String error) {
@@ -515,7 +532,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_outlined, color: AppColors.accent, size: 48),
+          const Icon(
+            Icons.wifi_off_outlined,
+            color: AppColors.accent,
+            size: 48,
+          ),
           const SizedBox(height: 16),
           const Text(
             'ОШИБКА СЕТИ',

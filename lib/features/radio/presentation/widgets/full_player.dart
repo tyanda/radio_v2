@@ -36,10 +36,7 @@ class FullPlayer extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
-        border: Border.all(
-          color: AppColors.cardBackground,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.cardBackground, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.5),
@@ -140,8 +137,7 @@ class FullPlayer extends ConsumerWidget {
                             color: AppColors.accent,
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    AppColors.accent.withValues(alpha: 0.4),
+                                color: AppColors.accent.withValues(alpha: 0.4),
                                 blurRadius: 16,
                                 offset: const Offset(0, 4),
                               ),

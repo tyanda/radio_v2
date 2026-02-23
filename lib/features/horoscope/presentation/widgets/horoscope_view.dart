@@ -46,16 +46,14 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
     final horoscopeState = ref.watch(horoscopeProvider);
 
-    return SafeArea(
-      bottom: false,
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          ResponsivePadding.medium(context),
-          0,
-          ResponsivePadding.medium(context),
-          ResponsivePadding.xlarge(context),
-        ),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        ResponsivePadding.medium(context),
+        16,
+        ResponsivePadding.medium(context),
+        140,
+      ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -108,7 +106,6 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             _buildPredictionCard(horoscopeState),
           ],
         ),
-      ),
     );
   }
 

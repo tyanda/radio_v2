@@ -107,7 +107,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
-        0,
+        16,
         horizontalPadding,
         140,
       ),

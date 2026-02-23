@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
@@ -21,7 +20,6 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
 
     return playerAsync.when(
       data: (playerState) {
-        // Условие видимости: станция выбрана И (играет ИЛИ буферизуется)
         final isVisible = playerState.currentStation != null &&
             (playerState.isPlaying || playerState.isBuffering);
 
@@ -50,7 +48,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Слайдер громкости (анимация)
+        // Слайдер громкости
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 280),
           crossFadeState: playerState.showVolumeSlider
@@ -96,214 +94,204 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
             ),
           ),
         ),
-        // Основной контейнер мини-плеера
-        ClipRRect(
-          borderRadius: BorderRadius.circular(32.0),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 280),
-              child: Container(
-                height: 64.0,
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(32.0),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      blurRadius: 25,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+        // Основной контейнер мини-плеера (прозрачный)
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(32.0),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          constraints: const BoxConstraints(maxWidth: 280),
+          height: 64.0,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Логотип
+              GestureDetector(
+                onTap: () =>
+                    ref.read(playerProvider.notifier).toggleVolumeSlider(),
+                child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    // Логотип
-                    GestureDetector(
-                      onTap: () =>
-                          ref.read(playerProvider.notifier).toggleVolumeSlider(),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12.0),
-                            child: SizedBox(
-                              width: 44,
-                              height: 44,
-                              child: isBuffering
-                                  ? Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.cardBackground,
-                                        borderRadius: BorderRadius.circular(12.0),
-                                      ),
-                                      child: Center(
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              Colors.white.withValues(alpha: 0.5),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      currentStation.art,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade800,
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                          ),
-                                          child: const Icon(
-                                            Icons.music_note,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                            ),
-                          ),
-                          if (playerState.isPlaying && !isBuffering)
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  color: Colors.black.withValues(alpha: 0.40),
-                                ),
-                                child: const Center(
-                                  child: EqualizerAnimation(
-                                      isActive: true, size: 20),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Информация о станции
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          isBuffering
-                              ? ShimmerWidget.text(
-                                  width: 120,
-                                  height: 14,
-                                  textStyle: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 13.0,
-                                    letterSpacing: -0.5,
-                                  ),
-                                )
-                              : Text(
-                                  currentStation.name,
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 13.0,
-                                    letterSpacing: -0.5,
-                                    height: 1.0,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                          const SizedBox(height: 3),
-                          isBuffering
-                              ? ShimmerWidget.text(
-                                  width: 80,
-                                  height: 10,
-                                  textStyle: TextStyle(
-                                    fontFamily: 'Inter',
-                                    color: AppColors.accent,
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.2,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Индикатор эфира (точка)
-                                    Container(
-                                      width: 5,
-                                      height: 5,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.accent,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      "ПРЯМОЙ ЭФИР",
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        color: AppColors.accent,
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.2,
-                                        height: 1.0,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Кнопка Play/Pause/Loading
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(playerProvider.notifier).stop();
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.accent,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.accent.withValues(alpha: 0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: SizedBox(
+                        width: 44,
+                        height: 44,
                         child: isBuffering
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                            ? Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.cardBackground,
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white.withValues(alpha: 0.5),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               )
-                            : const Icon(
-                                Icons.pause_rounded,
-                                color: Colors.white,
-                                size: 22,
+                            : Image.asset(
+                                currentStation.art,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (context, error, stackTrace) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade800,
+                                      borderRadius:
+                                          BorderRadius.circular(12.0),
+                                    ),
+                                    child: const Icon(
+                                      Icons.music_note,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  );
+                                },
                               ),
                       ),
                     ),
+                    if (playerState.isPlaying && !isBuffering)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0),
+                            color: Colors.black.withValues(alpha: 0.40),
+                          ),
+                          child: const Center(
+                            child: EqualizerAnimation(
+                                isActive: true, size: 20),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ),
+              const SizedBox(width: 10),
+              // Информация о станции
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    isBuffering
+                        ? ShimmerWidget.text(
+                            width: 120,
+                            height: 14,
+                            textStyle: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13.0,
+                              letterSpacing: -0.5,
+                            ),
+                          )
+                        : Text(
+                            currentStation.name,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13.0,
+                              letterSpacing: -0.5,
+                              height: 1.0,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                    const SizedBox(height: 3),
+                    isBuffering
+                        ? ShimmerWidget.text(
+                            width: 80,
+                            height: 10,
+                            textStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              color: AppColors.accent,
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                "ПРЯМОЙ ЭФИР",
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: AppColors.accent,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Кнопка Play/Pause
+              GestureDetector(
+                onTap: () {
+                  if (playerState.isPlaying) {
+                    ref.read(playerProvider.notifier).stop();
+                  } else {
+                    ref.read(playerProvider.notifier).playStation(currentStation);
+                  }
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.accent,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: isBuffering
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          playerState.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

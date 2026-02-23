@@ -103,7 +103,13 @@ final tickerProvider = StreamProvider<String>((ref) {
   try {
     final database = FirebaseDatabase.instance.ref('ticker_message');
     return database.onValue.map(
-      (event) => event.snapshot.value as String? ?? "",
+      (event) {
+        final value = event.snapshot.value;
+        if (value is String) {
+          return value;
+        }
+        return "";
+      },
     );
   } catch (e) {
     // Return a stream with an error

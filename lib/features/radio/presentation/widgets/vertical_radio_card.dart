@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/features/radio/domain/station.dart';
 
 /// Вертикальная карточка радиостанции в стиле «плитка»
 /// 
@@ -10,7 +11,7 @@ import 'package:radio_v2/core/theme/app_colors.dart';
 /// - Автономность: занимает всё доступное пространство родителя
 /// - Безопасность контента: maxLines и TextOverflow.ellipsis
 class VerticalRadioCard extends StatelessWidget {
-  final dynamic station;
+  final Station station;
   final bool isActive;
   final bool isFavorite;
   final VoidCallback? onTap;

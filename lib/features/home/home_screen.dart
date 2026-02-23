@@ -62,7 +62,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: _buildBottomBar(),
+            child: SafeArea(
+              top: false,
+              bottom: true,
+              child: _buildBottomBar(),
+            ),
           ),
         ],
       ),
@@ -71,24 +75,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildBottomBar() {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            AppColors.background.withValues(alpha: 0.8),
-            AppColors.background,
-          ],
-        ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const MiniPlayer(),
           const SizedBox(height: 12),
-          // Основной контейнер навигации
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(

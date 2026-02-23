@@ -13,6 +13,7 @@ import 'core/providers.dart';
 import 'core/utils/logger.dart';
 import 'features/home/home_screen.dart';
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 import 'widgets/splash_screen.dart';
 
 Future<void> main() async {
@@ -85,8 +86,13 @@ class MyApp extends StatelessWidget {
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
+              AppLocalizations.delegate,
             ],
-            supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
+            supportedLocales: const [
+              Locale('ru'),
+              Locale('en'),
+            ],
+            locale: const Locale('ru'),
             home: kIsWeb ? const AppInitializer() : const HomeScreen(),
           );
         },

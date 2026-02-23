@@ -1,0 +1,108 @@
+{
+  "@@locale": "ru",
+  
+  "app_title": "Sakha Radio",
+  "@app_title": {
+    "description": "Название приложения"
+  },
+  
+  "live_broadcast": "ПРЯМОЙ ЭФИР",
+  "@live_broadcast": {
+    "description": "Статус прямого эфира в плеере"
+  },
+  
+  "pause_status": "ПАУЗА",
+  "@pause_status": {
+    "description": "Статус паузы в плеере"
+  },
+  
+  "good_morning": "ДОБРОЕ УТРО",
+  "@good_morning": {
+    "description": "Приветствие утром"
+  },
+  
+  "good_afternoon": "ДОБРЫЙ ДЕНЬ",
+  "@good_afternoon": {
+    "description": "Приветствие днём"
+  },
+  
+  "good_evening": "ДОБРЫЙ ВЕЧЕР",
+  "@good_evening": {
+    "description": "Приветствие вечером"
+  },
+  
+  "good_night": "ДОБРОЙ НОЧИ",
+  "@good_night": {
+    "description": "Приветствие ночью"
+  },
+  
+  "on_air": "В ЭФИРЕ",
+  "@on_air": {
+    "description": "Статус 'в эфире'"
+  },
+  
+  "select_zodiac_sign": "ВЫБЕРИТЕ ЗНАК",
+  "@select_zodiac_sign": {
+    "description": "Заголовок выбора знака зодиака"
+  },
+  
+  "loading_horoscope": "Загрузка гороскопа...",
+  "@loading_horoscope": {
+    "description": "Текст загрузки гороскопа"
+  },
+  
+  "error_loading_horoscope": "Ошибка загрузки гороскопа: {error}",
+  "@error_loading_horoscope": {
+    "description": "Ошибка загрузки гороскопа",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "horoscope_not_found": "Гороскоп не найден. Попробуйте другой знак.",
+  "@horoscope_not_found": {
+    "description": "Гороскоп не найден"
+  },
+  
+  "horoscope_unavailable": "Гороскоп временно недоступен",
+  "@horoscope_unavailable": {
+    "description": "Гороскоп недоступен"
+  },
+  
+  "forecast_for_today": "Прогноз на сегодня",
+  "@forecast_for_today": {
+    "description": "Метка прогноза на сегодня"
+  },
+  
+  "error_network": "ОШИБКА СЕТИ",
+  "@error_network": {
+    "description": "Ошибка сети"
+  },
+  
+  "retry": "ПОВТОРИТЬ",
+  "@retry": {
+    "description": "Кнопка повтора"
+  },
+  
+  "error_loading_weather": "Ошибка загрузки погоды: {error}",
+  "@error_loading_weather": {
+    "description": "Ошибка загрузки погоды",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "error_playback": "Ошибка воспроизведения: {error}",
+  "@error_playback": {
+    "description": "Ошибка воспроизведения",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

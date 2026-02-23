@@ -179,6 +179,10 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         }
       } catch (e) {
         Logger.error("Auto-play failed: $e", tag: 'Player');
+        // Показываем ошибку только если есть контекст (для web)
+        if (!kIsWeb) {
+          Logger.error("Auto-play error details: ${e.toString()}", tag: 'Player');
+        }
       }
     }
 

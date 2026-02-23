@@ -5,6 +5,8 @@ import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/widgets/equalizer_animation.dart';
 import 'package:radio_v2/widgets/shimmer_widget.dart';
+import 'package:radio_v2/core/utils/snackbar_helper.dart';
+import 'package:radio_v2/l10n/app_localizations.dart';
 
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});
@@ -235,7 +237,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                "ПРЯМОЙ ЭФИР",
+                                AppLocalizations.of(context).live_broadcast,
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   color: AppColors.accent,
@@ -253,13 +255,22 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
               const SizedBox(width: 10),
               // Кнопка Play/Pause
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   if (playerState.isPlaying) {
                     ref.read(playerProvider.notifier).stop();
                   } else {
-                    ref
-                        .read(playerProvider.notifier)
-                        .playStation(currentStation);
+                    try {
+                      await ref
+                          .read(playerProvider.notifier)
+                          .playStation(currentStation);
+                    } catch (e) {
+                      if (context.mounted) {
+                        SnackbarHelper.showError(
+                          context: context,
+                          message: e.toString(),
+                        );
+                      }
+                    }
                   }
                 },
                 child: Container(

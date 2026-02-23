@@ -6,6 +6,9 @@ import 'dart:async';
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/providers/weather_provider.dart';
+import 'package:radio_v2/core/utils/responsive_utils.dart';
+import 'package:radio_v2/core/utils/snackbar_helper.dart';
+import 'package:radio_v2/l10n/app_localizations.dart';
 import '../models/weather_model.dart';
 
 class WeatherScreen extends ConsumerStatefulWidget {
@@ -116,7 +119,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxCardWidth),
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(ResponsivePadding.large(context)),
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(32),
@@ -528,6 +531,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   }
 
   Widget _buildErrorView(String error) {
+    // Показываем snackbar с ошибкой
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        SnackbarHelper.showError(
+          context: context,
+          message: error.split(': ').last,
+        );
+      }
+    });
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -538,9 +551,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             size: 48,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'ОШИБКА СЕТИ',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).error_network,
+            style: const TextStyle(
               fontFamily: 'Inter',
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -551,9 +564,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             onPressed: () =>
                 ref.read(weatherProvider.notifier).refreshWeather(),
             style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
-            child: const Text(
-              'ПОВТОРИТЬ',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.of(context).retry,
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 color: Colors.black,
                 fontWeight: FontWeight.w600,

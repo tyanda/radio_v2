@@ -4,6 +4,8 @@ import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/core/providers/horoscope_provider.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
+import 'package:radio_v2/core/utils/responsive_utils.dart';
+import 'package:radio_v2/l10n/app_localizations.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
   const HoroscopeView({super.key});
@@ -48,14 +50,19 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       bottom: false,
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 240),
+        padding: EdgeInsets.fromLTRB(
+          ResponsivePadding.medium(context),
+          0,
+          ResponsivePadding.medium(context),
+          ResponsivePadding.xlarge(context),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: ResponsivePadding.medium(context)),
               child: Text(
-                'ВЫБЕРИТЕ ЗНАК',
+                AppLocalizations.of(context).select_zodiac_sign,
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 10,
@@ -191,13 +198,13 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: ResponsivePadding.medium(context)),
           if (horoscopeState.isLoading)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(ResponsivePadding.medium(context)),
                 child: Text(
-                  'Загрузка гороскопа...',
+                  AppLocalizations.of(context).loading_horoscope,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     color: Colors.white,
@@ -208,9 +215,11 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             )
           else if (horoscopeState.errorMessage != null)
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(ResponsivePadding.medium(context)),
               child: Text(
-                'Ошибка загрузки гороскопа: ${horoscopeState.errorMessage}',
+                AppLocalizations.of(context).error_loading_horoscope(
+                  horoscopeState.errorMessage ?? '',
+                ),
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   color: AppColors.error,
@@ -221,9 +230,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
           else if (horoscopeState.horoscopeData != null)
             horoscopeState.horoscopeData!.text.isEmpty
                 ? Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(ResponsivePadding.medium(context)),
                     child: Text(
-                      'Гороскоп не найден. Попробуйте другой знак.',
+                      AppLocalizations.of(context).horoscope_not_found,
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         color: Colors.white70,
@@ -242,10 +251,10 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                     ),
                   )
           else
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+            Padding(
+              padding: EdgeInsets.all(ResponsivePadding.medium(context)),
               child: Text(
-                'Гороскоп временно недоступен',
+                AppLocalizations.of(context).horoscope_unavailable,
                 style: TextStyle(
                   fontFamily: 'Inter',
                   color: Colors.white,

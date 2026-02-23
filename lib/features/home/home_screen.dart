@@ -288,6 +288,7 @@ class _MarqueeSection extends ConsumerWidget {
     return Container(
       height: 32.0,
       decoration: const BoxDecoration(color: AppColors.accent),
+      alignment: Alignment.center,
       child: Marquee(
         text:
             "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",

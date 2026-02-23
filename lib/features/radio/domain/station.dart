@@ -1,5 +1,5 @@
 class Station {
-  final dynamic id; // Может быть int или String
+  final String? id;
   final String name;
   final String desc;
   final String art;

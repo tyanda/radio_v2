@@ -5,6 +5,8 @@ import 'package:radio_v2/core/design/figma_design.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/core/providers/radio_providers.dart';
+import 'package:radio_v2/core/utils/responsive_utils.dart';
+import 'package:radio_v2/l10n/app_localizations.dart';
 
 class FullPlayer extends ConsumerWidget {
   const FullPlayer({super.key});
@@ -49,7 +51,7 @@ class FullPlayer extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(ResponsivePadding.medium(context)),
             child: Row(
               children: [
                 // Обложка альбома (107x93 по Figma)
@@ -106,7 +108,9 @@ class FullPlayer extends ConsumerWidget {
                       const SizedBox(height: 4),
                       // Статус
                       Text(
-                        playerState.isPlaying ? "ПРЯМОЙ ЭФИР" : "ПАУЗА",
+                        playerState.isPlaying
+                            ? AppLocalizations.of(context).live_broadcast
+                            : AppLocalizations.of(context).pause_status,
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: playerState.isPlaying

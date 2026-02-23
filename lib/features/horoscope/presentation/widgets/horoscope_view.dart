@@ -6,6 +6,7 @@ import 'package:radio_v2/core/providers/horoscope_provider.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
 import 'package:radio_v2/l10n/app_localizations.dart';
+import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
   const HoroscopeView({super.key});
@@ -45,6 +46,14 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     super.build(context);
 
     final horoscopeState = ref.watch(horoscopeProvider);
+    final playerState = ref.watch(playerProvider);
+    
+    // Динамический отступ снизу: больше если плеер виден, меньше если скрыт
+    final playerData = playerState.asData?.value;
+    final isPlayerVisible = playerData != null &&
+        playerData.currentStation != null &&
+        (playerData.isPlaying || playerData.isBuffering);
+    final bottomPadding = isPlayerVisible ? 200.0 : 80.0;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -52,7 +61,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
         ResponsivePadding.medium(context),
         16,
         ResponsivePadding.medium(context),
-        140,
+        bottomPadding,
       ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

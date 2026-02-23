@@ -9,6 +9,7 @@ import 'package:radio_v2/core/providers/weather_provider.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
 import 'package:radio_v2/core/utils/snackbar_helper.dart';
 import 'package:radio_v2/l10n/app_localizations.dart';
+import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import '../models/weather_model.dart';
 
 class WeatherScreen extends ConsumerStatefulWidget {
@@ -82,6 +83,14 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   Widget _buildWeatherContent(WeatherData weatherData) {
     final current = weatherData.current;
     final forecastList = weatherData.forecast;
+    
+    // Динамический отступ снизу: больше если плеер виден, меньше если скрыт
+    final playerState = ref.watch(playerProvider);
+    final playerData = playerState.asData?.value;
+    final isPlayerVisible = playerData != null &&
+        playerData.currentStation != null &&
+        (playerData.isPlaying || playerData.isBuffering);
+    final bottomPadding = isPlayerVisible ? 200.0 : 80.0;
 
     final sunrise = current.sys.sunrise > 0
         ? DateTime.fromMillisecondsSinceEpoch(
@@ -109,7 +118,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         horizontalPadding,
         16,
         horizontalPadding,
-        140,
+        bottomPadding,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

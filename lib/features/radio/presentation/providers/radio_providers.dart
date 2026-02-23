@@ -6,6 +6,9 @@ import 'package:radio_v2/core/providers/providers.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/services/news_service.dart';
+import '../../domain/repositories/favorites_repository.dart';
+import '../providers/favorites_provider.dart';
+import '../../data/repositories/favorites_repository_impl.dart';
 
 final stationListProvider = Provider<List<Station>>((ref) {
   return [
@@ -102,15 +105,13 @@ final newsProvider = FutureProvider<List<String>>((ref) async {
 final tickerProvider = StreamProvider<String>((ref) {
   try {
     final database = FirebaseDatabase.instance.ref('ticker_message');
-    return database.onValue.map(
-      (event) {
-        final value = event.snapshot.value;
-        if (value is String) {
-          return value;
-        }
-        return "";
-      },
-    );
+    return database.onValue.map((event) {
+      final value = event.snapshot.value;
+      if (value is String) {
+        return value;
+      }
+      return "";
+    });
   } catch (e) {
     // Return a stream with an error
     return Stream.error(e);
@@ -143,3 +144,14 @@ final marqueeTextProvider = Provider<String>((ref) {
 
   return combined.join("  •  ");
 });
+
+final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
+  // В реальном приложении здесь будет создание репозитория с зависимостями
+  return FavoritesRepositoryImpl();
+});
+
+final favoritesProvider =
+    StateNotifierProvider<FavoritesNotifier, FavoritesState>((ref) {
+      final repository = ref.watch(favoritesRepositoryProvider);
+      return FavoritesNotifier(repository);
+    });

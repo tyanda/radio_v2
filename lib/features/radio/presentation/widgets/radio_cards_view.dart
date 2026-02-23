@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
-import 'package:radio_v2/features/radio/presentation/providers/favorites_provider.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/vertical_radio_card.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 
@@ -78,8 +77,10 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     final hasSelectedStation = currentStation != null;
 
     // Авто-скролл к активной станции
-    final isActiveChanged = currentStation != null &&
-        _lastActiveIndex != stations.indexWhere((s) => s.id == currentStation.id);
+    final isActiveChanged =
+        currentStation != null &&
+        _lastActiveIndex !=
+            stations.indexWhere((s) => s.id == currentStation.id);
     if (isActiveChanged) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToActiveStation();
@@ -92,7 +93,12 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         return SingleChildScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(16, 0, 16, hasSelectedStation ? 150.0 : 80.0),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            hasSelectedStation ? 150.0 : 80.0,
+          ),
           child: child,
         );
       },
@@ -126,7 +132,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                   builder: (context, ref, child) {
                     final isFavorite = ref.watch(
                       favoritesProvider.select(
-                        (state) => state == station.name,
+                        (state) => state.favoriteStationName == station.name,
                       ),
                     );
 
@@ -142,13 +148,19 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                           isActive: isActive,
                           isFavorite: isFavorite,
                           onTap: () {
-                            ref.read(playerProvider.notifier).playStation(station);
+                            ref
+                                .read(playerProvider.notifier)
+                                .playStation(station);
                           },
                           onFavoriteTap: () {
-                            ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .toggleFavorite(station.name);
                           },
                           onLongPress: () {
-                            ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .toggleFavorite(station.name);
                           },
                         ),
                       ),
@@ -179,28 +191,29 @@ class _AnimatedCard extends StatelessWidget {
     // Уменьшенная задержка для более плавного последовательного появления
     final delay = index * 0.05;
     final beginTime = delay.clamp(0.0, 0.8);
-    
+
     // Более плавная кривая анимации с естественным движением
-    final tween = Tween(begin: 0.0, end: 1.0).chain(
-      CurveTween(curve: Curves.easeOutCubic),
-    );
+    final tween = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).chain(CurveTween(curve: Curves.easeOutCubic));
 
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
         final animationValue = controller.value;
         // Плавный расчёт прогресса без резких переходов
-        final progress = beginTime >= 1.0 
-            ? 1.0 
-            : ((animationValue - beginTime) / (1.0 - beginTime)).clamp(0.0, 1.0);
+        final progress = beginTime >= 1.0
+            ? 1.0
+            : ((animationValue - beginTime) / (1.0 - beginTime)).clamp(
+                0.0,
+                1.0,
+              );
         final value = tween.transform(progress);
 
         return Transform.translate(
           offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: child,

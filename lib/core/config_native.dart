@@ -35,23 +35,23 @@ class AppConfig {
 
       // Проверка на пустые значения
       if (openWeatherApiKey.isEmpty) {
-        Logger.warn('OPENWEATHER_API_KEY is empty');
+        Logger.warn('OPENWEATHER_API_KEY is empty', tag: 'Config');
       }
       if (apiNinjasKey.isEmpty) {
-        Logger.warn('API_NINJAS_KEY is empty');
+        Logger.warn('API_NINJAS_KEY is empty', tag: 'Config');
       }
       if (apiVerveKey.isEmpty) {
-        Logger.warn('API_VERVE_KEY is empty (опционально)');
+        Logger.warn('API_VERVE_KEY is empty (опционально)', tag: 'Config');
       }
       if (rssFeedUrl.isEmpty) {
         rssFeedUrl = 'https://ysia.ru/feed/';
-        Logger.log('RSS_FEED_URL: используется значение по умолчанию');
+        Logger.log('RSS_FEED_URL: используется значение по умолчанию', tag: 'Config');
       }
-      
-      Logger.log('AppConfig initialized from .env file');
+
+      Logger.log('AppConfig initialized from .env file', tag: 'Config');
     } catch (e) {
-      Logger.error('Could not load .env file: $e');
-      Logger.log('Using default values for configuration');
+      Logger.error('Could not load .env file: $e', tag: 'Config');
+      Logger.log('Using default values for configuration', tag: 'Config');
       rssFeedUrl = 'https://ysia.ru/feed/';
     }
   }

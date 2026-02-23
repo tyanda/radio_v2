@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'firebase_options.dart';
 import 'package:radio_v2/features/home/home_screen.dart';
 import 'core/config.dart';
@@ -22,7 +23,7 @@ Future<void> main() async {
   try {
     await initializeDateFormatting('ru_RU');
   } catch (e) {
-    Logger.error("Ошибка локализации: $e");
+    Logger.error("Ошибка локализации: $e", tag: 'Main');
   }
 
   // 2. Firebase
@@ -31,22 +32,30 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      Logger.log("Firebase initialized");
+      Logger.log("Firebase initialized", tag: 'Main');
     } else {
-      Logger.log("Firebase already initialized (skipped)");
+      Logger.log("Firebase already initialized (skipped)", tag: 'Main');
     }
   } on FirebaseException catch (e) {
     if (e.code == 'duplicate-app') {
       // Игнорируем ошибку дублирования - Firebase уже инициализирован
-      Logger.log("Firebase duplicate-app (ignored)");
+      Logger.log("Firebase duplicate-app (ignored)", tag: 'Main');
     } else {
-      Logger.error("Firebase init error: $e");
+      Logger.error("Firebase init error: $e", tag: 'Main');
       rethrow;
     }
   } catch (e) {
-    Logger.error("Firebase unexpected error: $e");
+    Logger.error("Firebase unexpected error: $e", tag: 'Main');
     rethrow;
   }
+
+  // Инициализация фонового воспроизведения
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'sakhalive_radio_channel',
+    androidNotificationChannelName: 'SakhaLive Radio',
+    androidNotificationOngoing: true,
+    androidStopForegroundOnPause: true,
+  );
 
   runApp(const MyApp());
 }

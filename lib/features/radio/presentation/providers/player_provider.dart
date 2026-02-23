@@ -69,7 +69,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       // Return file URI
       return file.uri;
     } catch (e) {
-      Logger.error('Error loading asset $assetPath: $e');
+      Logger.error('Error loading asset $assetPath: $e', tag: 'Player');
       return null;
     }
   }
@@ -79,7 +79,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     _radioPlayer = RadioPlayer();
 
     // Listen to player state changes
-    _playerStateSubscription = _radioPlayer.playerStateStream.listen((playerState) {
+    _playerStateSubscription = _radioPlayer.playerStateStream.listen((
+      playerState,
+    ) {
       final currentState = state.asData?.value;
       if (currentState != null) {
         if (currentState.isPlaying != playerState.playing) {
@@ -91,15 +93,16 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     });
 
     // Listen to processing state changes (buffering)
-    _processingStateSubscription = _radioPlayer.processingStateStream.listen((processingState) {
+    _processingStateSubscription = _radioPlayer.processingStateStream.listen((
+      processingState,
+    ) {
       final currentState = state.asData?.value;
       if (currentState != null) {
-        final isBuffering = processingState == ProcessingState.buffering ||
-                           processingState == ProcessingState.loading;
+        final isBuffering =
+            processingState == ProcessingState.buffering ||
+            processingState == ProcessingState.loading;
         if (currentState.isBuffering != isBuffering) {
-          state = AsyncData(
-            currentState.copyWith(isBuffering: isBuffering),
-          );
+          state = AsyncData(currentState.copyWith(isBuffering: isBuffering));
         }
       }
     });
@@ -148,23 +151,34 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           if (!kIsWeb) {
             Future.microtask(() async {
               try {
-                Logger.log("Auto-play: attempting to play ${station.name}");
+                Logger.log(
+                  "Auto-play: attempting to play ${station.name}",
+                  tag: 'Player',
+                );
                 await _radioPlayer.play();
-                Logger.log("Auto-play: successfully playing ${station.name}");
+                Logger.log(
+                  "Auto-play: successfully playing ${station.name}",
+                  tag: 'Player',
+                );
               } catch (e) {
-                Logger.error("Auto-play failed for ${station.name}: $e");
-                state = AsyncData(PlayerState(
-                  volume: volume,
-                  showVolumeSlider: showVolume,
-                  currentStation: station,
-                  isPlaying: false,
-                ));
+                Logger.error(
+                  "Auto-play failed for ${station.name}: $e",
+                  tag: 'Player',
+                );
+                state = AsyncData(
+                  PlayerState(
+                    volume: volume,
+                    showVolumeSlider: showVolume,
+                    currentStation: station,
+                    isPlaying: false,
+                  ),
+                );
               }
             });
           }
         }
       } catch (e) {
-        Logger.error("Auto-play failed: $e");
+        Logger.error("Auto-play failed: $e", tag: 'Player');
       }
     }
 
@@ -179,38 +193,75 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
   Future<void> playStation(Station station) async {
     final currentState = state.asData?.value;
+    Logger.log(
+      "playStation(): called for station ${station.name}",
+      tag: 'Player',
+    );
+
     if (currentState == null) {
-      Logger.error("playStation(): state is null (not ready yet)");
+      Logger.error(
+        "playStation(): state is null (not ready yet)",
+        tag: 'Player',
+      );
       return;
     }
 
+    Logger.log(
+      "playStation(): current state - station: ${currentState.currentStation?.name}, isPlaying: ${currentState.isPlaying}",
+      tag: 'Player',
+    );
+
     // 1. Tapping the same station: Toggle Play/Pause
     if (currentState.currentStation?.name == station.name) {
+      Logger.log(
+        "playStation(): same station, toggling play/pause",
+        tag: 'Player',
+      );
       if (currentState.isPlaying) {
+        Logger.log("playStation(): pausing current station", tag: 'Player');
         await _radioPlayer.pause();
       } else {
         try {
+          Logger.log("playStation(): playing current station", tag: 'Player');
           await _radioPlayer.play();
         } catch (e) {
-          Logger.error("playStation(): play failed: $e");
+          Logger.error("playStation(): play failed: $e", tag: 'Player');
+          Logger.error(
+            "playStation(): play error details - ${e.toString()}",
+            tag: 'Player',
+          );
         }
       }
       return;
     }
 
     // 2. Changing station
+    Logger.log(
+      "playStation(): changing station to ${station.name}",
+      tag: 'Player',
+    );
     try {
       // Set buffering state
+      Logger.log("playStation(): setting buffering state", tag: 'Player');
       state = AsyncData(
-        currentState.copyWith(currentStation: station, isPlaying: true, isBuffering: true),
+        currentState.copyWith(
+          currentStation: station,
+          isPlaying: true,
+          isBuffering: true,
+        ),
       );
 
+      Logger.log("playStation(): stopping current stream", tag: 'Player');
       await _radioPlayer.stop();
 
+      Logger.log("playStation(): preparing artwork", tag: 'Player');
       final artUri = station.art.isNotEmpty
           ? await _getAssetUri(station.art)
           : null;
 
+      Logger.log("playStation(): artwork URI: $artUri", tag: 'Player');
+
+      Logger.log("playStation(): setting up new stream", tag: 'Player');
       await _radioPlayer.playStream(
         url: station.url,
         title: station.name,
@@ -220,16 +271,28 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       );
 
       try {
+        Logger.log("playStation(): starting playback", tag: 'Player');
         await _radioPlayer.play();
-        Logger.log("playStation(): playing ${station.name}");
+        Logger.log("playStation(): playing ${station.name}", tag: 'Player');
       } catch (e) {
-        Logger.error("playStation(): play failed: $e");
+        Logger.error("playStation(): play failed: $e", tag: 'Player');
+        Logger.error(
+          "playStation(): play error details - ${e.toString()}",
+          tag: 'Player',
+        );
         state = AsyncData(
           currentState.copyWith(currentStation: station, isPlaying: false),
         );
       }
     } catch (e) {
-      Logger.error("playStation(): error setting up station: $e");
+      Logger.error(
+        "playStation(): error setting up station: $e",
+        tag: 'Player',
+      );
+      Logger.error(
+        "playStation(): setup error details - ${e.toString()}",
+        tag: 'Player',
+      );
       state = AsyncData(
         (state.asData?.value ?? currentState).copyWith(isPlaying: false),
       );

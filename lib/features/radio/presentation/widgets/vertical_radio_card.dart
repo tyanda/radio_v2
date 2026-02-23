@@ -5,12 +5,12 @@ import 'package:radio_v2/core/theme/app_colors.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 
 /// Вертикальная карточка радиостанции в стиле «плитка»
-/// 
+///
 /// Архитектурные принципы:
 /// - Реактивность: анимация смены состояний через AnimatedContainer
 /// - Автономность: занимает всё доступное пространство родителя
 /// - Безопасность контента: maxLines и TextOverflow.ellipsis
-class VerticalRadioCard extends StatelessWidget {
+class VerticalRadioCard extends StatefulWidget {
   final Station station;
   final bool isActive;
   final bool isFavorite;
@@ -29,25 +29,55 @@ class VerticalRadioCard extends StatelessWidget {
   });
 
   @override
+  State<VerticalRadioCard> createState() => _VerticalRadioCardState();
+}
+
+class _VerticalRadioCardState extends State<VerticalRadioCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       onLongPress: () {
         HapticFeedback.mediumImpact();
-        onLongPress?.call();
+        widget.onLongPress?.call();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         clipBehavior: Clip.none,
         decoration: BoxDecoration(
-          color: isActive ? AppColors.accent : AppColors.cardBackground,
+          color: widget.isActive ? AppColors.accent : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(24.0),
           border: Border.all(
-            color: isActive ? AppColors.accent : Colors.white.withValues(alpha: 0.08),
-            width: isActive ? 1.5 : 1.0,
+            color: widget.isActive
+                ? AppColors.accent
+                : Colors.white.withValues(alpha: 0.08),
+            width: widget.isActive ? 1.5 : 1.0,
           ),
-          boxShadow: isActive
+          boxShadow: widget.isActive
               ? [
                   BoxShadow(
                     color: AppColors.accent.withValues(alpha: 0.3),
@@ -62,7 +92,7 @@ class VerticalRadioCard extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             // Анимация для активной станции
-            if (isActive)
+            if (widget.isActive)
               Positioned(
                 right: -5,
                 bottom: -5,
@@ -97,11 +127,11 @@ class VerticalRadioCard extends StatelessWidget {
                             color: const Color(0xFF000000),
                             borderRadius: BorderRadius.circular(16.0),
                           ),
-                          child: station.art.isNotEmpty
+                          child: widget.station.art.isNotEmpty
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(16.0),
                                   child: Image.asset(
-                                    station.art,
+                                    widget.station.art,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return const Center(
@@ -123,30 +153,39 @@ class VerticalRadioCard extends StatelessWidget {
                                 ),
                         ),
 
-                        // Иконка избранного поверх изображения
+                        // Иконка избранного поверх изображения с пульсацией
                         Positioned(
                           top: 8,
                           right: 8,
                           child: GestureDetector(
                             onTap: () {
                               HapticFeedback.lightImpact();
-                              onFavoriteTap?.call();
+                              widget.onFavoriteTap?.call();
                             },
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                isFavorite
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_outline_rounded,
-                                color: isFavorite
-                                    ? const Color(0xFFFF0000)
-                                    : Colors.white,
-                                size: 18.0,
-                              ),
+                            child: AnimatedBuilder(
+                              animation: _pulseAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _pulseAnimation.value,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.4),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      widget.isFavorite
+                                          ? Icons.favorite_rounded
+                                          : Icons.favorite_outline_rounded,
+                                      color: widget.isFavorite
+                                          ? const Color(0xFFFF0000)
+                                          : Colors.white,
+                                      size: 18.0,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -163,21 +202,21 @@ class VerticalRadioCard extends StatelessWidget {
                     children: [
                       // Название станции
                       Text(
-                        station.name.toUpperCase(),
+                        widget.station.name.toUpperCase(),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w900,
                           fontSize: 16.0,
-                          color: isActive ? Colors.black : Colors.white,
+                          color: widget.isActive ? Colors.black : Colors.white,
                           letterSpacing: -0.5,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       // Подзаголовок (описание)
-                      if (station.desc.isNotEmpty)
+                      if (widget.station.desc.isNotEmpty)
                         Text(
-                          station.desc,
+                          widget.station.desc,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.w700,

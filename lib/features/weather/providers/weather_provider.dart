@@ -48,7 +48,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
           position.longitude,
         );
       } catch (locationError) {
-        Logger.error('Ошибка получения местоположения: $locationError');
+        Logger.error('Ошибка получения местоположения: $locationError', tag: 'Weather');
         data = await _repository.getWeatherForecast("Yakutsk");
       }
 
@@ -60,7 +60,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
       if (cached != null) {
         state = AsyncData(cached);
       } else {
-        Logger.error('Ошибка получения погоды: $e');
+        Logger.error('Ошибка получения погоды: $e', tag: 'Weather');
         state = AsyncError(e, StackTrace.current);
       }
     } catch (e) {
@@ -68,7 +68,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
       if (cached != null) {
         state = AsyncData(cached);
       } else {
-        Logger.error('Произошла ошибка: ${e.toString()}');
+        Logger.error('Произошла ошибка: ${e.toString()}', tag: 'Weather');
         state = AsyncError(e, StackTrace.current);
       }
     }
@@ -83,6 +83,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
       if (difference.inMinutes < 15) {
         Logger.log(
           'Weather data is fresh (updated ${difference.inMinutes} mins ago). Skipping refresh.',
+          tag: 'Weather',
         );
         return;
       }
@@ -99,7 +100,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cachedWeatherKey, jsonEncode(data.toJson()));
     } catch (e) {
-      Logger.error('Ошибка кэширования данных погоды: $e');
+      Logger.error('Ошибка кэширования данных погоды: $e', tag: 'Weather');
     }
   }
 
@@ -111,7 +112,7 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
         return WeatherData.fromJson(jsonDecode(cachedData));
       }
     } catch (e) {
-      Logger.error('Ошибка загрузки кэшированных данных погоды: $e');
+      Logger.error('Ошибка загрузки кэшированных данных погоды: $e', tag: 'Weather');
     }
     return null;
   }

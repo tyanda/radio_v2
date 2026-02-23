@@ -46,6 +46,7 @@ dependencies:
   # --- ФУНКЦИОНАЛ РАДИО ---
   just_audio: ^0.10.5
   audio_service: ^0.18.17
+  just_audio_background: ^0.0.1-beta.17
   
   marquee: ^2.2.3
   flutter_localizations:
@@ -54,6 +55,7 @@ dependencies:
   
   # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
   flutter_riverpod: ^2.5.1
+  riverpod: ^2.5.1
   
   # --- ПРОИЗВОДИТЕЛЬНОСТЬ И UX ---
   cached_network_image: ^3.4.1

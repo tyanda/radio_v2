@@ -9,7 +9,7 @@ class EnvLoader {
     try {
       await dotenv.load(fileName: ".env");
     } catch (e) {
-      Logger.warn('Could not load .env file: $e');
+      Logger.warn('Could not load .env file: $e', tag: 'EnvLoader');
     }
   }
 

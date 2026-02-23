@@ -35,7 +35,7 @@ class NewsService {
 
   /// Версия для Web (через RSS2JSON с CORS поддержкой)
   Future<List<String>> _fetchNewsWeb({int limit = 5}) async {
-    Logger.log('[NewsService] Web: Fetching via RSS2JSON');
+    Logger.log('Web: Fetching via RSS2JSON', tag: 'NewsService');
 
     try {
       // Для веба не используем кэш (SharedPreferences не работает)
@@ -43,7 +43,7 @@ class NewsService {
       // https://rss2json.com/
       final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=${Uri.encodeComponent(_directRssUrl)}';
 
-      Logger.log('[NewsService] Web URL: $rss2JsonUrl');
+      Logger.log('Web URL: $rss2JsonUrl', tag: 'NewsService');
 
       final response = await _dio.get(
         rss2JsonUrl,
@@ -71,21 +71,21 @@ class NewsService {
           }
 
           if (titles.isNotEmpty) {
-            Logger.log('[NewsService] Web: Parsed ${titles.length} titles via RSS2JSON');
+            Logger.log('Web: Parsed ${titles.length} titles via RSS2JSON', tag: 'NewsService');
             return titles;
           }
         }
 
-        Logger.warn('[NewsService] Web: RSS2JSON returned error or empty: ${data?['message']}');
+        Logger.warn('Web: RSS2JSON returned error or empty: ${data?['message']}', tag: 'NewsService');
       } else {
-        Logger.error('[NewsService] Web: RSS2JSON status ${response.statusCode}');
+        Logger.error('Web: RSS2JSON status ${response.statusCode}', tag: 'NewsService');
       }
 
       // Если RSS2JSON не сработал, возвращаем заглушку
       return ["НЕТ НОВОСТЕЙ", "ОСТАВАЙТЕСЬ С НАМИ"];
 
     } catch (e) {
-      Logger.error('[NewsService] Web Error: $e');
+      Logger.error('Web Error: $e', tag: 'NewsService');
       return ["ЗАГРУЗКА НОВОСТЕЙ...", "ПРОВЕРЬТЕ ИНТЕРНЕТ"];
     }
   }
@@ -97,8 +97,8 @@ class NewsService {
       final encodedUrl = Uri.encodeQueryComponent(_directRssUrl);
       final rss2JsonUrl = 'https://api.rss2json.com/v1/api.json?rss_url=$encodedUrl';
 
-      Logger.log('[NewsService] Native: Fetching via RSS2JSON');
-      Logger.log('[NewsService] URL: $rss2JsonUrl');
+      Logger.log('Native: Fetching via RSS2JSON', tag: 'NewsService');
+      Logger.log('URL: $rss2JsonUrl', tag: 'NewsService');
 
       final response = await _dio.get(
         rss2JsonUrl,
@@ -126,22 +126,22 @@ class NewsService {
           }
 
           if (titles.isNotEmpty) {
-            Logger.log('[NewsService] Parsed ${titles.length} titles via RSS2JSON');
+            Logger.log('Parsed ${titles.length} titles via RSS2JSON', tag: 'NewsService');
             await _cacheTitles(titles);
             return titles;
           }
         }
 
-        Logger.warn('[NewsService] RSS2JSON returned error or empty: ${data?['message']}');
+        Logger.warn('RSS2JSON returned error or empty: ${data?['message']}', tag: 'NewsService');
       } else {
-        Logger.error('[NewsService] RSS2JSON status ${response.statusCode}');
+        Logger.error('RSS2JSON status ${response.statusCode}', tag: 'NewsService');
       }
 
       // Если RSS2JSON не сработал, возвращаем кэш
       return _getCachedTitles(limit);
 
     } catch (e) {
-      Logger.error('[NewsService] Native error: $e');
+      Logger.error('Native error: $e', tag: 'NewsService');
       return _getCachedTitles(limit);
     }
   }
@@ -157,9 +157,9 @@ class NewsService {
         _cacheTimestampKey,
         DateTime.now().millisecondsSinceEpoch,
       );
-      Logger.log('[NewsService] Cached ${titles.length} titles');
+      Logger.log('Cached ${titles.length} titles', tag: 'NewsService');
     } catch (e) {
-      Logger.warn('[NewsService] Cache save error: $e');
+      Logger.warn('Cache save error: $e', tag: 'NewsService');
     }
   }
 
@@ -177,15 +177,15 @@ class NewsService {
       // Проверяем актуальность
       final cacheAge = DateTime.now().millisecondsSinceEpoch - timestamp;
       if (cacheAge > _cacheDuration.inMilliseconds) {
-        Logger.log('[NewsService] Cache expired (${cacheAge ~/ 1000}s)');
+        Logger.log('Cache expired (${cacheAge ~/ 1000}s)', tag: 'NewsService');
         return [];
       }
 
       final titles = (jsonDecode(cachedJson) as List).cast<String>();
-      Logger.log('[NewsService] Returning ${titles.length} cached titles');
+      Logger.log('Returning ${titles.length} cached titles', tag: 'NewsService');
       return titles.take(limit).toList();
     } catch (e) {
-      Logger.warn('[NewsService] Cache read error: $e');
+      Logger.warn('Cache read error: $e', tag: 'NewsService');
       return [];
     }
   }
@@ -196,16 +196,16 @@ class NewsService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_cacheKey);
       await prefs.remove(_cacheTimestampKey);
-      Logger.log('[NewsService] Cache cleared');
+      Logger.log('Cache cleared', tag: 'NewsService');
     } catch (e) {
-      Logger.warn('[NewsService] Cache clear error: $e');
+      Logger.warn('Cache clear error: $e', tag: 'NewsService');
     }
   }
 
   /// Принудительное обновление (игнорируя кэш)
   Future<List<String>> forceRefresh({int limit = 5}) async {
-    Logger.log('[NewsService] Force refresh');
-    
+    Logger.log('Force refresh', tag: 'NewsService');
+
     if (kIsWeb) {
       final titles = await _fetchNewsWeb(limit: limit);
       return titles;

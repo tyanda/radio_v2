@@ -9,7 +9,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
+import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/data/radio_player.dart';
 import '../../../../../core/utils/logger.dart';
 

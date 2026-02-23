@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
-import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
-import '../providers/weather_provider.dart';
+import 'package:radio_v2/core/providers/weather_provider.dart';
 import '../models/weather_model.dart';
 
 class WeatherScreen extends ConsumerStatefulWidget {

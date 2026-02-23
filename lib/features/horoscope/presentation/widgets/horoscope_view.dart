@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
-import 'package:radio_v2/features/horoscope/presentation/providers/horoscope_provider.dart';
+import 'package:radio_v2/core/providers/horoscope_provider.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {

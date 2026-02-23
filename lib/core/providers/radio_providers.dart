@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/core/providers/providers.dart';
+import 'package:radio_v2/core/providers/global_providers.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/services/news_service.dart';
-import '../../domain/repositories/favorites_repository.dart';
-import '../providers/favorites_provider.dart';
-import '../../data/repositories/favorites_repository_impl.dart';
+import 'package:radio_v2/features/radio/domain/repositories/favorites_repository.dart';
+import 'package:radio_v2/features/radio/presentation/providers/favorites_provider.dart';
+import 'package:radio_v2/features/radio/data/repositories/favorites_repository_impl.dart';
 
 final stationListProvider = Provider<List<Station>>((ref) {
   return [

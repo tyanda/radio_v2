@@ -8,7 +8,6 @@ class AppColors {
     0xFF0F0F0F,
   ); // Основной фон (BG / Primary)
   static const Color cardBackground = Color(0xFF1A1A1A); // Фон карточек
-  static const Color cardBackgroundDark = Color(0xFF1A1A1A);
   static const Color error = Color(0xFFEF4444);
   static const Color subText = Color(0xFFA3A3A3);
 

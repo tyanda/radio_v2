@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/widgets/equalizer_animation.dart';

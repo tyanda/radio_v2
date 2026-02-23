@@ -4,10 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 
-import 'package:radio_v2/core/theme/app_colors.dart';
-import 'package:radio_v2/core/theme/figma_design.dart';
+import 'package:radio_v2/core/design/app_colors.dart';
+import 'package:radio_v2/core/design/figma_design.dart';
 import 'package:radio_v2/features/horoscope/presentation/widgets/horoscope_view.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
+import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/mini_player.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
 import 'package:radio_v2/features/weather/presentation/weather_screen.dart';

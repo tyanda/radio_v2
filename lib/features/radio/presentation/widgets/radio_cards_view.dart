@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
+import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/vertical_radio_card.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 

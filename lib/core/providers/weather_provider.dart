@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:radio_v2/core/providers/providers.dart';
-import '../models/weather_model.dart';
-import '../models/weather_failure.dart';
-import '../data/weather_repository.dart';
-import '../data/weather_service.dart';
-import '../../../core/utils/logger.dart';
+import 'package:radio_v2/core/providers/global_providers.dart';
+import 'package:radio_v2/features/weather/models/weather_model.dart';
+import 'package:radio_v2/features/weather/models/weather_failure.dart';
+import 'package:radio_v2/features/weather/data/weather_repository.dart';
+import 'package:radio_v2/features/weather/data/weather_service.dart';
+import 'package:radio_v2/core/utils/logger.dart';
 
 class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
   static const String _cachedWeatherKey = 'cached_weather_data';

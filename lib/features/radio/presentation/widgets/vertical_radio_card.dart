@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
-import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 
 /// Вертикальная карточка радиостанции в стиле «плитка»

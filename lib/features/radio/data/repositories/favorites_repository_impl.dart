@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/repositories/favorites_repository.dart';
 import '../../domain/station.dart';
-import '../datasources/station_datasource.dart';
+import '../datasources/local_station_source.dart';
 
 class FavoritesRepositoryImpl implements FavoritesRepository {
   static const String _favoriteKey = 'favorite_station';

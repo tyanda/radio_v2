@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-import 'package:radio_v2/core/theme/app_colors.dart';
+import 'package:radio_v2/core/design/app_colors.dart';
 
 class EqualizerAnimation extends StatefulWidget {
   final bool isActive;

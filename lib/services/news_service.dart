@@ -5,6 +5,9 @@ import 'dart:convert';
 import '../core/config.dart';
 import '../core/utils/logger.dart';
 
+// Импорт для веб-версии
+import 'package:web/web.dart' as web;
+
 /// Сервис для получения RSS через CORS-прокси
 ///
 /// Преимущества:
@@ -14,6 +17,7 @@ import '../core/utils/logger.dart';
 /// - Быстро (кэширование)
 class NewsService {
   final Dio _dio;
+  bool _isRefreshing = false; // Флаг для предотвращения рекурсии
 
   // Резервный URL (прямой запрос для мобильных)
   static String get _directRssUrl => AppConfig.rssFeedUrl;
@@ -42,12 +46,17 @@ class NewsService {
       final cached = await _getCachedTitles(limit);
       if (cached.isNotEmpty) {
         Logger.log('Web: Using cached titles', tag: 'NewsService');
-        // Возвращаем кэш, но в фоне обновляем
-        _fetchNewsWeb(limit: limit).then((titles) {
-          if (titles.isNotEmpty) {
-            _cacheTitles(titles);
-          }
-        });
+        // Возвращаем кэш, но в фоне обновляем (только если нет уже идущего запроса)
+        if (!_isRefreshing) {
+          _isRefreshing = true;
+          _fetchNewsWeb(limit: limit).then((titles) {
+            if (titles.isNotEmpty) {
+              _cacheTitles(titles);
+            }
+          }).whenComplete(() {
+            _isRefreshing = false;
+          });
+        }
         return cached;
       }
 
@@ -187,12 +196,22 @@ class NewsService {
     if (titles.isEmpty) return;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cacheKey, jsonEncode(titles));
-      await prefs.setInt(
-        _cacheTimestampKey,
-        DateTime.now().millisecondsSinceEpoch,
-      );
+      if (kIsWeb) {
+        // Для веба используем напрямую localStorage
+        web.window.localStorage.setItem(_cacheKey, jsonEncode(titles));
+        web.window.localStorage.setItem(
+          _cacheTimestampKey,
+          DateTime.now().millisecondsSinceEpoch.toString(),
+        );
+      } else {
+        // Для нативных платформ — SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_cacheKey, jsonEncode(titles));
+        await prefs.setInt(
+          _cacheTimestampKey,
+          DateTime.now().millisecondsSinceEpoch,
+        );
+      }
       Logger.log('Cached ${titles.length} titles', tag: 'NewsService');
     } catch (e) {
       Logger.warn('Cache save error: $e', tag: 'NewsService');
@@ -202,9 +221,22 @@ class NewsService {
   /// Получение кэшированных заголовков
   Future<List<String>> _getCachedTitles(int limit) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final cachedJson = prefs.getString(_cacheKey);
-      final timestamp = prefs.getInt(_cacheTimestampKey);
+      String? cachedJson;
+      int? timestamp;
+
+      if (kIsWeb) {
+        // Для веба используем напрямую localStorage
+        cachedJson = web.window.localStorage.getItem(_cacheKey);
+        final timestampStr = web.window.localStorage.getItem(_cacheTimestampKey);
+        if (timestampStr != null && timestampStr.isNotEmpty) {
+          timestamp = int.tryParse(timestampStr);
+        }
+      } else {
+        // Для нативных платформ — SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        cachedJson = prefs.getString(_cacheKey);
+        timestamp = prefs.getInt(_cacheTimestampKey);
+      }
 
       if (cachedJson == null || timestamp == null) {
         return [];
@@ -232,9 +264,16 @@ class NewsService {
   /// Очистка кэша (для отладки)
   static Future<void> clearCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_cacheKey);
-      await prefs.remove(_cacheTimestampKey);
+      if (kIsWeb) {
+        // Для веба используем напрямую localStorage
+        web.window.localStorage.removeItem(_cacheKey);
+        web.window.localStorage.removeItem(_cacheTimestampKey);
+      } else {
+        // Для нативных платформ — SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(_cacheKey);
+        await prefs.remove(_cacheTimestampKey);
+      }
       Logger.log('Cache cleared', tag: 'NewsService');
     } catch (e) {
       Logger.warn('Cache clear error: $e', tag: 'NewsService');

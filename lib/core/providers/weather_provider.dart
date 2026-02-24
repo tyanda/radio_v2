@@ -47,12 +47,18 @@ class WeatherNotifier extends Notifier<AsyncValue<WeatherData?>> {
           position.latitude,
           position.longitude,
         );
+        Logger.log(
+          'Погода загружена по координатам: ${position.latitude}, ${position.longitude}',
+          tag: 'Weather',
+        );
       } catch (locationError) {
         Logger.error(
           'Ошибка получения местоположения: $locationError',
           tag: 'Weather',
         );
+        // Пробуем загрузить по городу Якутск
         data = await _repository.getWeatherForecast("Yakutsk");
+        Logger.log('Погода загружена по умолчанию (Yakutsk)', tag: 'Weather');
       }
 
       await _cacheWeatherData(data);

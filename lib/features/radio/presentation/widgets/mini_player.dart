@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
@@ -191,8 +192,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                         ? ShimmerWidget.text(
                             width: 120,
                             height: 14,
-                            textStyle: const TextStyle(
-                              fontFamily: 'Inter',
+                            textStyle: GoogleFonts.inter(
                               fontWeight: FontWeight.w900,
                               fontSize: 13.0,
                               letterSpacing: -0.5,
@@ -200,8 +200,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                           )
                         : Text(
                             currentStation.name,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.inter(
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
                               fontSize: 13.0,
@@ -216,8 +215,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                         ? ShimmerWidget.text(
                             width: 80,
                             height: 10,
-                            textStyle: TextStyle(
-                              fontFamily: 'Inter',
+                            textStyle: GoogleFonts.inter(
                               color: AppColors.accent,
                               fontSize: 8.5,
                               fontWeight: FontWeight.w700,
@@ -238,8 +236,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                               const SizedBox(width: 5),
                               Text(
                                 AppLocalizations.of(context).live_broadcast,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.inter(
                                   color: AppColors.accent,
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w700,

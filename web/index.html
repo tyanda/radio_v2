@@ -1,24 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+  <!-- This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`. -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Sakha Radio - онлайн радио">
+  <meta name="theme-color" content="#0A0A0A">
+  
+  <!-- CSP для веб-версии - разрешаем все необходимые ресурсы -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' 'unsafe-inline' 'unsafe-eval'
+      blob:
+      data:
+      https://*.googleapis.com
+      https://*.gstatic.com
+      https://*.firebaseio.com
+      https://*.google-analytics.com
+      https://*.analytics.google.com
+      https://*.googletagmanager.com
+      https://lottie.host
+      https://cdn.jsdelivr.net;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval'
+      blob:
+      https://*.googleapis.com
+      https://*.gstatic.com
+      https://*.firebaseio.com
+      https://lottie.host
+      https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline'
+      https://*.googleapis.com;
+    font-src 'self' data:
+      https://*.googleapis.com
+      https://*.gstatic.com;
+    img-src 'self' data: blob: https:;
+    media-src 'self' blob: data: https: http:;
+    connect-src 'self'
+      blob:
+      https://*.googleapis.com
+      https://*.gstatic.com
+      https://*.firebaseio.com
+      https://*.google-analytics.com
+      https://api.rss2json.com
+      https://api.openweathermap.org
+      https://api.api-ninjas.com
+      https://api.apiverve.com
+      https://lottie.host
+      https://cdn.jsdelivr.net
+      https://www.gstatic.com
+      https://*.hostingradio.ru
+      https://*.cdnvideo.ru
+      https://*.nip.io;
+    frame-src 'self' https:;
+    worker-src 'self' blob:;
+    child-src 'self' blob:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  ">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">

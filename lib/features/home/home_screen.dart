@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/core/design/figma_design.dart';
@@ -220,8 +221,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
               const SizedBox(height: 2.0),
               Text(
                 greeting,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.inter(
                   color: AppColors.accent,
                   fontWeight: FontWeight.w700,
                   fontStyle: FontStyle.italic,
@@ -292,8 +292,7 @@ class _MarqueeSection extends ConsumerWidget {
       child: Marquee(
         text:
             "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
-        style: const TextStyle(
-          fontFamily: 'Inter',
+        style: GoogleFonts.inter(
           fontWeight: FontWeight.w600,
           fontSize: 14,
           color: Colors.black,

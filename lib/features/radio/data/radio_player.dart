@@ -1,12 +1,20 @@
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/utils/logger.dart';
+import 'web_radio_player.dart';
 
 /// Класс для управления воспроизведением радио-потока
+/// На Web используется HTML5 Audio API, на других платформах - just_audio
 class RadioPlayer {
-  final AudioPlayer player;
+  final AudioPlayer? player;
+  final WebRadioPlayer? webPlayer;
+  final bool isWeb;
 
-  RadioPlayer() : player = AudioPlayer();
+  RadioPlayer()
+      : isWeb = kIsWeb,
+        player = kIsWeb ? null : AudioPlayer(),
+        webPlayer = kIsWeb ? WebRadioPlayer() : null;
 
   /// Подключение к потоку радио с метаданными
   Future<void> playStream({
@@ -23,25 +31,30 @@ class RadioPlayer {
         tag: 'RadioPlayer',
       );
 
-      // Проверка валидности URL
-      final uri = Uri.parse(url);
-      Logger.log(
-        "RadioPlayer: Parsed URI scheme: ${uri.scheme}, host: ${uri.host}",
-        tag: 'RadioPlayer',
-      );
+      if (isWeb) {
+        // Web: используем HTML5 Audio
+        await webPlayer!.loadStream(url);
+      } else {
+        // Mobile/Desktop: используем just_audio
+        final uri = Uri.parse(url);
+        Logger.log(
+          "RadioPlayer: Parsed URI scheme: ${uri.scheme}, host: ${uri.host}",
+          tag: 'RadioPlayer',
+        );
 
-      await player.setAudioSource(
-        AudioSource.uri(
-          uri,
-          tag: MediaItem(
-            id: url,
-            title: title,
-            artist: artist,
-            album: album ?? 'Sakha Radio',
-            artUri: artUri != null ? Uri.parse(artUri) : null,
+        await player!.setAudioSource(
+          AudioSource.uri(
+            uri,
+            tag: MediaItem(
+              id: url,
+              title: title,
+              artist: artist,
+              album: album ?? 'Sakha Radio',
+              artUri: artUri != null ? Uri.parse(artUri) : null,
+            ),
           ),
-        ),
-      );
+        );
+      }
 
       Logger.log("RadioPlayer: Stream loaded successfully", tag: 'RadioPlayer');
     } on PlayerException catch (e) {
@@ -74,10 +87,17 @@ class RadioPlayer {
   Future<void> play() async {
     try {
       Logger.log(
-        "RadioPlayer: Attempting to play, current player state: ${player.playerState}",
+        "RadioPlayer: Attempting to play, isWeb: $isWeb",
         tag: 'RadioPlayer',
       );
-      await player.play();
+      
+      if (isWeb) {
+        // Для Web используем resume() который может перезагрузить поток
+        await webPlayer!.resume();
+      } else {
+        await player!.play();
+      }
+      
       Logger.log("RadioPlayer: Playing", tag: 'RadioPlayer');
     } catch (e) {
       Logger.error("RadioPlayer: Play failed: $e", tag: 'RadioPlayer');
@@ -91,7 +111,12 @@ class RadioPlayer {
 
   Future<void> pause() async {
     try {
-      await player.pause();
+      Logger.log("RadioPlayer: Pausing", tag: 'RadioPlayer');
+      if (isWeb) {
+        await webPlayer!.pause();
+      } else {
+        await player!.pause();
+      }
       Logger.log("RadioPlayer: Paused", tag: 'RadioPlayer');
     } catch (e) {
       Logger.error("RadioPlayer: Pause failed: $e", tag: 'RadioPlayer');
@@ -101,11 +126,12 @@ class RadioPlayer {
 
   Future<void> stop() async {
     try {
-      Logger.log(
-        "RadioPlayer: Stopping player, current state: ${player.playerState}",
-        tag: 'RadioPlayer',
-      );
-      await player.stop();
+      Logger.log("RadioPlayer: Stopping player", tag: 'RadioPlayer');
+      if (isWeb) {
+        await webPlayer!.stop();
+      } else {
+        await player!.stop();
+      }
       Logger.log("RadioPlayer: Stopped", tag: 'RadioPlayer');
     } catch (e) {
       Logger.error("RadioPlayer: Stop failed: $e", tag: 'RadioPlayer');
@@ -121,7 +147,11 @@ class RadioPlayer {
   Future<void> setVolume(double volume) async {
     try {
       final clampedVolume = volume.clamp(0.0, 1.0);
-      await player.setVolume(clampedVolume);
+      if (isWeb) {
+        await webPlayer!.setVolume(clampedVolume);
+      } else {
+        await player!.setVolume(clampedVolume);
+      }
       Logger.log(
         "RadioPlayer: Volume set to $clampedVolume",
         tag: 'RadioPlayer',
@@ -132,11 +162,16 @@ class RadioPlayer {
     }
   }
 
-  /// Скорость воспроизведения (0.5 - 2.0)
+  /// Скорость воспроизведения (0.5 - 2.0) - только для не-Web
   Future<void> setSpeed(double speed) async {
+    if (isWeb) {
+      Logger.log("RadioPlayer: setSpeed not supported on Web", tag: 'RadioPlayer');
+      return;
+    }
+    
     try {
       final clampedSpeed = speed.clamp(0.5, 2.0);
-      await player.setSpeed(clampedSpeed);
+      await player!.setSpeed(clampedSpeed);
       Logger.log("RadioPlayer: Speed set to $clampedSpeed", tag: 'RadioPlayer');
     } catch (e) {
       Logger.error("RadioPlayer: Set speed failed: $e", tag: 'RadioPlayer');
@@ -145,20 +180,40 @@ class RadioPlayer {
   }
 
   /// Получить текущее состояние плеера
-  PlayerState get currentState => player.playerState;
+  bool get isPlaying => isWeb ? webPlayer!.isPlaying : player!.playerState.playing;
+
+  /// Получить текущее состояние обработки
+  ProcessingState get processingState => 
+      isWeb ? ProcessingState.ready : player!.processingState;
 
   /// Поток изменений состояния плеера
-  Stream<PlayerState> get playerStateStream => player.playerStateStream;
+  Stream<PlayerState> get playerStateStream {
+    if (isWeb) {
+      return webPlayer!.playerStateStream.map((playing) => 
+          PlayerState(playing, ProcessingState.ready));
+    }
+    return player!.playerStateStream;
+  }
 
   /// Поток изменений состояния обработки (буферизация)
-  Stream<ProcessingState> get processingStateStream =>
-      player.processingStateStream;
+  Stream<ProcessingState> get processingStateStream {
+    if (isWeb) {
+      return webPlayer!.bufferingStateStream.map((isBuffering) =>
+          isBuffering ? ProcessingState.buffering : ProcessingState.ready);
+    }
+    return player!.processingStateStream;
+  }
 
   /// Очистка ресурсов
   Future<void> dispose() async {
     try {
-      await player.stop();
-      await player.dispose();
+      Logger.log("RadioPlayer: Disposing", tag: 'RadioPlayer');
+      if (isWeb) {
+        await webPlayer!.dispose();
+      } else {
+        await player!.stop();
+        await player!.dispose();
+      }
       Logger.log("RadioPlayer: Disposed", tag: 'RadioPlayer');
     } catch (e) {
       Logger.error("RadioPlayer: Dispose failed: $e", tag: 'RadioPlayer');

@@ -4,6 +4,7 @@ import 'package:radio_v2/features/radio/presentation/providers/player_provider.d
 import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/vertical_radio_card.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
+import 'package:radio_v2/core/utils/logger.dart';
 
 class RadioCardsView extends ConsumerStatefulWidget {
   const RadioCardsView({super.key});
@@ -137,9 +138,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                     );
 
                     return ScrollScaleCard(
-                      onTap: () {
-                        ref.read(playerProvider.notifier).playStation(station);
-                      },
+                      onTap: null, // onTap обрабатывается в VerticalRadioCard
                       child: _AnimatedCard(
                         index: index,
                         controller: _animationController,
@@ -148,6 +147,10 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                           isActive: isActive,
                           isFavorite: isFavorite,
                           onTap: () {
+                            Logger.log(
+                              "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
+                              tag: 'RadioUI',
+                            );
                             ref
                                 .read(playerProvider.notifier)
                                 .playStation(station);

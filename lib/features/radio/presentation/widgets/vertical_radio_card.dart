@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 
@@ -204,8 +205,7 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                       // Название станции
                       Text(
                         widget.station.name.toUpperCase(),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.inter(
                           fontWeight: FontWeight.w900,
                           fontSize: 16.0,
                           color: widget.isActive ? Colors.black : Colors.white,
@@ -218,8 +218,7 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                       if (widget.station.desc.isNotEmpty)
                         Text(
                           widget.station.desc,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.inter(
                             fontWeight: FontWeight.w700,
                             fontSize: 10.0,
                             color: Colors.white,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/core/providers/horoscope_provider.dart';
@@ -70,8 +71,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               padding: EdgeInsets.symmetric(horizontal: ResponsivePadding.medium(context)),
               child: Text(
                 AppLocalizations.of(context).select_zodiac_sign,
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   color: AppColors.secondaryText,
@@ -142,8 +142,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       child: Center(
         child: Text(
           zodiac.name,
-          style: TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.inter(
             color: isSelected ? Colors.black : Colors.white,
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -184,8 +183,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               Expanded(
                 child: Text(
                   '${zodiacSigns[_selectedIndex].name} на сегодня',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -211,8 +209,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 padding: EdgeInsets.all(ResponsivePadding.medium(context)),
                 child: Text(
                   AppLocalizations.of(context).loading_horoscope,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 16,
                   ),
@@ -226,8 +223,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 AppLocalizations.of(context).error_loading_horoscope(
                   horoscopeState.errorMessage ?? '',
                 ),
-                style: const TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.inter(
                   color: AppColors.error,
                   fontSize: 16,
                 ),
@@ -239,8 +235,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                     padding: EdgeInsets.all(ResponsivePadding.medium(context)),
                     child: Text(
                       AppLocalizations.of(context).horoscope_not_found,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
+                      style: GoogleFonts.inter(
                         color: Colors.white70,
                         fontSize: 16,
                       ),
@@ -248,8 +243,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   )
                 : Text(
                     horoscopeState.horoscopeData!.text,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 16,
                       height: 1.6,
@@ -261,8 +255,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               padding: EdgeInsets.all(ResponsivePadding.medium(context)),
               child: Text(
                 AppLocalizations.of(context).horoscope_unavailable,
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 16,
                 ),
@@ -335,8 +328,7 @@ class _BuildSmallBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          fontFamily: 'Inter',
+        style: GoogleFonts.inter(
           color: Colors.white,
           fontSize: 12,
           fontWeight: FontWeight.w700,

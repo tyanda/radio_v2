@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/providers/weather_provider.dart';
@@ -151,8 +152,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                           children: [
                             Text(
                               current.name.toUpperCase(),
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.inter(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.primaryText,
@@ -161,8 +161,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             ),
                             Text(
                               dfDate.format(DateTime.now()),
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.secondaryText,
@@ -182,10 +181,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       children: [
                         Text(
                           '${current.main.temp.round()}°',
-                          style: const TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 110,
                             fontWeight: FontWeight.w300,
-                            fontFamily: 'Inter',
                             color: AppColors.primaryText,
                             letterSpacing: -4,
                             height: 1.0,
@@ -203,8 +201,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               children: [
                                 Text(
                                   current.weather[0].description.toUpperCase(),
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.accent,
@@ -216,8 +213,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                 const SizedBox(height: 4),
                                 Text(
                                   'Ощущается как ${current.main.feelsLike.round()}°',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                     color: AppColors.secondaryText,
@@ -283,12 +279,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           ),
 
           // ЗАГОЛОВОК (Минимальные отступы для плотности)
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 4),
             child: Text(
               'ПРОГНОЗ НА НЕДЕЛЮ',
-              style: TextStyle(
-                fontFamily: 'Inter',
+              style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 color: AppColors.secondaryText,
@@ -359,8 +354,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             width: 45.0,
                             child: Text(
                               shortDayName,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.secondaryText,
@@ -370,8 +364,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                           Expanded(
                             child: Text(
                               dayName,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primaryText,
@@ -387,8 +380,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             child: Text(
                               '$tempMin°',
                               textAlign: TextAlign.right,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.secondaryText,
@@ -401,8 +393,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             child: Text(
                               '$tempMax°',
                               textAlign: TextAlign.right,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.primaryText,
@@ -429,8 +420,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w700,
             color: AppColors.secondaryText,
@@ -439,8 +429,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: AppColors.primaryText,
@@ -511,8 +500,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w800,
             color: AppColors.secondaryText,
@@ -522,8 +510,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         const SizedBox(height: 6),
         Text(
           time,
-          style: const TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
             fontSize: 18,
             color: AppColors.primaryText,
@@ -562,8 +549,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).error_network,
-            style: const TextStyle(
-              fontFamily: 'Inter',
+            style: GoogleFonts.inter(
               color: Colors.white,
               fontWeight: FontWeight.w700,
             ),
@@ -575,8 +561,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
             child: Text(
               AppLocalizations.of(context).retry,
-              style: const TextStyle(
-                fontFamily: 'Inter',
+              style: GoogleFonts.inter(
                 color: Colors.black,
                 fontWeight: FontWeight.w600,
               ),

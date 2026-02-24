@@ -98,9 +98,15 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     ) {
       final currentState = state.asData?.value;
       if (currentState != null) {
+        // buffering/loading = показываем индикатор загрузки
+        // ready/ready = скрываем индикатор
         final isBuffering =
             processingState == ProcessingState.buffering ||
             processingState == ProcessingState.loading;
+        Logger.log(
+          "ProcessingState: $processingState, isBuffering: $isBuffering",
+          tag: 'Player',
+        );
         if (currentState.isBuffering != isBuffering) {
           state = AsyncData(currentState.copyWith(isBuffering: isBuffering));
         }
@@ -224,10 +230,31 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       if (currentState.isPlaying) {
         Logger.log("playStation(): pausing current station", tag: 'Player');
         await _radioPlayer.pause();
+        // Обновляем состояние после pause
+        final afterPauseState = state.asData?.value;
+        if (afterPauseState != null) {
+          state = AsyncData(afterPauseState.copyWith(isPlaying: false));
+          Logger.log(
+            "playStation(): updated isPlaying to false",
+            tag: 'Player',
+          );
+        }
       } else {
         try {
           Logger.log("playStation(): playing current station", tag: 'Player');
           await _radioPlayer.play();
+          // Обновляем состояние после play
+          final afterPlayState = state.asData?.value;
+          if (afterPlayState != null) {
+            state = AsyncData(afterPlayState.copyWith(
+              isPlaying: true,
+              isBuffering: false,
+            ));
+            Logger.log(
+              "playStation(): updated isPlaying to true",
+              tag: 'Player',
+            );
+          }
         } catch (e) {
           Logger.error("playStation(): play failed: $e", tag: 'Player');
           Logger.error(
@@ -245,12 +272,12 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       tag: 'Player',
     );
     try {
-      // Set buffering state
+      // Set buffering state (isPlaying пока false)
       Logger.log("playStation(): setting buffering state", tag: 'Player');
       state = AsyncData(
         currentState.copyWith(
           currentStation: station,
-          isPlaying: true,
+          isPlaying: false,
           isBuffering: true,
         ),
       );
@@ -278,6 +305,18 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         Logger.log("playStation(): starting playback", tag: 'Player');
         await _radioPlayer.play();
         Logger.log("playStation(): playing ${station.name}", tag: 'Player');
+        // Обновляем состояние после успешного play
+        final afterPlayState = state.asData?.value;
+        if (afterPlayState != null) {
+          state = AsyncData(afterPlayState.copyWith(
+            isPlaying: true,
+            isBuffering: false,
+          ));
+          Logger.log(
+            "playStation(): updated isPlaying to true, cleared buffering",
+            tag: 'Player',
+          );
+        }
       } catch (e) {
         Logger.error("playStation(): play failed: $e", tag: 'Player');
         Logger.error(

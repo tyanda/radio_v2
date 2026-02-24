@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/core/design/figma_design.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
@@ -95,8 +96,7 @@ class FullPlayer extends ConsumerWidget {
                       // Название станции
                       Text(
                         currentStation.name,
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.inter(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                           fontSize: FigmaDesign.fontSizeFullPlayerTitle,
@@ -111,8 +111,7 @@ class FullPlayer extends ConsumerWidget {
                         playerState.isPlaying
                             ? AppLocalizations.of(context).live_broadcast
                             : AppLocalizations.of(context).pause_status,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.inter(
                           color: playerState.isPlaying
                               ? AppColors.accent
                               : Colors.white60,

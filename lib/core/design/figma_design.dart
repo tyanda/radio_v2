@@ -9,8 +9,8 @@ class FigmaDesign {
   static const double screenHeight = 852.0;
 
   // Отступы
-  static const double horizontalPadding = 15.0;
-  static const double verticalPadding = 15.0;
+  static const double horizontalPadding = 16.0;
+  static const double verticalPadding = 16.0;
   static const double gridSpacing = 16.0;
 
   // Закругления

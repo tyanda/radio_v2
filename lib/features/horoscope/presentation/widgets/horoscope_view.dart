@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:radio_v2/core/design/app_colors.dart';
+import 'package:radio_v2/core/design/figma_design.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/core/providers/horoscope_provider.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
@@ -45,6 +45,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final theme = Theme.of(context);
 
     final horoscopeState = ref.watch(horoscopeProvider);
     final playerState = ref.watch(playerProvider);
@@ -59,22 +60,22 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        ResponsivePadding.medium(context),
+        FigmaDesign.horizontalPadding,
         16,
-        ResponsivePadding.medium(context),
+        FigmaDesign.horizontalPadding,
         bottomPadding,
       ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: ResponsivePadding.medium(context)),
+              padding: EdgeInsets.symmetric(horizontal: FigmaDesign.horizontalPadding),
               child: Text(
                 AppLocalizations.of(context).select_zodiac_sign,
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.secondaryText,
+                  color: theme.colorScheme.onSurfaceVariant,
                   letterSpacing: 2.0,
                 ),
               ),
@@ -86,8 +87,8 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
+                mainAxisSpacing: FigmaDesign.gridSpacing,
+                crossAxisSpacing: FigmaDesign.gridSpacing,
                 childAspectRatio: 1.1,
               ),
               itemCount: zodiacSigns.length,
@@ -120,30 +121,39 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
   /// Виджет карточки знака зодиака в сетке
   Widget _buildZodiacMiniCard(ZodiacSign zodiac, bool isSelected) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.accent : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        color: isSelected ? theme.primaryColor : theme.cardColor,
+        borderRadius: BorderRadius.circular(20), // Slightly rounded for mini cards
         border: Border.all(
-          color: isSelected ? AppColors.accent : Colors.transparent,
+          color: isSelected ? theme.primaryColor : (isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05)),
           width: 2,
         ),
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: AppColors.accent.withValues(alpha: 0.3),
+                  color: theme.primaryColor.withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 0,
                 ),
               ]
-            : null,
+            : (!isDark ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ] : null),
       ),
       child: Center(
         child: Text(
           zodiac.name,
           style: GoogleFonts.inter(
-            color: isSelected ? Colors.black : Colors.white,
+            color: isSelected ? Colors.black : theme.colorScheme.onSurface,
             fontSize: 13,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.2,
@@ -158,19 +168,22 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
   /// Основная карточка с предсказанием
   Widget _buildPredictionCard(HoroscopeState horoscopeState) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(36),
-        border: const Border(
-          left: BorderSide(color: AppColors.accent, width: 10),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
+        border: Border(
+          left: BorderSide(color: theme.primaryColor, width: 10),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+            blurRadius: isDark ? 16 : 10,
             offset: const Offset(0, 8),
           ),
         ],
@@ -184,7 +197,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 child: Text(
                   '${zodiacSigns[_selectedIndex].name} на сегодня',
                   style: GoogleFonts.inter(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
@@ -192,12 +205,12 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 ),
               ),
               if (horoscopeState.isLoading)
-                const SizedBox(
+                SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
+                    valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
                   ),
                 ),
             ],
@@ -210,7 +223,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 child: Text(
                   AppLocalizations.of(context).loading_horoscope,
                   style: GoogleFonts.inter(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 16,
                   ),
                 ),
@@ -224,7 +237,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   horoscopeState.errorMessage ?? '',
                 ),
                 style: GoogleFonts.inter(
-                  color: AppColors.error,
+                  color: theme.colorScheme.error,
                   fontSize: 16,
                 ),
               ),
@@ -236,7 +249,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                     child: Text(
                       AppLocalizations.of(context).horoscope_not_found,
                       style: GoogleFonts.inter(
-                        color: Colors.white70,
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 16,
                       ),
                     ),
@@ -244,7 +257,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 : Text(
                     horoscopeState.horoscopeData!.text,
                     style: GoogleFonts.inter(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 16,
                       height: 1.6,
                       fontWeight: FontWeight.w500,
@@ -256,7 +269,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               child: Text(
                 AppLocalizations.of(context).horoscope_unavailable,
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                   fontSize: 16,
                 ),
               ),
@@ -320,16 +333,19 @@ class _BuildSmallBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
+        color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
-          color: Colors.white,
+          color: theme.colorScheme.onSurface,
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),

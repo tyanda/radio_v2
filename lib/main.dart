@@ -80,31 +80,30 @@ class MyApp extends StatelessWidget {
               final orientation = MediaQuery.of(context).orientation;
               final isLandscape = orientation == Orientation.landscape;
 
-              return ShadApp(
-                title: 'Sakha Radio',
-                debugShowCheckedModeBanner: false,
-                theme: themeNotifier.shadcnTheme,
-                darkTheme: ShadThemeData(
-                  brightness: Brightness.dark,
-                  colorScheme: const ShadZincColorScheme.dark(),
+              return ShadTheme(
+                data: themeNotifier.shadcnTheme,
+                child: MaterialApp(
+                  title: 'Sakha Radio',
+                  debugShowCheckedModeBanner: false,
+                  theme: themeNotifier.themeData,
+                  localizationsDelegates: const [
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                    AppLocalizations.delegate,
+                  ],
+                  supportedLocales: const [
+                    Locale('ru'),
+                    Locale('en'),
+                  ],
+                  locale: const Locale('ru'),
+                  home: kIsWeb
+                      ? OrientationHandler(
+                          isLandscape: isLandscape,
+                          child: const AppInitializer(),
+                        )
+                      : const HomeScreen(),
                 ),
-                localizationsDelegates: const [
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                  AppLocalizations.delegate,
-                ],
-                supportedLocales: const [
-                  Locale('ru'),
-                  Locale('en'),
-                ],
-                locale: const Locale('ru'),
-                home: kIsWeb
-                    ? OrientationHandler(
-                        isLandscape: isLandscape,
-                        child: const AppInitializer(),
-                      )
-                    : const HomeScreen(),
               );
             },
           );

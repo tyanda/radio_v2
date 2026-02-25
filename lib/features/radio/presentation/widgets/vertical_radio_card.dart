@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 
 /// Вертикальная карточка радиостанции в стиле «плитка»
@@ -59,6 +58,10 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accentColor = theme.colorScheme.primary;
+
     return GestureDetector(
       onTap: widget.onTap,
       onLongPress: () {
@@ -70,24 +73,32 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
         curve: Curves.easeInOut,
         clipBehavior: Clip.none,
         decoration: BoxDecoration(
-          color: widget.isActive ? AppColors.accent : AppColors.cardBackground,
+          color: widget.isActive 
+              ? accentColor 
+              : theme.cardColor,
           borderRadius: BorderRadius.circular(24.0),
           border: Border.all(
             color: widget.isActive
-                ? AppColors.accent
-                : Colors.white.withValues(alpha: 0.08),
+                ? accentColor
+                : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
             width: widget.isActive ? 1.5 : 1.0,
           ),
           boxShadow: widget.isActive
               ? [
                   BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.3),
+                    color: accentColor.withValues(alpha: 0.3),
                     blurRadius: 20,
                     spreadRadius: 2,
                     offset: const Offset(0, 0),
                   ),
                 ]
-              : null,
+              : (!isDark ? [
+                  BoxShadow(
+                    color: const Color(0xFF000000).withValues(alpha: 0.05), // Тень 0.05 alpha
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ] : null),
         ),
         child: Stack(
           clipBehavior: Clip.none,
@@ -208,7 +219,9 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w900,
                           fontSize: 16.0,
-                          color: widget.isActive ? Colors.black : Colors.white,
+                          color: widget.isActive 
+                              ? Colors.black 
+                              : theme.colorScheme.onSurface,
                           letterSpacing: -0.5,
                         ),
                         maxLines: 2,
@@ -221,7 +234,9 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.w700,
                             fontSize: 10.0,
-                            color: Colors.white,
+                            color: widget.isActive 
+                                ? Colors.black.withValues(alpha: 0.7)
+                                : theme.colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

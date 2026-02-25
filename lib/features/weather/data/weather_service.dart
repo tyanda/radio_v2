@@ -1,20 +1,17 @@
 // Сервис для работы с погодными данными
 import 'dart:async';
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config.dart';
 import '../../../core/utils/logger.dart';
 import '../models/weather_failure.dart';
 
-// Импорт для веб-версии
-import 'package:web/web.dart' as web;
-
 class WeatherService {
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
   static String get _apiKey => AppConfig.openWeatherApiKey;
-  static const String _coordsCacheKey = 'user_coords_web';
+  static const String _coordsCacheKeyLat = 'user_coords_lat';
+  static const String _coordsCacheKeyLon = 'user_coords_lon';
   final Dio _dio;
 
   WeatherService(this._dio);
@@ -153,22 +150,15 @@ class WeatherService {
     }
   }
 
-  /// Получает сохранённые координаты из кэша (ТОЛЬКО WEB)
+  /// Получает сохранённые координаты из кэша
   Future<Map<String, double>?> getCachedCoords() async {
-    // Кэширование только для веб-платформы
-    if (!kIsWeb) {
-      return null;
-    }
-    
     try {
-      // Используем напрямую localStorage для веба
-      final cachedData = web.window.localStorage.getItem(_coordsCacheKey);
-      if (cachedData != null && cachedData.isNotEmpty) {
-        final coords = jsonDecode(cachedData) as Map<String, dynamic>;
-        return {
-          'lat': coords['lat'] as double,
-          'lon': coords['lon'] as double,
-        };
+      final prefs = await SharedPreferences.getInstance();
+      final lat = prefs.getDouble(_coordsCacheKeyLat);
+      final lon = prefs.getDouble(_coordsCacheKeyLon);
+      
+      if (lat != null && lon != null) {
+        return {'lat': lat, 'lon': lon};
       }
     } catch (e) {
       // Игнорируем ошибки кэша
@@ -176,48 +166,38 @@ class WeatherService {
     return null;
   }
 
-  /// Сохраняет координаты в кэш (ТОЛЬКО WEB)
+  /// Сохраняет координаты в кэш
   Future<void> cacheCoords(double lat, double lon) async {
-    // Кэширование только для веб-платформы
-    if (!kIsWeb) {
-      return;
-    }
-    
     try {
-      // Используем напрямую localStorage для веба
-      final coords = {'lat': lat, 'lon': lon};
-      web.window.localStorage.setItem(_coordsCacheKey, jsonEncode(coords));
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_coordsCacheKeyLat, lat);
+      await prefs.setDouble(_coordsCacheKeyLon, lon);
     } catch (e) {
       // Игнорируем ошибки кэширования
     }
   }
 
-  /// Получает местоположение пользователя с кэшированием (ТОЛЬКО WEB)
-  /// На нативных платформах всегда запрашивает геолокацию
+  /// Получает местоположение пользователя с кэшированием
   Future<Position> getCurrentLocation() async {
-    // Кэширование только для веб-платформы
-    if (kIsWeb) {
-      // Сначала пробуем получить из кэша
-      final cachedCoords = await getCachedCoords();
-      if (cachedCoords != null) {
-        // Возвращаем Position из кэшированных координат
-        Logger.log('Используем кэшированные координаты: ${cachedCoords['lat']}, ${cachedCoords['lon']}', tag: 'Weather');
-        return Position(
-          latitude: cachedCoords['lat']!,
-          longitude: cachedCoords['lon']!,
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
-      }
+    // Сначала пробуем получить из кэша
+    final cachedCoords = await getCachedCoords();
+    if (cachedCoords != null) {
+      Logger.log('Используем кэшированные координаты: ${cachedCoords['lat']}, ${cachedCoords['lon']}', tag: 'Weather');
+      return Position(
+        latitude: cachedCoords['lat']!,
+        longitude: cachedCoords['lon']!,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
     }
 
-    // Для нативных платформ или если кэша нет — запрашиваем геолокацию
+    // Если кэша нет — запрашиваем геолокацию
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -225,10 +205,8 @@ class WeatherService {
       // Проверяем, включена ли служба геолокации
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        // Если служба отключена — используем Якутск по умолчанию (только для web)
-        if (kIsWeb) {
-          await cacheCoords(62.03, 129.73);
-        }
+        // Если служба отключена — используем Якутск по умолчанию
+        await cacheCoords(62.03, 129.73);
         throw WeatherFailure('Служба геолокации отключена');
       }
 
@@ -236,35 +214,29 @@ class WeatherService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          // Пользователь отклонил — сохраняем Якутск как дефолт (только для web)
-          if (kIsWeb) {
-            await cacheCoords(62.03, 129.73);
-          }
+          // Пользователь отклонил — сохраняем Якутск как дефолт
+          await cacheCoords(62.03, 129.73);
           throw WeatherFailure('Разрешение на геолокацию отклонено');
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        // Отклонено навсегда — сохраняем Якутск (только для web)
-        if (kIsWeb) {
-          await cacheCoords(62.03, 129.73);
-        }
+        // Отклонено навсегда — сохраняем Якутск
+        await cacheCoords(62.03, 129.73);
         throw WeatherFailure('Разрешение на геолокацию отклонено навсегда');
       }
 
-      // Получаем текущее местоположение с таймаутом (особенно для web)
+      // Получаем текущее местоположение с таймаутом
       final position = await _getCurrentPositionWithTimeout();
 
-      // Сохраняем в кэш только для веб-платформы
-      if (kIsWeb) {
-        await cacheCoords(position.latitude, position.longitude);
-        Logger.log('Координаты сохранены в кэш: ${position.latitude}, ${position.longitude}', tag: 'Weather');
-      }
+      // Сохраняем в кэш
+      await cacheCoords(position.latitude, position.longitude);
+      Logger.log('Координаты сохранены в кэш: ${position.latitude}, ${position.longitude}', tag: 'Weather');
 
       return position;
     } catch (e) {
-      // При любой ошибке на веб-платформе сохраняем Якутск
-      if (kIsWeb && e is! WeatherFailure) {
+      // При любой ошибке сохраняем Якутск
+      if (e is! WeatherFailure) {
         await cacheCoords(62.03, 129.73);
         Logger.error('Ошибка геолокации, используем Якутск: $e', tag: 'Weather');
       }
@@ -272,23 +244,17 @@ class WeatherService {
     }
   }
 
-  /// Получает координаты с таймаутом (для web)
+  /// Получает координаты с таймаутом
   Future<Position> _getCurrentPositionWithTimeout() async {
-    // На веб-платформе добавляем таймаут 10 секунд
-    if (kIsWeb) {
-      try {
-        return await Geolocator.getCurrentPosition().timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            throw WeatherFailure('Превышено время ожидания геолокации');
-          },
-        );
-      } on TimeoutException {
-        throw WeatherFailure('Превышено время ожидания геолокации');
-      }
+    try {
+      return await Geolocator.getCurrentPosition().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw WeatherFailure('Превышено время ожидания геолокации');
+        },
+      );
+    } on TimeoutException {
+      throw WeatherFailure('Превышено время ожидания геолокации');
     }
-
-    // Для нативных платформ используем стандартный запрос
-    return await Geolocator.getCurrentPosition();
   }
 }

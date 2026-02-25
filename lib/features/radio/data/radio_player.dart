@@ -8,13 +8,13 @@ import 'web_radio_player.dart';
 /// На Web используется HTML5 Audio API, на других платформах - just_audio
 class RadioPlayer {
   final AudioPlayer? player;
-  final WebRadioPlayer? webPlayer;
+  final RadioPlayerInterface? webPlayer;
   final bool isWeb;
 
   RadioPlayer()
       : isWeb = kIsWeb,
         player = kIsWeb ? null : AudioPlayer(),
-        webPlayer = kIsWeb ? WebRadioPlayer() : null;
+        webPlayer = kIsWeb ? createRadioPlayer() : null;
 
   /// Подключение к потоку радио с метаданными
   Future<void> playStream({

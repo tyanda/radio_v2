@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/providers/weather_provider.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
@@ -69,7 +68,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final weatherAsync = ref.watch(weatherProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: weatherAsync.when(
         data: (weatherData) => weatherData != null
             ? _buildWeatherContent(weatherData)
@@ -84,6 +83,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   Widget _buildWeatherContent(WeatherData weatherData) {
     final current = weatherData.current;
     final forecastList = weatherData.forecast;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     // Динамический отступ снизу: больше если плеер виден, меньше если скрыт
     final playerState = ref.watch(playerProvider);
@@ -124,19 +125,19 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ОБНОВЛЕННЫЙ ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
+          // ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxCardWidth),
               child: Container(
                 padding: EdgeInsets.all(ResponsivePadding.large(context)),
                 decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 20,
+                      color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.05),
+                      blurRadius: isDark ? 20 : 10,
                       offset: const Offset(0, 10),
                     ),
                   ],
@@ -155,7 +156,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
-                                color: AppColors.primaryText,
+                                color: theme.colorScheme.onSurface,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -164,7 +165,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.secondaryText,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -184,7 +185,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                           style: GoogleFonts.inter(
                             fontSize: 110,
                             fontWeight: FontWeight.w300,
-                            color: AppColors.primaryText,
+                            color: theme.colorScheme.onSurface,
                             letterSpacing: -4,
                             height: 1.0,
                           ),
@@ -204,7 +205,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.accent,
+                                    color: theme.primaryColor,
                                     letterSpacing: 1,
                                   ),
                                   maxLines: 2,
@@ -216,7 +217,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: AppColors.secondaryText,
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -233,7 +234,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: isDark 
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.black.withValues(alpha: 0.05),
                           ),
                         ),
                       ),
@@ -264,7 +267,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           const SizedBox(height: 20),
 
           // Тонкий разделитель
-          Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+          Divider(
+            color: isDark 
+                ? Colors.white.withValues(alpha: 0.12)
+                : theme.dividerColor, 
+            height: 1,
+          ),
 
           // БЛОК ВОСХОДА/ЗАКАТА
           Padding(
@@ -278,7 +286,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
           ),
 
-          // ЗАГОЛОВОК (Минимальные отступы для плотности)
+          // ЗАГОЛОВОК
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 4),
             child: Text(
@@ -286,13 +294,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
-                color: AppColors.secondaryText,
+                color: theme.colorScheme.onSurfaceVariant,
                 letterSpacing: 2.0,
               ),
             ),
           ),
 
-          // СПИСОК ПРОГНОЗА (Уплотненный)
+          // СПИСОК ПРОГНОЗА
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxCardWidth),
@@ -342,11 +350,20 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: isDark 
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.05),
                         ),
+                        boxShadow: isDark ? null : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
@@ -357,7 +374,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.secondaryText,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -367,7 +384,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primaryText,
+                                color: theme.colorScheme.onSurface,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -383,7 +400,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.secondaryText,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -396,7 +413,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.primaryText,
+                                color: theme.colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -416,6 +433,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
   // Вспомогательный виджет для деталей в главной карточке
   Widget _buildDetailItem(String label, String value) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Text(
@@ -423,7 +441,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w700,
-            color: AppColors.secondaryText,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 4),
@@ -432,15 +450,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.primaryText,
+            color: theme.colorScheme.onSurface,
           ),
         ),
       ],
     );
   }
 
-  // Возвращает желтую иконку в зависимости от состояния погоды
+  // Возвращает иконку в зависимости от состояния погоды
   Widget _getWeatherIcon(String main, {double size = 28}) {
+    final theme = Theme.of(context);
     IconData iconData;
     switch (main.toLowerCase()) {
       case 'clear':
@@ -458,11 +477,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       default:
         iconData = Icons.wb_cloudy_outlined;
     }
-    return Icon(iconData, color: AppColors.accent, size: size);
+    return Icon(iconData, color: theme.primaryColor, size: size);
   }
 
   // Возвращает иконку с мягким внешним свечением
   Widget _getWeatherIconWithGlow(String main, {double size = 28}) {
+    final theme = Theme.of(context);
     IconData iconData;
     switch (main.toLowerCase()) {
       case 'clear':
@@ -484,18 +504,19 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withValues(alpha: 0.2),
+            color: theme.primaryColor.withValues(alpha: 0.2),
             blurRadius: 20,
             spreadRadius: 5,
             offset: const Offset(0, 0),
           ),
         ],
       ),
-      child: Icon(iconData, color: AppColors.accent, size: size),
+      child: Icon(iconData, color: theme.primaryColor, size: size),
     );
   }
 
   Widget _buildSunInfo(String label, String time) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Text(
@@ -503,7 +524,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w800,
-            color: AppColors.secondaryText,
+            color: theme.colorScheme.onSurfaceVariant,
             letterSpacing: 1.0,
           ),
         ),
@@ -513,7 +534,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
             fontSize: 18,
-            color: AppColors.primaryText,
+            color: theme.colorScheme.onSurface,
           ),
         ),
       ],
@@ -521,12 +542,15 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   }
 
   Widget _buildLoadingView() {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.accent),
+    return Center(
+      child: CircularProgressIndicator(color: Theme.of(context).primaryColor),
     );
   }
 
   Widget _buildErrorView(String error) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     // Показываем snackbar с ошибкой
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -541,16 +565,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.wifi_off_outlined,
-            color: AppColors.accent,
+            color: theme.primaryColor,
             size: 48,
           ),
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).error_network,
             style: GoogleFonts.inter(
-              color: Colors.white,
+              color: isDark ? Colors.white : theme.colorScheme.onSurface,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -558,7 +582,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           FilledButton(
             onPressed: () =>
                 ref.read(weatherProvider.notifier).refreshWeather(),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+            style: FilledButton.styleFrom(backgroundColor: theme.primaryColor),
             child: Text(
               AppLocalizations.of(context).retry,
               style: GoogleFonts.inter(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +13,7 @@ import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/mini_player.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
 import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
+import 'package:radio_v2/core/providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -33,16 +35,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Основной контент
           Column(
             children: [
               const _AppHeader(),
-              // Убрали SizedBox(height: 25), теперь строка прижата к хедеру
               const _MarqueeSection(),
-              // Контент начинается сразу после полосы без зазоров
               Expanded(
                 child: PageView(
                   controller: _pageController,
@@ -73,6 +73,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildBottomBar() {
+    final themeState = ref.watch(themeProvider);
+    final isDarkMode = themeState.isDarkTheme;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       decoration: const BoxDecoration(color: Colors.transparent),
@@ -84,16 +87,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground.withValues(alpha: 0.98),
+              color: isDarkMode
+                  ? AppColors.cardBackground.withValues(alpha: 0.98)
+                  : Colors.white.withValues(alpha: 1.0), // СТРОГО БЕЛЫЙ #FFFFFF
               borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(
+                color: isDarkMode
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+              ),
+              boxShadow: isDarkMode
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.sensors_rounded, 0),
-                _buildNavItem(Icons.filter_drama_rounded, 1),
-                _buildNavItem(Icons.auto_awesome_rounded, 2),
+                _buildNavItem(Icons.sensors_rounded, 0, 'Радио'),
+                _buildNavItem(Icons.filter_drama_rounded, 1, 'Погода'),
+                _buildNavItem(Icons.auto_awesome_rounded, 2, 'Звезды'),
+                _buildThemeNavItem(
+                  isDarkMode ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                ),
               ],
             ),
           ),
@@ -102,8 +123,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
+  Widget _buildNavItem(IconData icon, int index, String label) {
     final bool active = _currentTab == index;
+    final isDark = ref.read(themeProvider).isDarkTheme;
+    final accentColor = Theme.of(context).primaryColor;
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -119,15 +143,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: active ? AppColors.accent : Colors.transparent,
+          color: active ? accentColor : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Icon(
           icon,
           size: 26,
-          color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+          color: active
+              ? Colors
+                    .black // Контраст на желтом
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : const Color(0xFFA7B0B8)), // iconGrey для светлой
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeNavItem(IconData icon) {
+    final isDark = ref.read(themeProvider).isDarkTheme;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        ref.read(themeProvider.notifier).toggleTheme();
+        if (kDebugMode) print('Тема переключена');
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Icon(
+          icon,
+          size: 26,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.5)
+              : const Color(0xFFA7B0B8), // iconGrey для светлой
         ),
       ),
     );
@@ -175,6 +230,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
   @override
   Widget build(BuildContext context) {
     final greetingAsync = ref.watch(greetingProvider);
+    final isDark = ref.watch(themeProvider).isDarkTheme;
 
     final greeting = greetingAsync.when(
       data: (data) => data.toUpperCase(),
@@ -197,19 +253,23 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               RichText(
-                text: const TextSpan(
+                text: TextSpan(
                   style: TextStyle(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : const Color(0xFF1D1D1F),
                     fontSize: FigmaDesign.headerTitleSize,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
                     height: 1.0,
+                    fontFamily: 'Inter',
                   ),
                   children: [
-                    TextSpan(text: "Sakha"),
+                    const TextSpan(text: "Sakha"),
                     TextSpan(
                       text: "Live",
-                      style: TextStyle(color: AppColors.accent, height: 1.0),
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        height: 1.0,
+                      ),
                     ),
                   ],
                 ),
@@ -222,7 +282,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
               Text(
                 greeting,
                 style: GoogleFonts.inter(
-                  color: AppColors.accent,
+                  color: isDark ? Theme.of(context).primaryColor : const Color(0xFF1D1D1F),
                   fontWeight: FontWeight.w700,
                   fontStyle: FontStyle.italic,
                   fontSize: FigmaDesign.fontSizeGreeting,
@@ -247,19 +307,25 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.3),
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.3),
                         blurRadius: _blurAnimation.value,
                         spreadRadius: _controller.value * 2,
                       ),
                     ],
                     border: Border.all(
-                      color: AppColors.accent.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.5),
                       width: 1.5,
                     ),
                   ),
                   child: CircleAvatar(
                     radius: FigmaDesign.headerLogoSize / 2,
-                    backgroundColor: AppColors.cardBackground,
+                    backgroundColor: isDark
+                        ? AppColors.cardBackground
+                        : Colors.white,
                     child: ClipOval(
                       child: Image.asset(
                         'assets/images/load.png',
@@ -287,7 +353,7 @@ class _MarqueeSection extends ConsumerWidget {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
       height: 32.0,
-      decoration: const BoxDecoration(color: AppColors.accent),
+      decoration: BoxDecoration(color: Theme.of(context).primaryColor),
       alignment: Alignment.center,
       child: Marquee(
         text:
@@ -295,7 +361,7 @@ class _MarqueeSection extends ConsumerWidget {
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w600,
           fontSize: 14,
-          color: Colors.black,
+          color: Colors.black, // Контраст на желтом
         ),
         velocity: 30,
         blankSpace: 100,

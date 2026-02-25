@@ -60,24 +60,21 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        FigmaDesign.horizontalPadding,
+        16.0,
         16,
-        FigmaDesign.horizontalPadding,
+        16.0,
         bottomPadding,
       ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: FigmaDesign.horizontalPadding),
-              child: Text(
-                AppLocalizations.of(context).select_zodiac_sign,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.onSurfaceVariant,
-                  letterSpacing: 2.0,
-                ),
+            Text(
+              AppLocalizations.of(context).select_zodiac_sign,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: theme.colorScheme.onSurfaceVariant,
+                letterSpacing: 2.0,
               ),
             ),
             const SizedBox(height: 16),
@@ -87,9 +84,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
-                mainAxisSpacing: FigmaDesign.gridSpacing,
-                crossAxisSpacing: FigmaDesign.gridSpacing,
-                childAspectRatio: 1.1,
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+                childAspectRatio: 0.85,
               ),
               itemCount: zodiacSigns.length,
               itemBuilder: (context, index) {

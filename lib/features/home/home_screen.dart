@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:radio_v2/core/design/app_colors.dart';
 import 'package:radio_v2/core/design/figma_design.dart';
@@ -227,6 +228,32 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
     super.dispose();
   }
 
+  /// Виджет SVG-иконки приветствия на основе времени суток
+  Widget _buildGreetingSvg(bool isDarkMode) {
+    final hour = DateTime.now().hour;
+    String assetName;
+    
+    if (hour >= 6 && hour < 12) {
+      assetName = 'morning';
+    } else if (hour >= 12 && hour < 18) {
+      assetName = 'day';
+    } else if (hour >= 18 && hour < 24) {
+      assetName = 'evening';
+    } else {
+      assetName = 'night';
+    }
+
+    return SvgPicture.asset(
+      'assets/icons/$assetName.svg',
+      width: 20,
+      height: 20,
+      colorFilter: ColorFilter.mode(
+        isDarkMode ? const Color(0xFFFFD700) : const Color(0xFFFFCC00),
+        BlendMode.srcIn,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final greetingAsync = ref.watch(greetingProvider);
@@ -240,8 +267,8 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
 
     return Padding(
       padding: EdgeInsets.only(
-        left: FigmaDesign.horizontalPadding,
-        right: FigmaDesign.horizontalPadding,
+        left: 16.0,
+        right: 16.0,
         top: 50.0,
         bottom: 12.0,
       ),
@@ -279,20 +306,26 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                 ),
               ),
               const SizedBox(height: 2.0),
-              Text(
-                greeting,
-                style: GoogleFonts.inter(
-                  color: isDark ? Theme.of(context).primaryColor : const Color(0xFF1D1D1F),
-                  fontWeight: FontWeight.w700,
-                  fontStyle: FontStyle.italic,
-                  fontSize: FigmaDesign.fontSizeGreeting,
-                  letterSpacing: 4.0,
-                  height: 1.0,
-                ),
-                textHeightBehavior: const TextHeightBehavior(
-                  applyHeightToFirstAscent: false,
-                  applyHeightToLastDescent: false,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    greeting,
+                    style: GoogleFonts.inter(
+                      color: isDark ? const Color(0xFF86868B) : const Color(0xFF1D1D1F),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      letterSpacing: 4.0,
+                      height: 1.0,
+                    ),
+                    textHeightBehavior: const TextHeightBehavior(
+                      applyHeightToFirstAscent: false,
+                      applyHeightToLastDescent: false,
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  _buildGreetingSvg(isDark),
+                ],
               ),
             ],
           ),

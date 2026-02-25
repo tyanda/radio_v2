@@ -122,6 +122,10 @@ flutter:
     - assets/images/superdisco.jpg
     - assets/images/load.png
     - assets/icon/Icon - Heart.svg
+    - assets/icons/morning.svg
+    - assets/icons/day.svg
+    - assets/icons/evening.svg
+    - assets/icons/night.svg
     - .env
 
   # Enable support for additional languages including Cyrillic script

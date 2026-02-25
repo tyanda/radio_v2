@@ -68,13 +68,6 @@ final zodiacSignsProvider = Provider<List<ZodiacSign>>((ref) {
 final greetingProvider = StreamProvider<String>((ref) async* {
   String getGreeting() {
     final hour = DateTime.now().hour;
-    String emoji = (hour < 6)
-        ? "🌙"
-        : (hour < 12)
-        ? "☀️"
-        : (hour < 18)
-        ? "🌤️"
-        : "🌆";
     String base = (hour < 6)
         ? "ДОБРОЙ НОЧИ"
         : (hour < 12)
@@ -82,7 +75,7 @@ final greetingProvider = StreamProvider<String>((ref) async* {
         : (hour < 18)
         ? "ДОБРЫЙ ДЕНЬ"
         : "ДОБРЫЙ ВЕЧЕР";
-    return "$base $emoji";
+    return base;
   }
 
   yield getGreeting();

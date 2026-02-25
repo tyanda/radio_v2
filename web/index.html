@@ -64,33 +64,33 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="radio_v2">
+  <meta name="apple-mobile-web-app-title" content="SakhaLive Radio">
   <meta name="theme-color" content="#0A0A0A">
+  <meta name="apple-mobile-web-app-orientation" content="any">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>radio_v2</title>
+  <title>SakhaLive Radio</title>
   <link rel="manifest" href="manifest.json">
   <style>
     body {
       background-color: #0A0A0A; /* Твой цвет фона из AppColors */
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
     }
-    /* Запрет поворота экрана - строго вертикальная ориентация */
+    
+    /* Адаптация под ориентацию устройства */
     @media screen and (orientation: landscape) {
+      /* Горизонтальная ориентация - центрируем контент */
       body {
-        transform: rotate(-90deg);
-        transform-origin: 50% 50%;
-        width: 100vh;
-        height: 100vw;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        margin-top: -50vh;
-        margin-left: -50vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
   </style>

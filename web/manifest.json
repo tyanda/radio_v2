@@ -1,11 +1,11 @@
 {
-    "name": "radio_v2",
-    "short_name": "radio_v2",
+    "name": "SakhaLive Radio",
+    "short_name": "SakhaLive",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0A0A0A",
     "theme_color": "#0A0A0A",
-    "description": "A new Flutter project.",
+    "description": "SakhaLive Radio - онлайн радио Якутии",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

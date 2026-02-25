@@ -74,30 +74,70 @@ class MyApp extends StatelessWidget {
           ref.watch(themeProvider);
           final themeNotifier = ref.read(themeProvider.notifier);
 
-          return ShadApp(
-            title: 'Sakha Radio',
-            debugShowCheckedModeBanner: false,
-            theme: themeNotifier.shadcnTheme,
-            darkTheme: ShadThemeData(
-              brightness: Brightness.dark,
-              colorScheme: const ShadZincColorScheme.dark(),
-            ),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              AppLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('ru'),
-              Locale('en'),
-            ],
-            locale: const Locale('ru'),
-            home: kIsWeb ? const AppInitializer() : const HomeScreen(),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              // Определяем текущую ориентацию
+              final orientation = MediaQuery.of(context).orientation;
+              final isLandscape = orientation == Orientation.landscape;
+
+              return ShadApp(
+                title: 'Sakha Radio',
+                debugShowCheckedModeBanner: false,
+                theme: themeNotifier.shadcnTheme,
+                darkTheme: ShadThemeData(
+                  brightness: Brightness.dark,
+                  colorScheme: const ShadZincColorScheme.dark(),
+                ),
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                  AppLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('ru'),
+                  Locale('en'),
+                ],
+                locale: const Locale('ru'),
+                home: kIsWeb
+                    ? OrientationHandler(
+                        isLandscape: isLandscape,
+                        child: const AppInitializer(),
+                      )
+                    : const HomeScreen(),
+              );
+            },
           );
         },
       ),
     );
+  }
+}
+
+// Обработчик ориентации для веб-версии
+class OrientationHandler extends StatelessWidget {
+  final bool isLandscape;
+  final Widget child;
+
+  const OrientationHandler({
+    super.key,
+    required this.isLandscape,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLandscape) {
+      // В горизонтальной ориентации центрируем и ограничиваем ширину
+      return Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: child,
+        ),
+      );
+    }
+    // В вертикальной ориентации показываем как есть
+    return child;
   }
 }
 

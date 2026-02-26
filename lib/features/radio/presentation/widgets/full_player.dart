@@ -7,7 +7,7 @@ import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class FullPlayer extends ConsumerWidget {
   const FullPlayer({super.key});

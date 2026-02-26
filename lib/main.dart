@@ -13,8 +13,8 @@ import 'core/providers.dart';
 import 'core/utils/logger.dart';
 import 'features/home/home_screen.dart';
 import 'firebase_options.dart';
-import 'l10n/app_localizations.dart';
 import 'widgets/splash_screen.dart';
+import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

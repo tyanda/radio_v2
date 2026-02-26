@@ -6,7 +6,7 @@ import 'package:radio_v2/features/radio/presentation/providers/player_provider.d
 import 'package:radio_v2/widgets/equalizer_animation.dart';
 import 'package:radio_v2/widgets/shimmer_widget.dart';
 import 'package:radio_v2/core/utils/snackbar_helper.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:radio_v2/core/design/app_colors.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Утилиты для показа Snackbar
 class SnackbarHelper {

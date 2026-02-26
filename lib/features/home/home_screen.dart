@@ -1,7 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -124,9 +122,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  /// Возвращает цвет иконки в зависимости от состояния и темы
+  Color _getIconColor(bool isActive, bool isDark) {
+    if (isActive) return Colors.black;
+    return isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : const Color(0xFFA7B0B8);
+  }
+
   Widget _buildNavItem(IconData icon, int index, String label) {
     final bool active = _currentTab == index;
-    final isDark = ref.read(themeProvider).isDarkTheme;
     final accentColor = Theme.of(context).primaryColor;
 
     return GestureDetector(
@@ -142,49 +147,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: active ? accentColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Icon(
-          icon,
-          size: 26,
-          color: active
-              ? Colors
-                    .black // Контраст на желтом
-              : (isDark
-                    ? Colors.white.withValues(alpha: 0.5)
-                    : const Color(0xFFA7B0B8)), // iconGrey для светлой
-        ),
+      child: Consumer(
+        builder: (context, ref, _) {
+          final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: active ? accentColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              icon,
+              size: 26,
+              color: _getIconColor(active, isDark),
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildThemeNavItem(IconData icon) {
-    final isDark = ref.read(themeProvider).isDarkTheme;
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
         ref.read(themeProvider.notifier).toggleTheme();
-        if (kDebugMode) print('Тема переключена');
       },
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Icon(
-          icon,
-          size: 26,
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.5)
-              : const Color(0xFFA7B0B8), // iconGrey для светлой
-        ),
+      child: Consumer(
+        builder: (context, ref, _) {
+          final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              icon,
+              size: 26,
+              color: _getIconColor(false, isDark),
+            ),
+          );
+        },
       ),
     );
   }
@@ -232,7 +238,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
   Widget _buildGreetingSvg(bool isDarkMode) {
     final hour = DateTime.now().hour;
     String assetName;
-    
+
     if (hour >= 6 && hour < 12) {
       assetName = 'morning';
     } else if (hour >= 12 && hour < 18) {
@@ -243,21 +249,31 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
       assetName = 'night';
     }
 
-    return SvgPicture.asset(
-      'assets/icons/$assetName.svg',
-      width: 20,
-      height: 20,
-      colorFilter: ColorFilter.mode(
-        isDarkMode ? const Color(0xFFFFD700) : const Color(0xFFFFCC00),
-        BlendMode.srcIn,
-      ),
-    );
+    try {
+      return SvgPicture.asset(
+        'assets/icons/$assetName.svg',
+        width: 20,
+        height: 20,
+        colorFilter: ColorFilter.mode(
+          isDarkMode ? const Color(0xFFFFD700) : const Color(0xFFFFCC00),
+          BlendMode.srcIn,
+        ),
+      );
+    } catch (e) {
+      // Fallback если SVG файл не найден
+      return Icon(
+        hour >= 6 && hour < 18 ? Icons.wb_sunny : Icons.nightlight_round,
+        size: 20,
+        color: isDarkMode ? const Color(0xFFFFD700) : const Color(0xFFFFCC00),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final greetingAsync = ref.watch(greetingProvider);
     final isDark = ref.watch(themeProvider).isDarkTheme;
+    final topPadding = MediaQuery.of(context).padding.top + 4.0;
 
     final greeting = greetingAsync.when(
       data: (data) => data.toUpperCase(),
@@ -269,7 +285,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
       padding: EdgeInsets.only(
         left: 16.0,
         right: 16.0,
-        top: 50.0,
+        top: topPadding,
         bottom: 12.0,
       ),
       child: Row(
@@ -358,7 +374,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                     radius: FigmaDesign.headerLogoSize / 2,
                     backgroundColor: isDark
                         ? AppColors.cardBackground
-                        : Colors.white,
+                        : Theme.of(context).scaffoldBackgroundColor,
                     child: ClipOval(
                       child: Image.asset(
                         'assets/images/load.png',

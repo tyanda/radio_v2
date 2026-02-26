@@ -5,6 +5,7 @@ import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/presentation/widgets/vertical_radio_card.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/utils/logger.dart';
+import 'package:radio_v2/core/design/app_constants.dart';
 
 class RadioCardsView extends ConsumerStatefulWidget {
   const RadioCardsView({super.key});
@@ -74,8 +75,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     final playerAsync = ref.watch(playerProvider);
     final currentStation = playerAsync.value?.currentStation;
 
-    // Отступ 150 при выбранной станции, иначе 80
-    final hasSelectedStation = currentStation != null;
+    // Единый отступ 140 для учёта высоты мини-плеера
 
     // Авто-скролл к активной станции
     final isActiveChanged =
@@ -94,12 +94,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         return SingleChildScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            16,
-            0,
-            16,
-            hasSelectedStation ? 150.0 : 80.0,
-          ),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, kBottomBarTotalHeight),
           child: child,
         );
       },

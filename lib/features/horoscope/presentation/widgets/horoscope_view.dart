@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/figma_design.dart';
+import 'package:radio_v2/core/design/app_constants.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/core/providers/horoscope_provider.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
   const HoroscopeView({super.key});
@@ -20,6 +20,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   late AnimationController _animationController;
   int _selectedIndex = 0;
+  String? _lastHoroscopeText;
 
   final List<ZodiacSign> zodiacSigns = ZodiacSign.all;
 
@@ -48,14 +49,14 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     final theme = Theme.of(context);
 
     final horoscopeState = ref.watch(horoscopeProvider);
-    final playerState = ref.watch(playerProvider);
-    
-    // Динамический отступ снизу: больше если плеер виден, меньше если скрыт
-    final playerData = playerState.asData?.value;
-    final isPlayerVisible = playerData != null &&
-        playerData.currentStation != null &&
-        (playerData.isPlaying || playerData.isBuffering);
-    final bottomPadding = isPlayerVisible ? 200.0 : 80.0;
+
+    // Перезапуск анимации при изменении текста гороскопа
+    final currentHoroscopeText = horoscopeState.horoscopeData?.text;
+    if (currentHoroscopeText != null &&
+        currentHoroscopeText != _lastHoroscopeText) {
+      _lastHoroscopeText = currentHoroscopeText;
+      _animationController.forward(from: 0);
+    }
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -63,7 +64,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
         16.0,
         16,
         16.0,
-        bottomPadding,
+        kBottomBarTotalHeight,
       ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,7 +78,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 letterSpacing: 2.0,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
             // Сетка знаков зодиака
             GridView.builder(
               shrinkWrap: true,
@@ -86,7 +87,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 crossAxisCount: 4,
                 mainAxisSpacing: 8.0,
                 crossAxisSpacing: 8.0,
-                childAspectRatio: 0.85,
+                childAspectRatio: 1.0,
               ),
               itemCount: zodiacSigns.length,
               itemBuilder: (context, index) {
@@ -108,7 +109,6 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 );
               },
             ),
-            const SizedBox(height: 32),
             // Карточка с текстом гороскопа
             _buildPredictionCard(horoscopeState),
           ],
@@ -147,17 +147,23 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               ] : null),
       ),
       child: Center(
-        child: Text(
-          zodiac.name,
-          style: GoogleFonts.inter(
-            color: isSelected ? Colors.black : theme.colorScheme.onSurface,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
+        child: Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              zodiac.name,
+              style: GoogleFonts.inter(
+                color: isSelected ? Colors.black : theme.colorScheme.onSurface,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
@@ -192,7 +198,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             children: [
               Expanded(
                 child: Text(
-                  '${zodiacSigns[_selectedIndex].name} на сегодня',
+                  '${zodiacSigns.elementAtOrNull(_selectedIndex)?.name ?? ''} на сегодня',
                   style: GoogleFonts.inter(
                     color: theme.colorScheme.onSurface,
                     fontSize: 22,
@@ -274,13 +280,34 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
           const SizedBox(height: 24),
           Row(
             children: [
-              _BuildSmallBadge('Прогноз на сегодня'),
+              _buildSmallBadge('Прогноз на сегодня'),
               const SizedBox(width: 8),
               if (horoscopeState.horoscopeData?.source != null)
-                _BuildSmallBadge(horoscopeState.horoscopeData!.source!),
+                _buildSmallBadge(horoscopeState.horoscopeData!.source!),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSmallBadge(String label) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          color: theme.colorScheme.onSurface,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -320,33 +347,6 @@ class _AnimatedCard extends StatelessWidget {
         );
       },
       child: child,
-    );
-  }
-}
-
-class _BuildSmallBadge extends StatelessWidget {
-  final String label;
-  const _BuildSmallBadge(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          color: theme.colorScheme.onSurface,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
     );
   }
 }

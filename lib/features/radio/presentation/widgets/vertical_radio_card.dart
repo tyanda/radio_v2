@@ -214,18 +214,22 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Название станции
-                      Text(
-                        widget.station.name.toUpperCase(),
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16.0,
-                          color: widget.isActive 
-                              ? Colors.black 
-                              : theme.colorScheme.onSurface,
-                          letterSpacing: -0.5,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          widget.station.name.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16.0,
+                            color: widget.isActive
+                                ? Colors.black
+                                : theme.colorScheme.onSurface,
+                            letterSpacing: -0.5,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       // Подзаголовок (описание)
                       if (widget.station.desc.isNotEmpty)

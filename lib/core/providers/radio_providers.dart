@@ -96,19 +96,17 @@ final newsProvider = FutureProvider<List<String>>((ref) async {
 });
 
 final tickerProvider = StreamProvider<String>((ref) {
-  try {
-    final database = FirebaseDatabase.instance.ref('ticker_message');
-    return database.onValue.map((event) {
-      final value = event.snapshot.value;
-      if (value is String) {
-        return value;
-      }
-      return "";
-    });
-  } catch (e) {
-    // Return a stream with an error
-    return Stream.error(e);
-  }
+  final database = FirebaseDatabase.instance.ref('ticker_message');
+  return database.onValue.map((event) {
+    final value = event.snapshot.value;
+    if (value is String) {
+      return value;
+    }
+    return "";
+  }).handleError((error) {
+    // Логируем ошибку, но не прерываем поток
+    return "";
+  });
 });
 
 final marqueeTextProvider = Provider<String>((ref) {
@@ -122,7 +120,7 @@ final marqueeTextProvider = Provider<String>((ref) {
   );
 
   final newsText = news.when(
-    data: (data) => data.map((title) => "🔥 $title").toList(),
+    data: (data) => data.map((title) => title).toList(),
     loading: () => [],
     error: (_, _) => [],
   );

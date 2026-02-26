@@ -8,8 +8,8 @@ import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/providers/weather_provider.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
 import 'package:radio_v2/core/utils/snackbar_helper.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
+import 'package:radio_v2/core/design/app_constants.dart';
+import '../../../l10n/app_localizations.dart';
 import '../models/weather_model.dart';
 
 class WeatherScreen extends ConsumerStatefulWidget {
@@ -39,6 +39,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _refreshTimer = null;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -85,14 +86,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final forecastList = weatherData.forecast;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
-    // Динамический отступ снизу: больше если плеер виден, меньше если скрыт
-    final playerState = ref.watch(playerProvider);
-    final playerData = playerState.asData?.value;
-    final isPlayerVisible = playerData != null &&
-        playerData.currentStation != null &&
-        (playerData.isPlaying || playerData.isBuffering);
-    final bottomPadding = isPlayerVisible ? 200.0 : 80.0;
 
     final sunrise = current.sys.sunrise > 0
         ? DateTime.fromMillisecondsSinceEpoch(
@@ -120,7 +113,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         horizontalPadding,
         16,
         horizontalPadding,
-        bottomPadding,
+        kBottomBarTotalHeight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,47 +173,58 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          '${current.main.temp.round()}°',
-                          style: GoogleFonts.inter(
-                            fontSize: 110,
-                            fontWeight: FontWeight.w300,
-                            color: theme.colorScheme.onSurface,
-                            letterSpacing: -4,
-                            height: 1.0,
+                        // Цифра температуры
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${current.main.temp.round()}°',
+                              style: GoogleFonts.inter(
+                                fontSize: 72,
+                                fontWeight: FontWeight.w300,
+                                color: theme.colorScheme.onSurface,
+                                letterSpacing: -2,
+                                height: 1.0,
+                              ),
+                            ),
                           ),
                         ),
+                        // Колонка с описанием и ощущением
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              left: 12,
-                              bottom: 12,
-                            ),
+                            padding: const EdgeInsets.only(left: 12, bottom: 8),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  current.weather[0].description.toUpperCase(),
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.primaryColor,
-                                    letterSpacing: 1,
+                                // Теперь описание не обрежется, а сожмется
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    current.weather[0].description.toUpperCase(),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.primaryColor,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Ощущается как ${current.main.feelsLike.round()}°',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                const SizedBox(height: 2),
+                                // Ощущается как... тоже под защитой
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Ощущается как ${current.main.feelsLike.round()}°',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
@@ -304,11 +308,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxCardWidth),
-              child: ListView.builder(
+              child: ListView.separated(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 7,
+                itemCount: forecastList.isEmpty ? 0 : 7,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final dayOffset = index + 1;
 
@@ -322,6 +327,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                     'ru',
                   ).format(date).toUpperCase();
 
+                  // Защита от пустого списка прогноза
+                  if (forecastList.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
                   final forecastForDay = forecastList.firstWhere(
                     (element) {
                       final elementDate = DateTime.fromMillisecondsSinceEpoch(
@@ -331,11 +341,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                           elementDate.month == date.month &&
                           elementDate.year == date.year;
                     },
-                    orElse: () => forecastList.length > dayOffset
-                        ? forecastList[dayOffset]
-                        : forecastList.isNotEmpty
-                        ? forecastList[forecastList.length - 1]
-                        : forecastList.first,
+                    orElse: () {
+                      // Защита от выхода за границы списка
+                      final safeIndex = dayOffset < forecastList.length
+                          ? dayOffset
+                          : forecastList.length - 1;
+                      return forecastList[safeIndex];
+                    },
                   );
 
                   final tempMax = forecastForDay.main.temp.round();
@@ -344,7 +356,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                   return ScrollScaleCard(
                     onTap: () {},
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
                       padding: EdgeInsets.symmetric(
                         horizontal: isWeb ? 16 : 20,
                         vertical: 16,
@@ -353,22 +364,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                         color: theme.cardColor,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: isDark 
+                          color: isDark
                               ? Colors.white.withValues(alpha: 0.08)
                               : Colors.black.withValues(alpha: 0.05),
                         ),
-                        boxShadow: isDark ? null : [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
                       child: Row(
                         children: [
+                          // Слот 1: Короткое название (ПН, ВТ) — фиксированная ширина
                           SizedBox(
-                            width: 45.0,
+                            width: 35.0,
                             child: Text(
                               shortDayName,
                               style: GoogleFonts.inter(
@@ -378,22 +383,29 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                               ),
                             ),
                           ),
+                          const SizedBox(width: 8),
+                          // Слот 2: Полное название — теперь оно сжимается, если не влезает
                           Expanded(
-                            child: Text(
-                              dayName,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: theme.colorScheme.onSurface,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                dayName,
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.colorScheme.onSurface,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 12),
+                          // Слот 3: Иконка и температура — зафиксированы справа
                           _getWeatherIcon(forecastForDay.weather[0].main),
                           const SizedBox(width: 12),
+                          // Минимальная температура
                           SizedBox(
-                            width: 35.0,
+                            width: 38.0,
                             child: Text(
                               '$tempMin°',
                               textAlign: TextAlign.right,
@@ -405,8 +417,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                             ),
                           ),
                           const SizedBox(width: 8),
+                          // Максимальная температура
                           SizedBox(
-                            width: 35.0,
+                            width: 38.0,
                             child: Text(
                               '$tempMax°',
                               textAlign: TextAlign.right,
@@ -425,7 +438,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
               ),
             ),
           ),
-          const SizedBox(height: 40),
         ],
       ),
     );

@@ -60,6 +60,7 @@ dependencies:
   # --- ПРОИЗВОДИТЕЛЬНОСТЬ И UX ---
   cached_network_image: ^3.4.1
   connectivity_plus: ^6.1.1
+  crypto: ^3.0.3
   
   path_provider: ^2.1.5
   flutter_dotenv: ^6.0.0
@@ -122,6 +123,11 @@ flutter:
     - assets/images/europa_plus.jpg
     - assets/images/superdisco.jpg
     - assets/images/load.png
+    - assets/images/radio_record_logo.png
+    - assets/images/russkoe_radio.png
+    - assets/images/images.png
+    - assets/images/record-russian-hits.png
+    - assets/images/stv.jpeg
     - assets/icon/Icon - Heart.svg
     - assets/icons/morning.svg
     - assets/icons/day.svg

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/design/design.dart';
 
@@ -269,6 +270,9 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
   }
 
   Widget _buildImageSection(bool isDark, Color accentColor) {
+    final hasLogoUrl = widget.station.logoUrl != null && 
+                       widget.station.logoUrl!.isNotEmpty;
+
     return Stack(
       children: [
         // Контейнер с изображением
@@ -278,18 +282,30 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
             color: const Color(0xFF000000),
             borderRadius: BorderRadius.circular(AppEffects.radiusXl),
           ),
-          child: widget.station.art.isNotEmpty
+          child: hasLogoUrl
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(AppEffects.radiusXl),
-                  child: Image.asset(
-                    widget.station.art,
+                  child: CachedNetworkImage(
+                    imageUrl: widget.station.logoUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildPlaceholder();
-                    },
+                    fadeInDuration: const Duration(milliseconds: 300),
+                    fadeOutDuration: const Duration(milliseconds: 300),
+                    placeholder: (context, url) => _buildPlaceholder(),
+                    errorWidget: (context, url, error) => _buildPlaceholder(),
                   ),
                 )
-              : _buildPlaceholder(),
+              : widget.station.art.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+                      child: Image.asset(
+                        widget.station.art,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildPlaceholder();
+                        },
+                      ),
+                    )
+                  : _buildPlaceholder(),
         ),
 
         // LIVE бейдж для активной станции
@@ -433,23 +449,6 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        // Частота
-        if (widget.station.frequency.isNotEmpty &&
-            widget.station.frequency != 'Online')
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              widget.station.frequency,
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                color: widget.isActive
-                    ? Colors.black.withValues(alpha: 0.7)
-                    : AppColors.textSecondary,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
         // Описание
         if (widget.station.desc.isNotEmpty)
           Text(

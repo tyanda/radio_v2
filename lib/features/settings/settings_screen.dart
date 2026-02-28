@@ -19,7 +19,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
-    final settings = ref.watch(settingsProvider);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
@@ -60,40 +59,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           SizedBox(height: AppSpacing.lg),
 
-          // Раздел: Аудио
-          _buildSectionTitle('Аудио', isDark),
-          _buildSettingsTile(
-            icon: Icons.volume_up_rounded,
-            title: 'Громкость',
-            subtitle: 'Настройки громкости',
-            isDark: isDark,
-            onTap: () => _showVolumeDialog(context),
-          ),
-          _buildSettingsTile(
-            icon: Icons.headphones_rounded,
-            title: 'Фоновое воспроизведение',
-            subtitle: 'Играть в фоне',
-            isDark: isDark,
-            trailing: Switch(
-              value: settings.backgroundPlayback,
-              onChanged: (value) {
-                HapticFeedback.lightImpact();
-                ref.read(settingsProvider.notifier).toggleBackgroundPlayback(value);
-              },
-            ),
-          ),
-
-          SizedBox(height: AppSpacing.lg),
-
           // Раздел: Приложение
           _buildSectionTitle('Приложение', isDark),
-          _buildSettingsTile(
-            icon: Icons.language_rounded,
-            title: 'Язык',
-            subtitle: 'Русский',
-            isDark: isDark,
-            onTap: () => _showLanguageDialog(context),
-          ),
           _buildSettingsTile(
             icon: Icons.notifications_rounded,
             title: 'Уведомления',
@@ -228,73 +195,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           color: isDark ? Colors.white54 : Colors.black54,
         ),
         onTap: onTap,
-      ),
-    );
-  }
-
-  void _showVolumeDialog(BuildContext context) {
-    final settings = ref.read(settingsProvider);
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
-        title: const Text('Громкость по умолчанию'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Slider(
-              value: settings.defaultVolume,
-              min: 0.0,
-              max: 1.0,
-              divisions: 20,
-              label: '${(settings.defaultVolume * 100).round()}%',
-              activeColor: AppColors.primary,
-              onChanged: (value) {
-                ref.read(settingsProvider.notifier).setDefaultVolume(value);
-              },
-            ),
-            Text(
-              '${(settings.defaultVolume * 100).round()}%',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLanguageDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Язык'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Русский'),
-              selected: true,
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              title: const Text('English'),
-              selected: false,
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
       ),
     );
   }

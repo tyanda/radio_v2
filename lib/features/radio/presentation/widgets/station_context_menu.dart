@@ -91,12 +91,12 @@ class StationContextMenu {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: AppColors.warning.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.share_rounded,
-                  color: Colors.blue,
+                  color: AppColors.warning,
                   size: 20,
                 ),
               ),

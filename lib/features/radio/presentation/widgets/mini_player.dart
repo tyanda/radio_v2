@@ -306,7 +306,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       width: 80,
                                       height: 10,
                                       textStyle: GoogleFonts.inter(
-                                        color: theme.primaryColor,
+                                        color: isDark
+                                            ? theme.primaryColor
+                                            : AppColors.primaryDark,
                                         fontSize: 8.5,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 1.2,
@@ -320,7 +322,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       child: Marquee(
                                         text: playerState.trackTitle!,
                                         style: GoogleFonts.inter(
-                                          color: theme.primaryColor,
+                                          color: isDark
+                                              ? theme.primaryColor
+                                              : AppColors.primaryDark,
                                           fontSize: 8.5,
                                           fontWeight: FontWeight.w700,
                                           letterSpacing: 0.5,
@@ -347,8 +351,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                           width: 5,
                                           height: 5,
                                           decoration: BoxDecoration(
-                                            color: theme.primaryColor,
-                                            shape: BoxShape.circle,
+                                            color: isDark
+                                                ? theme.primaryColor
+                                                : AppColors.primaryDark,
                                           ),
                                         ),
                                         SizedBox(width: AppSpacing.xs),
@@ -357,7 +362,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                             context,
                                           ).live_broadcast,
                                           style: GoogleFonts.inter(
-                                            color: theme.primaryColor,
+                                            color: isDark
+                                                ? theme.primaryColor
+                                                : AppColors.primaryDark,
                                             fontSize: 8.5,
                                             fontWeight: FontWeight.w700,
                                             letterSpacing: 1.2,

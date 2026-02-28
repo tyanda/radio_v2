@@ -38,6 +38,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   late AnimationController _animationController;
   ScrollController? _scrollController;
   int? _lastActiveIndex;
+  final Map<int, GlobalKey> _cardKeys = {}; // Ключи для карточек в списке
 
   bool _showFavoritesOnly = false;
   ViewType _currentViewType = ViewType.grid;
@@ -63,6 +64,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   void dispose() {
     _animationController.dispose();
     _scrollController?.dispose();
+    _cardKeys.clear();
     super.dispose();
   }
 
@@ -90,6 +92,19 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeOutCubic,
       );
+    } else if (_currentViewType == ViewType.list) {
+      // Для списка скроллим к активной карточке через GlobalKey
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final key = _cardKeys[activeIndex];
+        if (key != null && key.currentContext != null) {
+          Scrollable.ensureVisible(
+            key.currentContext!,
+            alignment: 0.5, // Центрируем активную карточку
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
     }
   }
 
@@ -98,6 +113,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
     // Фильтр избранных
     if (_showFavoritesOnly && favoriteNames.isNotEmpty) {
+      // Очищаем ключи при изменении фильтра
+      _cardKeys.clear();
       filtered = filtered.where((s) => favoriteNames.contains(s.name)).toList();
     }
 
@@ -288,13 +305,23 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         140.0,
       ),
       child: Column(
-        children: stations.map((station) {
+        children: stations.asMap().entries.map((entry) {
+          final index = entry.key;
+          final station = entry.value;
           final isActive = currentStation?.id == station.id;
           final isFavorite = favoriteNames.contains(station.name);
 
+          // Создаём GlobalKey для каждой карточки
+          if (!_cardKeys.containsKey(index)) {
+            _cardKeys[index] = GlobalKey();
+          }
+
           return Padding(
             padding: EdgeInsets.only(bottom: AppSpacing.md),
-            child: _buildListCard(station, isActive, isFavorite),
+            child: KeyedSubtree(
+              key: _cardKeys[index],
+              child: _buildListCard(station, isActive, isFavorite),
+            ),
           );
         }).toList(),
       ),
@@ -471,46 +498,18 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
                     SizedBox(height: 2),
 
-                    Row(
-                      children: [
-                        if (station.frequency.isNotEmpty && station.frequency != 'Online') ...[
-                          Text(
-                            station.frequency,
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 11,
-                              color: isActive
-                                  ? Colors.black.withValues(alpha: 0.7)
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                          Text(
-                            '•',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: isActive
-                                  ? Colors.black.withValues(alpha: 0.5)
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                        ],
-                        Expanded(
-                          child: Text(
-                            station.desc,
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 11,
-                              color: isActive
-                                  ? Colors.black.withValues(alpha: 0.6)
-                                  : AppColors.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    // Описание
+                    Text(
+                      station.desc,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 11,
+                        color: isActive
+                            ? Colors.black.withValues(alpha: 0.6)
+                            : AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

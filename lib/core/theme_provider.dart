@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'design/design_tokens.dart';
+
 class ThemeState {
   final bool isDarkTheme;
 
@@ -36,7 +38,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-        systemNavigationBarColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFFFFFFF),
+        systemNavigationBarColor: isDark ? AppColors.background : AppColors.backgroundLight,
         systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       ),
     );
@@ -52,56 +54,100 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 
   ShadThemeData get shadcnTheme {
+    // Кастомная цветовая схема с жёлтым акцентом как на Android
     return state.isDarkTheme
         ? ShadThemeData(
             brightness: Brightness.dark,
-            colorScheme: const ShadZincColorScheme.dark(),
+            colorScheme: ShadColorScheme(
+              primary: AppColors.primary,
+              primaryForeground: Colors.black,
+              background: AppColors.background,
+              foreground: AppColors.textPrimary,
+              card: AppColors.cardBackground,
+              cardForeground: AppColors.textPrimary,
+              border: AppColors.divider,
+              muted: AppColors.surfaceVariant,
+              mutedForeground: AppColors.textSecondary,
+              accent: AppColors.primaryLight,
+              accentForeground: Colors.black,
+              destructive: AppColors.error,
+              destructiveForeground: Colors.white,
+              input: AppColors.surfaceVariant,
+              popover: AppColors.cardBackground,
+              popoverForeground: AppColors.textPrimary,
+              ring: AppColors.primary,
+              secondary: AppColors.primaryDark,
+              secondaryForeground: Colors.black,
+              selection: AppColors.primary.withValues(alpha: 0.3),
+            ),
           )
         : ShadThemeData(
             brightness: Brightness.light,
-            colorScheme: const ShadZincColorScheme.light(),
+            colorScheme: ShadColorScheme(
+              primary: AppColors.primary,
+              primaryForeground: Colors.black,
+              background: AppColors.backgroundLight, // #F5F5F7
+              foreground: AppColors.textPrimaryLight,
+              card: Colors.white,
+              cardForeground: AppColors.textPrimaryLight,
+              border: AppColors.dividerLight,
+              muted: AppColors.surfaceVariantLight,
+              mutedForeground: AppColors.textSecondaryLight,
+              accent: AppColors.primaryLight,
+              accentForeground: Colors.black,
+              destructive: AppColors.error,
+              destructiveForeground: Colors.white,
+              input: AppColors.surfaceVariantLight,
+              popover: Colors.white,
+              popoverForeground: AppColors.textPrimaryLight,
+              ring: AppColors.primary,
+              secondary: AppColors.primaryDark,
+              secondaryForeground: Colors.black,
+              selection: AppColors.primary.withValues(alpha: 0.3),
+            ),
           );
   }
 
   ThemeData get themeData {
     if (state.isDarkTheme) {
       return ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFFF2C94C),
-        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
-        cardColor: const Color(0xFF1A1A1A),
-        dividerColor: const Color(0xFF222222),
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: AppColors.background,
+        cardColor: AppColors.cardBackground,
+        dividerColor: AppColors.divider,
         textTheme: const TextTheme().apply(fontFamily: 'Inter'),
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFF2C94C),
-          secondary: Color(0xFFF2C94C),
-          surface: Color(0xFF1A1A1A),
+          primary: AppColors.primary,
+          secondary: AppColors.primaryDark,
+          surface: AppColors.cardBackground,
           onPrimary: Colors.black,
+          onSurface: AppColors.textPrimary,
         ),
       );
     } else {
       return ThemeData.light().copyWith(
-        primaryColor: const Color(0xFFFFCC00), // accent: #FFCC00
-        canvasColor: const Color(0xFFC9A53A), // brand: #C9A53A
-        scaffoldBackgroundColor: const Color(0xFFF5F5F7), // background: #F5F5F7
-        cardColor: const Color(0xFFFFFFFF), // cardBackground: СТРОГО БЕЛЫЙ #FFFFFF
-        dividerColor: const Color(0xFFE5E5E7), // divider: #E5E5E7
+        primaryColor: AppColors.primary,
+        canvasColor: AppColors.primaryDark,
+        scaffoldBackgroundColor: AppColors.backgroundLight,
+        cardColor: Colors.white,
+        dividerColor: AppColors.dividerLight,
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFF1D1D1F)),
-          bodyMedium: TextStyle(color: Color(0xFF1D1D1F)),
-          titleLarge: TextStyle(color: Color(0xFF1D1D1F)),
+          bodyLarge: TextStyle(color: AppColors.textPrimaryLight),
+          bodyMedium: TextStyle(color: AppColors.textPrimaryLight),
+          titleLarge: TextStyle(color: AppColors.textPrimaryLight),
         ).apply(
-          fontFamily: 'Inter', 
-          bodyColor: const Color(0xFF1D1D1F), // primaryText: #1D1D1F
-          displayColor: const Color(0xFF1D1D1F),
+          fontFamily: 'Inter',
+          bodyColor: AppColors.textPrimaryLight,
+          displayColor: AppColors.textPrimaryLight,
         ),
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFFFFCC00),
-          secondary: Color(0xFFC9A53A), // brand
-          surface: Color(0xFFFFFFFF),
-          error: Color(0xFFEF4444), // error: #EF4444
-          onPrimary: Color(0xFF000000), // Текст на желтом - СТРОГО ЧЕРНЫЙ
-          onSurface: Color(0xFF1D1D1F), // primaryText
-          onSurfaceVariant: Color(0xFF86868B), // secondaryText: #86868B
+          primary: AppColors.primary,
+          secondary: AppColors.primaryDark,
+          surface: Colors.white,
+          error: AppColors.error,
+          onPrimary: Colors.black,
+          onSurface: AppColors.textPrimaryLight,
+          onSurfaceVariant: AppColors.textSecondaryLight,
         ),
       );
     }

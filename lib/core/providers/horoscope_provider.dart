@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:radio_v2/core/utils/logger.dart';
 import 'package:radio_v2/features/horoscope/data/implementations/horoscope_repository_impl.dart';
 import 'package:radio_v2/features/horoscope/data/models/horoscope_data.dart';
 import 'package:radio_v2/features/horoscope/data/services/horoscope_service.dart';
@@ -42,20 +43,27 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
     final service = HoroscopeService();
     _repository = HoroscopeRepositoryImpl(service);
     final initialSign = ZodiacSign.all.first;
-    // Загружаем гороскоп при инициализации
-    _loadHoroscope(initialSign);
+    
+    // Загружаем гороскоп асинхронно после инициализации
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadHoroscope(initialSign);
+    });
+    
     return HoroscopeState(selectedSign: initialSign, isLoading: true);
   }
 
   Future<void> _loadHoroscope(ZodiacSign sign) async {
     try {
+      Logger.log('Loading horoscope for: ${sign.name}', tag: 'HoroscopeProvider');
       final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
+      Logger.log('Horoscope loaded: ${horoscopeData.source}', tag: 'HoroscopeProvider');
       state = state.copyWith(
         horoscopeData: horoscopeData,
         isLoading: false,
         errorMessage: null,
       );
     } catch (e) {
+      Logger.error('Failed to load horoscope: $e', tag: 'HoroscopeProvider');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }

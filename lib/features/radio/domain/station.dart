@@ -6,6 +6,7 @@ class Station {
   final String icon;
   final String url;
   final String frequency;
+  final String? logoUrl; // URL логотипа для загрузки из интернета
   final Map<String, String>? metadata;
 
   Station({
@@ -16,6 +17,7 @@ class Station {
     required this.icon,
     required this.url,
     required this.frequency,
+    this.logoUrl,
     this.metadata,
   });
 }

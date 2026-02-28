@@ -176,41 +176,6 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
               },
             ),
             _buildActionItem(
-              icon: Icons.share_rounded,
-              title: 'Поделиться',
-              isDark: isDark,
-              onTap: () async {
-                final currentStation = station;
-                Navigator.pop(context);
-                HapticFeedback.lightImpact();
-
-                // Простая реализация share через clipboard
-                await Clipboard.setData(
-                  ClipboardData(
-                    text: 'Слушаю ${currentStation.name} на SakhaLive Radio!',
-                  ),
-                );
-
-                // Показываем уведомление после закрытия modal
-                await Future.delayed(const Duration(milliseconds: 300));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Скопировано: "${currentStation.name}"'),
-                      duration: const Duration(seconds: 2),
-                      backgroundColor: AppColors.primary,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppEffects.radiusLg,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-            _buildActionItem(
               icon: Icons.info_outline_rounded,
               title: 'О станции',
               isDark: isDark,

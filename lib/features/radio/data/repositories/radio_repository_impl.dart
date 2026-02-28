@@ -1,3 +1,5 @@
+// ignore_for_file: experimental_member_use
+
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
 import '../../../../core/utils/logger.dart';

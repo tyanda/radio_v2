@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:radio_v2/core/design/app_colors.dart';
+import '../design/design.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Утилиты для показа Snackbar
@@ -30,7 +30,7 @@ class SnackbarHelper {
       context: context,
       message: message,
       duration: duration,
-      backgroundColor: const Color(0xFF34C759),
+      backgroundColor: AppColors.success,
       icon: Icons.check_circle_outline_rounded,
     );
   }
@@ -45,7 +45,7 @@ class SnackbarHelper {
       context: context,
       message: message,
       duration: duration,
-      backgroundColor: AppColors.accent,
+      backgroundColor: AppColors.primary,
       icon: Icons.info_outline_rounded,
       textColor: Colors.black,
     );

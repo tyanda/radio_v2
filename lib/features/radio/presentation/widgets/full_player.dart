@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:radio_v2/core/design/app_colors.dart';
-import 'package:radio_v2/core/design/figma_design.dart';
-import 'package:radio_v2/features/radio/domain/station.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
-import 'package:radio_v2/core/providers/radio_providers.dart';
-import 'package:radio_v2/core/utils/responsive_utils.dart';
-import '../../../../l10n/app_localizations.dart';
+
+import '../../../../core/design/design.dart';
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/providers/radio_providers.dart';
+import '../../domain/station.dart';
+import '../providers/player_provider.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 class FullPlayer extends ConsumerWidget {
   const FullPlayer({super.key});
@@ -34,11 +34,16 @@ class FullPlayer extends ConsumerWidget {
     Station currentStation,
   ) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-      height: FigmaDesign.fullPlayerHeight,
+      margin: EdgeInsets.fromLTRB(
+        ResponsivePadding.medium(context),
+        0,
+        ResponsivePadding.medium(context),
+        AppSpacing.md,
+      ),
+      height: 136,
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
+        borderRadius: BorderRadius.circular(AppEffects.radiusXl),
         border: Border.all(color: AppColors.cardBackground, width: 1),
         boxShadow: [
           BoxShadow(
@@ -57,14 +62,14 @@ class FullPlayer extends ConsumerWidget {
               children: [
                 // Обложка альбома (107x93 по Figma)
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppEffects.radiusLg),
                   child: Container(
-                    width: FigmaDesign.fullPlayerArtWidth,
-                    height: FigmaDesign.fullPlayerArtHeight,
+                    width: 107,
+                    height: 93,
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accent.withValues(alpha: 0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -78,84 +83,62 @@ class FullPlayer extends ConsumerWidget {
                           color: Colors.grey.shade800,
                           child: const Icon(
                             Icons.music_note,
-                            color: Colors.white54,
-                            size: 40,
+                            color: Colors.white,
                           ),
                         );
                       },
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                // Информация о станции и управление
+                SizedBox(width: AppSpacing.md),
+                // Информация о станции и кнопки
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Spacer(),
-                      // Название станции
                       Text(
                         currentStation.name,
                         style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: FigmaDesign.fontSizeFullPlayerTitle,
-                          letterSpacing: -0.5,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      // Статус
+                      SizedBox(height: AppSpacing.xs),
                       Text(
-                        playerState.isPlaying
-                            ? AppLocalizations.of(context).live_broadcast
-                            : AppLocalizations.of(context).pause_status,
+                        AppLocalizations.of(context).live_broadcast,
                         style: GoogleFonts.inter(
-                          color: playerState.isPlaying
-                              ? AppColors.accent
-                              : Colors.white60,
-                          fontSize: FigmaDesign.fontSizeMiniPlayerStatus,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2.0,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Кнопка Play/Pause (58x58 по Figma)
-                      GestureDetector(
-                        onTap: () {
-                          if (playerState.isPlaying) {
-                            ref.read(playerProvider.notifier).stop();
-                          } else {
-                            ref
-                                .read(playerProvider.notifier)
-                                .playStation(currentStation);
-                          }
-                        },
-                        child: Container(
-                          width: FigmaDesign.fullPlayerButtonSize,
-                          height: FigmaDesign.fullPlayerButtonSize,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.accent,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.accent.withValues(alpha: 0.4),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            playerState.isPlaying
+                      SizedBox(height: AppSpacing.md),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildIconButton(
+                            context,
+                            icon: playerState.isPlaying
                                 ? Icons.pause_rounded
                                 : Icons.play_arrow_rounded,
-                            color: Colors.black,
-                            size: 32,
+                            onPressed: () {
+                              if (playerState.isPlaying) {
+                                ref.read(playerProvider.notifier).stop();
+                              } else {
+                                ref
+                                    .read(playerProvider.notifier)
+                                    .playStation(currentStation);
+                              }
+                            },
+                            isPrimary: true,
                           ),
-                        ),
+                        ],
                       ),
-                      const Spacer(),
                     ],
                   ),
                 ),
@@ -163,6 +146,42 @@ class FullPlayer extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onPressed,
+    bool isPrimary = false,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: isPrimary ? 58 : 40,
+          height: isPrimary ? 58 : 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isPrimary ? AppColors.primary : AppColors.surfaceVariant,
+            boxShadow: isPrimary
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Icon(
+            icon,
+            color: isPrimary ? Colors.black : AppColors.textPrimary,
+            size: isPrimary ? 28 : 20,
+          ),
+        ),
       ),
     );
   }

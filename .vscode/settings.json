@@ -1,4 +1,9 @@
 {
-    "cmake.sourceDirectory": "G:/radio_v2/linux",
-    "java.configuration.updateBuildConfiguration": "interactive"
+  "files.exclude": {
+    "**/defaultSettings.jsonc": true
+  },
+  "files.watcherExclude": {
+    "**/defaultSettings.jsonc": true
+  },
+  "json.validate.enable": false
 }

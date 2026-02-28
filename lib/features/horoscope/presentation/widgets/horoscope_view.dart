@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/figma_design.dart';
 import 'package:radio_v2/core/design/app_constants.dart';
+import 'package:radio_v2/core/design/design_tokens.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/core/providers/horoscope_provider.dart';
+import 'package:radio_v2/core/providers.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -118,13 +120,14 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
   /// Виджет карточки знака зодиака в сетке
   Widget _buildZodiacMiniCard(ZodiacSign zodiac, bool isSelected) {
+    final themeState = ref.watch(themeProvider);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = themeState.isDarkTheme;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
-        color: isSelected ? theme.primaryColor : theme.cardColor,
+        color: isSelected ? theme.primaryColor : (isDark ? AppColors.cardBackground : AppColors.cardBackgroundLight),
         borderRadius: BorderRadius.circular(20), // Slightly rounded for mini cards
         border: Border.all(
           color: isSelected ? theme.primaryColor : (isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05)),
@@ -154,7 +157,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             child: Text(
               zodiac.name,
               style: GoogleFonts.inter(
-                color: isSelected ? Colors.black : theme.colorScheme.onSurface,
+                color: isSelected ? Colors.black : (isDark ? AppColors.textPrimary : AppColors.textName),
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.2,
@@ -171,14 +174,15 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
   /// Основная карточка с предсказанием
   Widget _buildPredictionCard(HoroscopeState horoscopeState) {
+    final themeState = ref.watch(themeProvider);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = themeState.isDarkTheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: isDark ? AppColors.cardBackground : AppColors.cardBackgroundLight,
         borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
         border: Border(
           left: BorderSide(color: theme.primaryColor, width: 10),
@@ -200,7 +204,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 child: Text(
                   '${zodiacSigns.elementAtOrNull(_selectedIndex)?.name ?? ''} на сегодня',
                   style: GoogleFonts.inter(
-                    color: theme.colorScheme.onSurface,
+                    color: isDark ? AppColors.textPrimary : AppColors.textName,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
@@ -226,7 +230,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 child: Text(
                   AppLocalizations.of(context).loading_horoscope,
                   style: GoogleFonts.inter(
-                    color: theme.colorScheme.onSurface,
+                    color: isDark ? AppColors.textPrimary : AppColors.textName,
                     fontSize: 16,
                   ),
                 ),
@@ -252,7 +256,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                     child: Text(
                       AppLocalizations.of(context).horoscope_not_found,
                       style: GoogleFonts.inter(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: isDark ? AppColors.textTertiary : AppColors.textSecondary,
                         fontSize: 16,
                       ),
                     ),
@@ -260,7 +264,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 : Text(
                     horoscopeState.horoscopeData!.text,
                     style: GoogleFonts.inter(
-                      color: theme.colorScheme.onSurface,
+                      color: isDark ? AppColors.textPrimary : AppColors.textName,
                       fontSize: 16,
                       height: 1.6,
                       fontWeight: FontWeight.w500,
@@ -272,7 +276,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               child: Text(
                 AppLocalizations.of(context).horoscope_unavailable,
                 style: GoogleFonts.inter(
-                  color: theme.colorScheme.onSurface,
+                  color: isDark ? AppColors.textPrimary : AppColors.textName,
                   fontSize: 16,
                 ),
               ),
@@ -292,8 +296,8 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
   }
 
   Widget _buildSmallBadge(String label) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final themeState = ref.watch(themeProvider);
+    final isDark = themeState.isDarkTheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
@@ -304,7 +308,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       child: Text(
         label,
         style: GoogleFonts.inter(
-          color: theme.colorScheme.onSurface,
+          color: isDark ? AppColors.textPrimary : AppColors.textName,
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),

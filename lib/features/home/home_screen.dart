@@ -5,15 +5,22 @@ import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:radio_v2/core/design/app_colors.dart';
-import 'package:radio_v2/core/design/figma_design.dart';
-import 'package:radio_v2/features/horoscope/presentation/widgets/horoscope_view.dart';
-import 'package:radio_v2/core/providers/radio_providers.dart';
-import 'package:radio_v2/features/radio/presentation/widgets/mini_player.dart';
-import 'package:radio_v2/features/radio/presentation/widgets/radio_view.dart';
-import 'package:radio_v2/features/weather/presentation/weather_screen.dart';
-import 'package:radio_v2/core/providers.dart';
+import '../../core/design/design.dart';
+import '../../core/providers.dart';
+import '../../core/providers/radio_providers.dart';
+import '../horoscope/presentation/widgets/horoscope_view.dart';
+import '../radio/presentation/widgets/mini_player.dart';
+import '../radio/presentation/widgets/radio_view.dart';
+import '../weather/presentation/weather_screen.dart';
+import '../settings/settings_screen.dart';
 
+/// Улучшенный HomeScreen с расширенной навигацией
+///
+/// Особенности:
+/// - Плавные анимации переходов между вкладками
+/// - Улучшенный bottom bar с hover-эффектами
+/// - Анимированный хедер с пульсирующим логотипом
+/// - Интеграция StationGrid для быстрого доступа
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,20 +28,62 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with TickerProviderStateMixin {
   int _currentTab = 0;
-  final PageController _pageController = PageController(initialPage: 0);
+  late PageController _pageController;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+    
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: AppEffects.durationNormal,
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
+    
+    _fadeController.forward();
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _fadeController.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged(int index) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _fadeController.reverse().then((_) {
+        setState(() {
+          _currentTab = index;
+        });
+        _fadeController.forward();
+      });
+    });
+
+    _pageController.animateToPage(
+      index,
+      duration: AppEffects.durationSlow,
+      curve: AppEffects.curveEmphasis,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeState = ref.watch(themeProvider);
+    final isDark = themeState.isDarkTheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Основной контент
@@ -43,18 +92,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const _AppHeader(),
               const _MarqueeSection(),
               Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentTab = index;
-                    });
-                  },
-                  children: [
-                    const RadioView(),
-                    const WeatherScreen(),
-                    const HoroscopeView(),
-                  ],
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentTab = index;
+                      });
+                    },
+                    children: const [
+                      RadioView(),
+                      WeatherScreen(),
+                      HoroscopeView(),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -76,20 +128,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDarkMode = themeState.isDarkTheme;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: const BoxDecoration(color: Colors.transparent),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const MiniPlayer(),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.sm,
+            ),
             decoration: BoxDecoration(
               color: isDarkMode
                   ? AppColors.cardBackground.withValues(alpha: 0.98)
-                  : Colors.white.withValues(alpha: 1.0), // СТРОГО БЕЛЫЙ #FFFFFF
-              borderRadius: BorderRadius.circular(32),
+                  : Colors.white.withValues(alpha: 1.0),
+              borderRadius: BorderRadius.circular(AppEffects.radiusFull),
               border: Border.all(
                 color: isDarkMode
                     ? Colors.white.withValues(alpha: 0.05)
@@ -97,13 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               boxShadow: isDarkMode
                   ? null
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                  : AppEffects.shadowMd,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -111,8 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _buildNavItem(Icons.sensors_rounded, 0, 'Радио'),
                 _buildNavItem(Icons.filter_drama_rounded, 1, 'Погода'),
                 _buildNavItem(Icons.auto_awesome_rounded, 2, 'Звезды'),
-                _buildThemeNavItem(
-                  isDarkMode ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                _buildSettingsButton(
+                  isDarkMode ? Icons.settings_rounded : Icons.settings_outlined,
                 ),
               ],
             ),
@@ -127,40 +176,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (isActive) return Colors.black;
     return isDark
         ? Colors.white.withValues(alpha: 0.5)
-        : const Color(0xFFA7B0B8);
+        : AppColors.iconGrey;
   }
 
   Widget _buildNavItem(IconData icon, int index, String label) {
     final bool active = _currentTab == index;
     final accentColor = Theme.of(context).primaryColor;
 
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        setState(() {
-          _currentTab = index;
-        });
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-        );
-      },
-      behavior: HitTestBehavior.opaque,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
       child: Consumer(
         builder: (context, ref, _) {
           final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: active ? accentColor : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Icon(
-              icon,
-              size: 26,
-              color: _getIconColor(active, isDark),
+          return GestureDetector(
+            onTap: () => _onTabChanged(index),
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: AppEffects.durationNormal,
+              curve: AppEffects.curve,
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                color: active ? accentColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 26,
+                    color: _getIconColor(active, isDark),
+                  ),
+                  if (active) ...[
+                    SizedBox(width: AppSpacing.xs),
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           );
         },
@@ -168,29 +230,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildThemeNavItem(IconData icon) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        ref.read(themeProvider.notifier).toggleTheme();
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Consumer(
-        builder: (context, ref, _) {
-          final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Icon(
-              icon,
-              size: 26,
-              color: _getIconColor(false, isDark),
+  Widget _buildSettingsButton(IconData icon) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SettingsScreen(),
             ),
           );
         },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+          ),
+          child: Icon(
+            icon,
+            size: 26,
+            color: ref.watch(themeProvider.select((s) => s.isDarkTheme))
+                ? Colors.white.withValues(alpha: 0.5)
+                : AppColors.iconGrey,
+          ),
+        ),
       ),
     );
   }
@@ -208,6 +277,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _blurAnimation;
+  late Animation<double> _rotateAnimation;
 
   @override
   void initState() {
@@ -226,6 +296,11 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
       begin: 4.0,
       end: 16.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    
+    _rotateAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * 3.14159,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
   }
 
   @override
@@ -255,7 +330,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
         width: 20,
         height: 20,
         colorFilter: ColorFilter.mode(
-          isDarkMode ? const Color(0xFFFFD700) : const Color(0xFFFFCC00),
+          isDarkMode ? AppColors.primaryLight : AppColors.primaryDark,
           BlendMode.srcIn,
         ),
       );
@@ -264,7 +339,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
       return Icon(
         hour >= 6 && hour < 18 ? Icons.wb_sunny : Icons.nightlight_round,
         size: 20,
-        color: isDarkMode ? const Color(0xFFFFD700) : const Color(0xFFFFCC00),
+        color: isDarkMode ? AppColors.primaryLight : AppColors.primaryDark,
       );
     }
   }
@@ -273,7 +348,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
   Widget build(BuildContext context) {
     final greetingAsync = ref.watch(greetingProvider);
     final isDark = ref.watch(themeProvider).isDarkTheme;
-    final topPadding = MediaQuery.of(context).padding.top + 4.0;
+    final topPadding = MediaQuery.of(context).padding.top + AppSpacing.sm;
 
     final greeting = greetingAsync.when(
       data: (data) => data.toUpperCase(),
@@ -283,10 +358,10 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 16.0,
-        right: 16.0,
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
         top: topPadding,
-        bottom: 12.0,
+        bottom: AppSpacing.md,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -298,8 +373,8 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
               RichText(
                 text: TextSpan(
                   style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF1D1D1F),
-                    fontSize: FigmaDesign.headerTitleSize,
+                    color: isDark ? AppColors.textPrimary : AppColors.textName,
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
                     height: 1.0,
@@ -321,14 +396,14 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                   applyHeightToLastDescent: false,
                 ),
               ),
-              const SizedBox(height: 2.0),
+              SizedBox(height: AppSpacing.xs),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     greeting,
                     style: GoogleFonts.inter(
-                      color: isDark ? const Color(0xFF86868B) : const Color(0xFF1D1D1F),
+                      color: isDark ? AppColors.textTertiary : AppColors.textName,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                       letterSpacing: 4.0,
@@ -339,48 +414,55 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                       applyHeightToLastDescent: false,
                     ),
                   ),
-                  const SizedBox(width: 8.0),
+                  SizedBox(width: AppSpacing.sm),
                   _buildGreetingSvg(isDark),
                 ],
               ),
             ],
           ),
-          // Анимированный логотип "Дыхание"
+          // Анимированный логотип "Дыхание" с вращением
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
               return Transform.scale(
                 scale: _scaleAnimation.value,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.3),
-                        blurRadius: _blurAnimation.value,
-                        spreadRadius: _controller.value * 2,
+                child: Transform.rotate(
+                  angle: _rotateAnimation.value * 0.05,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).primaryColor.withValues(alpha: 0.5),
-                      width: 1.5,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          blurRadius: _blurAnimation.value,
+                          spreadRadius: _controller.value * 2,
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  child: CircleAvatar(
-                    radius: FigmaDesign.headerLogoSize / 2,
-                    backgroundColor: isDark
-                        ? AppColors.cardBackground
-                        : Theme.of(context).scaffoldBackgroundColor,
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/load.png',
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: isDark
+                          ? AppColors.cardBackground
+                          : Theme.of(context).scaffoldBackgroundColor,
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/load.png',
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -402,7 +484,16 @@ class _MarqueeSection extends ConsumerWidget {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
       height: 32.0,
-      decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       alignment: Alignment.center,
       child: Marquee(
         text:
@@ -410,7 +501,7 @@ class _MarqueeSection extends ConsumerWidget {
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w600,
           fontSize: 14,
-          color: Colors.black, // Контраст на желтом
+          color: Colors.black,
         ),
         velocity: 30,
         blankSpace: 100,

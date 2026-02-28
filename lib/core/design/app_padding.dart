@@ -1,41 +1,60 @@
+// ═══════════════════════════════════════════════════════════════
+// DEPRECATED: Этот файл устарел!
+// ═══════════════════════════════════════════════════════════════
+// 
+// Используйте новый файл: lib/core/design/spacing.dart
+// 
+// Пример миграции:
+//   БЫЛО: AppPadding.horizontal (16.0)
+//   СТАЛО: AppSpacing.lg (16.0)
+//
+//   БЫЛО: AppPadding.small (8.0)
+//   СТАЛО: AppSpacing.sm (8.0)
+//
+//   БЫЛО: AppPadding.large (24.0)
+//   СТАЛО: AppSpacing.xxl (24.0)
+// ═══════════════════════════════════════════════════════════════
+
 import 'package:flutter/material.dart';
 
-/// Глобальные константы отступов для всего приложения
+// Экспортируем новые дизайн-токены для обратной совместимости
+export 'spacing.dart';
+
+/// @deprecated Используйте [AppSpacing] из spacing.dart
 class AppPadding {
-  /// Стандартный горизонтальный отступ для всех экранов и виджетов
+  @Deprecated('Используйте AppSpacing.lg')
   static const double horizontal = 16.0;
 
-  /// Стандартный вертикальный отступ
+  @Deprecated('Используйте AppSpacing.lg')
   static const double vertical = 16.0;
 
-  /// Малый отступ (для компактных элементов)
+  @Deprecated('Используйте AppSpacing.sm')
   static const double small = 8.0;
 
-  /// Большой отступ (для основных разделов)
+  @Deprecated('Используйте AppSpacing.xxl')
   static const double large = 24.0;
 
-  /// Стандартный симметричный padding
+  @Deprecated('Используйте EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg)')
   static const EdgeInsets symmetric = EdgeInsets.symmetric(
-    horizontal: horizontal,
-    vertical: vertical,
+    horizontal: 16.0,
+    vertical: 16.0,
   );
 
-  /// Горизонтальный padding
+  @Deprecated('Используйте EdgeInsets.symmetric(horizontal: AppSpacing.lg)')
   static const EdgeInsets horizontalSymmetric = EdgeInsets.symmetric(
-    horizontal: horizontal,
+    horizontal: 16.0,
   );
 
-  /// Вертикальный padding
+  @Deprecated('Используйте EdgeInsets.symmetric(vertical: AppSpacing.lg)')
   static const EdgeInsets verticalSymmetric = EdgeInsets.symmetric(
-    vertical: vertical,
+    vertical: 16.0,
   );
 
-  /// Стандартный padding для экранов (SafeArea + контент)
-  /// Используется внутри SafeArea для верхнего отступа 16px
+  @Deprecated('Используйте EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm)')
   static const EdgeInsets screenPadding = EdgeInsets.fromLTRB(
-    horizontal,
-    horizontal,
-    horizontal,
-    small,
+    16.0,
+    16.0,
+    16.0,
+    8.0,
   );
 }

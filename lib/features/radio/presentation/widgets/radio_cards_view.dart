@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
-import 'package:radio_v2/core/providers/radio_providers.dart';
-import 'package:radio_v2/features/radio/presentation/widgets/vertical_radio_card.dart';
-import 'package:radio_v2/widgets/scroll_scale_card.dart';
-import 'package:radio_v2/core/utils/logger.dart';
-import 'package:radio_v2/core/design/app_constants.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/design/design.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../../core/providers/radio_providers.dart';
+import '../../../../core/providers.dart';
+import '../providers/player_provider.dart';
+import '../../domain/station.dart';
+import 'vertical_radio_card.dart';
+import '../../../../widgets/scroll_scale_card.dart';
+
+/// RadioCardsView с фильтрацией и поиском
+///
+/// Особенности:
+/// - Поиск по названию станции
+/// - Фильтр: Все / Избранные
+/// - Анимированное появление карточек
+/// - Плавный скролл к активной станции
 class RadioCardsView extends ConsumerStatefulWidget {
   const RadioCardsView({super.key});
 
@@ -20,13 +32,15 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   ScrollController? _scrollController;
   int? _lastActiveIndex;
 
+  bool _showFavoritesOnly = false;
+
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: AppEffects.durationSlow,
     );
 
     // Запускаем анимацию с небольшой задержкой для плавности
@@ -60,7 +74,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
     final row = (activeIndex / 2).floor();
     final rowHeight = 196.0;
-    final targetOffset = (row * rowHeight) - 30.0;
+    final targetOffset = (row * rowHeight) - AppSpacing.md;
 
     _scrollController!.animateTo(
       targetOffset.clamp(0.0, _scrollController!.position.maxScrollExtent),
@@ -69,13 +83,28 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     );
   }
 
+  List<Station> _filterStations(List<Station> stations, String? favoriteName) {
+    var filtered = stations;
+
+    // Фильтр избранных
+    if (_showFavoritesOnly && favoriteName != null) {
+      filtered = filtered.where((s) => s.name == favoriteName).toList();
+    }
+
+    return filtered;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final stations = ref.watch(stationListProvider);
+    final allStations = ref.watch(stationListProvider);
     final playerAsync = ref.watch(playerProvider);
     final currentStation = playerAsync.value?.currentStation;
+    final favoriteName = ref.watch(favoritesProvider.select(
+      (state) => state.favoriteStationName,
+    ));
 
-    // Единый отступ 140 для учёта высоты мини-плеера
+    // Фильтрация станций
+    final stations = _filterStations(allStations, favoriteName);
 
     // Авто-скролл к активной станции
     final isActiveChanged =
@@ -94,80 +123,215 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         return SingleChildScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(16, 0, 16, kBottomBarTotalHeight),
-          child: child,
-        );
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (stations.isEmpty)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: CircularProgressIndicator(color: Color(0xFFF2C94C)),
-              ),
-            )
-          else
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio: 0.88,
-              ),
-              clipBehavior: Clip.none,
-              itemCount: stations.length,
-              itemBuilder: (context, index) {
-                final station = stations[index];
-                final bool isActive = currentStation?.id == station.id;
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            140.0, // kBottomBarTotalHeight
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Поиск и фильтры
+              _buildSearchBar(),
+              SizedBox(height: AppSpacing.md),
+              // Сетка станций
+              if (stations.isEmpty)
+                _buildEmptyState()
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.lg,
+                    mainAxisSpacing: AppSpacing.lg,
+                    childAspectRatio: 0.88,
+                  ),
+                  clipBehavior: Clip.none,
+                  itemCount: stations.length,
+                  itemBuilder: (context, index) {
+                    final station = stations[index];
+                    final bool isActive = currentStation?.id == station.id;
 
-                return Consumer(
-                  builder: (context, ref, child) {
-                    final isFavorite = ref.watch(
-                      favoritesProvider.select(
-                        (state) => state.favoriteStationName == station.name,
-                      ),
-                    );
+                    return Consumer(
+                      builder: (context, ref, child) {
+                        final isFavorite = ref.watch(
+                          favoritesProvider.select(
+                            (state) =>
+                                state.favoriteStationName == station.name,
+                          ),
+                        );
 
-                    return ScrollScaleCard(
-                      onTap: null, // onTap обрабатывается в VerticalRadioCard
-                      child: _AnimatedCard(
-                        index: index,
-                        controller: _animationController,
-                        child: VerticalRadioCard(
-                          station: station,
-                          isActive: isActive,
-                          isFavorite: isFavorite,
-                          onTap: () {
-                            Logger.log(
-                              "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
-                              tag: 'RadioUI',
-                            );
-                            ref
-                                .read(playerProvider.notifier)
-                                .playStation(station);
-                          },
-                          onFavoriteTap: () {
-                            ref
-                                .read(favoritesProvider.notifier)
-                                .toggleFavorite(station.name);
-                          },
-                          onLongPress: () {
-                            ref
-                                .read(favoritesProvider.notifier)
-                                .toggleFavorite(station.name);
-                          },
-                        ),
-                      ),
+                        return ScrollScaleCard(
+                          onTap: null,
+                          child: _AnimatedCard(
+                            index: index,
+                            controller: _animationController,
+                            child: VerticalRadioCard(
+                              station: station,
+                              isActive: isActive,
+                              isFavorite: isFavorite,
+                              onTap: () {
+                                Logger.log(
+                                  "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
+                                  tag: 'RadioUI',
+                                );
+                                ref
+                                    .read(playerProvider.notifier)
+                                    .playStation(station);
+                              },
+                              onFavoriteTap: () {
+                                ref
+                                    .read(favoritesProvider.notifier)
+                                    .toggleFavorite(station.name);
+                              },
+                              onLongPress: () {
+                                ref
+                                    .read(favoritesProvider.notifier)
+                                    .toggleFavorite(station.name);
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Row(
+      children: [
+        // Фильтры
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip(
+                  icon: Icons.list_rounded,
+                  label: 'Все',
+                  isSelected: !_showFavoritesOnly,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _showFavoritesOnly = false);
+                  },
+                ),
+                SizedBox(width: AppSpacing.sm),
+                _buildFilterChip(
+                  icon: Icons.favorite_rounded,
+                  label: 'Избранные',
+                  isSelected: _showFavoritesOnly,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _showFavoritesOnly = true);
+                  },
+                ),
+              ],
             ),
-        ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final accentColor = Theme.of(context).primaryColor;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppEffects.durationNormal,
+        curve: AppEffects.curve,
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? accentColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+          border: Border.all(
+            color: isSelected
+                ? accentColor
+                : isDark
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected
+                  ? Colors.black
+                  : isDark
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : Colors.black.withValues(alpha: 0.6),
+            ),
+            SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: isSelected
+                    ? Colors.black
+                    : isDark
+                        ? Colors.white.withValues(alpha: 0.6)
+                        : Colors.black.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(top: AppSpacing.xxxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _showFavoritesOnly ? Icons.favorite_outline_rounded : Icons.radio_rounded,
+              size: 64,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.2),
+            ),
+            SizedBox(height: AppSpacing.lg),
+            Text(
+              _showFavoritesOnly
+                  ? 'Нет избранных станций'
+                  : 'Радиостанции не найдены',
+              style: GoogleFonts.inter(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : Colors.black.withValues(alpha: 0.5),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

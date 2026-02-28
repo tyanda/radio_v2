@@ -70,7 +70,7 @@ class _StationGridState extends ConsumerState<StationGrid>
 
     // Получаем избранные станции
     final favoriteStations = allStations
-        .where((s) => s.name == favorites.favoriteStationName)
+        .where((s) => favorites.isFavorite(s.name))
         .take(widget.maxStations)
         .toList();
 

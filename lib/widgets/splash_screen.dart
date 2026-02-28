@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen>
     )..repeat();
 
     _rotateAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _rotateController, curve: Curves.linear),
+      _rotateController,
     );
 
     // Прогресс загрузки

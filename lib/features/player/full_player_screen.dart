@@ -5,8 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
+import '../../core/providers/radio_providers.dart';
 import '../radio/presentation/providers/player_provider.dart';
-import '../../widgets/equalizer_card.dart';
+import '../radio/domain/station.dart';
 
 /// Full Player экран — полный экран плеера
 class FullPlayerScreen extends ConsumerStatefulWidget {
@@ -123,8 +124,171 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
             icon: Icon(Icons.more_horiz_rounded),
             color: isDark ? Colors.white : Colors.black,
             onPressed: () {
-              // TODO: Меню действий
+              _showActionMenu(isDark);
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showActionMenu(bool isDark) {
+    final playerState = ref.read(playerProvider).value;
+    final station = playerState?.currentStation;
+
+    if (station == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppEffects.radiusXl)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black26,
+                borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+              ),
+            ),
+            // Actions
+            _buildActionItem(
+              icon: Icons.favorite_outline_rounded,
+              title: 'Добавить в избранное',
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(context);
+                ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                HapticFeedback.lightImpact();
+              },
+            ),
+            _buildActionItem(
+              icon: Icons.share_rounded,
+              title: 'Поделиться',
+              isDark: isDark,
+              onTap: () async {
+                final currentStation = station;
+                Navigator.pop(context);
+                HapticFeedback.lightImpact();
+
+                // Простая реализация share через clipboard
+                await Clipboard.setData(
+                  ClipboardData(text: 'Слушаю ${currentStation.name} на SakhaLive Radio!'),
+                );
+
+                // Показываем уведомление после закрытия modal
+                await Future.delayed(const Duration(milliseconds: 300));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Скопировано: "${currentStation.name}"'),
+                      duration: const Duration(seconds: 2),
+                      backgroundColor: AppColors.primary,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppEffects.radiusLg),
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            _buildActionItem(
+              icon: Icons.info_outline_rounded,
+              title: 'О станции',
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(context);
+                _showStationInfo(station, isDark);
+                HapticFeedback.lightImpact();
+              },
+            ),
+            SizedBox(height: AppSpacing.xl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required String title,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isDark ? Colors.white70 : Colors.black87,
+        size: 24,
+      ),
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w500,
+          fontSize: 15,
+          color: isDark ? Colors.white : Colors.black,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  void _showStationInfo(Station station, bool isDark) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (station.art.isNotEmpty)
+              Image.asset(
+                station.art,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.radio, size: 60, color: AppColors.primary),
+              ),
+            SizedBox(height: AppSpacing.lg),
+            Text(
+              station.name,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (station.desc.isNotEmpty) ...[
+              SizedBox(height: AppSpacing.sm),
+              Text(
+                station.desc,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  color: isDark ? Colors.white54 : Colors.black54,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Закрыть'),
           ),
         ],
       ),
@@ -180,10 +344,13 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
 
   Widget _buildStationInfo(AsyncValue<PlayerState> playerAsync, bool isDark) {
     final station = playerAsync.value?.currentStation;
+    final trackTitle = playerAsync.value?.trackTitle;
+    final trackArtist = playerAsync.value?.trackArtist;
     final isPlaying = playerAsync.value?.isPlaying ?? false;
 
     return Column(
       children: [
+        // Название станции
         Text(
           station?.name ?? 'Неизвестно',
           style: GoogleFonts.inter(
@@ -193,52 +360,279 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isPlaying)
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: AppColors.success,
-                  shape: BoxShape.circle,
-                ),
+        SizedBox(height: AppSpacing.md),
+        // Информация о треке или статус
+        if (trackTitle != null && trackTitle.isNotEmpty) ...[
+          // Название трека
+          Text(
+            trackTitle,
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (trackArtist != null && trackArtist.isNotEmpty) ...[
+            SizedBox(height: AppSpacing.xs),
+            Text(
+              trackArtist,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: isDark ? Colors.white70 : Colors.black87,
               ),
-            if (isPlaying) SizedBox(width: AppSpacing.xs),
-            if (isPlaying)
-              Text(
-                'Прямой эфир',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: AppColors.success,
-                ),
-              ),
-            if (!isPlaying)
-              Text(
-                station?.desc ?? '',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
-        ),
+        ] else ...[
+          // Статус вещания
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isPlaying)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              if (isPlaying) SizedBox(width: AppSpacing.xs),
+              if (isPlaying)
+                Text(
+                  'Прямой эфир',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.success,
+                  ),
+                ),
+              if (!isPlaying)
+                Text(
+                  station?.desc ?? '',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    color: isDark ? Colors.white54 : Colors.black54,
+                  ),
+                ),
+            ],
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildVisualizer(AsyncValue<PlayerState> playerAsync) {
+    final station = playerAsync.value?.currentStation;
     final isPlaying = playerAsync.value?.isPlaying ?? false;
 
-    return EqualizerCard(
-      isActive: isPlaying,
-      width: 200,
-      height: 50,
-      mode: EqualizerMode.bars,
+    return _buildStationMetadata(station, isPlaying);
+  }
+
+  Widget _buildStationMetadata(Station? station, bool isPlaying) {
+    if (station == null) {
+      // Плейсхолдер с логотипом приложения
+      return Container(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            // Логотип приложения
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFF2C94C), Color(0xFFF59E0B)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFF2C94C).withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(3),
+              child: Container(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF0F0F0F),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/load.png',
+                    width: 74,
+                    height: 74,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSpacing.lg),
+            Text(
+              'SakhaLive',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                color: AppColors.primary,
+                letterSpacing: 1,
+              ),
+            ),
+            SizedBox(height: AppSpacing.xs),
+            Text(
+              'Ваше любимое радио',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: Colors.white54,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Метаданные станции
+    return Container(
+      padding: EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: isPlaying
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Логотип станции
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: station.art.isNotEmpty
+                  ? Image.asset(
+                      station.art,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildStationPlaceholder();
+                      },
+                    )
+                  : _buildStationPlaceholder(),
+            ),
+          ),
+          SizedBox(width: AppSpacing.lg),
+          // Информация
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  station.name,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: AppSpacing.xs),
+                if (station.desc.isNotEmpty)
+                  Text(
+                    station.desc,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (station.frequency.isNotEmpty) ...[
+                  SizedBox(height: 4),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+                    ),
+                    child: Text(
+                      station.frequency,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Индикатор воспроизведения
+          if (isPlaying)
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.success.withValues(alpha: 0.5),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStationPlaceholder() {
+    return Container(
+      color: AppColors.cardBackground,
+      child: Center(
+        child: Icon(
+          Icons.radio_rounded,
+          color: Colors.white54,
+          size: 24,
+        ),
+      ),
     );
   }
 
@@ -256,7 +650,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           isDark: isDark,
           onTap: () {
             HapticFeedback.mediumImpact();
-            // TODO: Предыдущая станция
+            ref.read(playerProvider.notifier).playPreviousStation();
           },
         ),
         SizedBox(width: AppSpacing.lg),
@@ -270,7 +664,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           isDark: isDark,
           onTap: () {
             HapticFeedback.mediumImpact();
-            // TODO: Следующая станция
+            ref.read(playerProvider.notifier).playNextStation();
           },
         ),
       ],

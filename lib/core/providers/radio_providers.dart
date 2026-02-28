@@ -46,7 +46,7 @@ final stationListProvider = Provider<List<Station>>((ref) {
       desc: 'Мировые хиты',
       art: 'assets/images/europa_plus.jpg',
       icon: 'E',
-      url: 'https://ep256.hostingradio.ru:8052/europaplus256.mp3',
+      url: 'http://ep64.streamr.ru',
       frequency: '105.2 FM',
     ),
     Station(

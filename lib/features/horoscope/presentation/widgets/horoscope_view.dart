@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:radio_v2/core/design/figma_design.dart';
+import 'package:radio_v2/core/design/design.dart';
 import 'package:radio_v2/core/design/app_constants.dart';
-import 'package:radio_v2/core/design/design_tokens.dart';
 import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
 import 'package:radio_v2/core/providers/horoscope_provider.dart';
 import 'package:radio_v2/core/providers.dart';
 import 'package:radio_v2/widgets/scroll_scale_card.dart';
-import 'package:radio_v2/core/utils/responsive_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {
@@ -63,26 +62,30 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        16.0,
-        16,
-        16.0,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
         kBottomBarTotalHeight,
       ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              AppLocalizations.of(context).select_zodiac_sign,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 2.0,
+            Padding(
+              padding: EdgeInsets.only(left: 4.0),
+              child: Text(
+                AppLocalizations.of(context).select_zodiac_sign,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  letterSpacing: 2.0,
+                ),
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: AppSpacing.md),
             // Сетка знаков зодиака
             GridView.builder(
+              padding: EdgeInsets.zero,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -111,6 +114,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 );
               },
             ),
+            SizedBox(height: 24),
             // Карточка с текстом гороскопа
             _buildPredictionCard(horoscopeState),
           ],
@@ -180,7 +184,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardBackground : AppColors.cardBackgroundLight,
         borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
@@ -222,11 +226,11 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 ),
             ],
           ),
-          SizedBox(height: ResponsivePadding.medium(context)),
+          SizedBox(height: AppSpacing.md),
           if (horoscopeState.isLoading)
             Center(
               child: Padding(
-                padding: EdgeInsets.all(ResponsivePadding.medium(context)),
+                padding: EdgeInsets.all(AppSpacing.md),
                 child: Text(
                   AppLocalizations.of(context).loading_horoscope,
                   style: GoogleFonts.inter(
@@ -238,7 +242,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             )
           else if (horoscopeState.errorMessage != null)
             Padding(
-              padding: EdgeInsets.all(ResponsivePadding.medium(context)),
+              padding: EdgeInsets.all(AppSpacing.md),
               child: Text(
                 AppLocalizations.of(context).error_loading_horoscope(
                   horoscopeState.errorMessage ?? '',
@@ -252,7 +256,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
           else if (horoscopeState.horoscopeData != null)
             horoscopeState.horoscopeData!.text.isEmpty
                 ? Padding(
-                    padding: EdgeInsets.all(ResponsivePadding.medium(context)),
+                    padding: EdgeInsets.all(AppSpacing.md),
                     child: Text(
                       AppLocalizations.of(context).horoscope_not_found,
                       style: GoogleFonts.inter(
@@ -272,7 +276,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   )
           else
             Padding(
-              padding: EdgeInsets.all(ResponsivePadding.medium(context)),
+              padding: EdgeInsets.all(AppSpacing.md),
               child: Text(
                 AppLocalizations.of(context).horoscope_unavailable,
                 style: GoogleFonts.inter(
@@ -281,7 +285,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 ),
               ),
             ),
-          const SizedBox(height: 24),
+          SizedBox(height: AppSpacing.lg),
           Row(
             children: [
               _buildSmallBadge('Прогноз на сегодня'),
@@ -331,23 +335,24 @@ class _AnimatedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final delay = index * 0.08;
-    final beginTime = delay.clamp(0.0, 1.0);
-    final tween = Tween(
-      begin: 0.0,
-      end: 1.0,
-    ).chain(CurveTween(curve: Curves.easeOutCubic));
+    final beginTime = delay.clamp(0.0, 0.8);
 
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
         final animationValue = controller.value;
-        final progress = ((animationValue - beginTime) * (1 / (1 - beginTime)))
-            .clamp(0.0, 1.0);
-        final value = tween.transform(progress);
+        
+        // Вычисляем прогресс с защитой от division by zero
+        final progress = beginTime >= 1.0
+            ? 1.0
+            : ((animationValue - beginTime) / (1.0 - beginTime)).clamp(0.0, 1.0);
+        
+        // Применяем кривую анимации
+        final curvedValue = Curves.easeOutCubic.transform(progress);
 
         return Transform.translate(
-          offset: Offset(0, 30 * (1 - value)),
-          child: Opacity(opacity: value, child: child),
+          offset: Offset(0, 30 * (1 - curvedValue)),
+          child: Opacity(opacity: curvedValue, child: child),
         );
       },
       child: child,

@@ -83,12 +83,12 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     );
   }
 
-  List<Station> _filterStations(List<Station> stations, String? favoriteName) {
+  List<Station> _filterStations(List<Station> stations, Set<String> favoriteNames) {
     var filtered = stations;
 
     // Фильтр избранных
-    if (_showFavoritesOnly && favoriteName != null) {
-      filtered = filtered.where((s) => s.name == favoriteName).toList();
+    if (_showFavoritesOnly && favoriteNames.isNotEmpty) {
+      filtered = filtered.where((s) => favoriteNames.contains(s.name)).toList();
     }
 
     return filtered;
@@ -99,12 +99,11 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     final allStations = ref.watch(stationListProvider);
     final playerAsync = ref.watch(playerProvider);
     final currentStation = playerAsync.value?.currentStation;
-    final favoriteName = ref.watch(favoritesProvider.select(
-      (state) => state.favoriteStationName,
-    ));
+    final favoritesState = ref.watch(favoritesProvider);
+    final favoriteNames = favoritesState.favoriteStationNames;
 
     // Фильтрация станций
-    final stations = _filterStations(allStations, favoriteName);
+    final stations = _filterStations(allStations, favoriteNames);
 
     // Авто-скролл к активной станции
     final isActiveChanged =
@@ -125,7 +124,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.md,
+            AppSpacing.lg,
             AppSpacing.lg,
             140.0, // kBottomBarTotalHeight
           ),
@@ -134,12 +133,12 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
             children: [
               // Поиск и фильтры
               _buildSearchBar(),
-              SizedBox(height: AppSpacing.md),
               // Сетка станций
               if (stations.isEmpty)
                 _buildEmptyState()
               else
                 GridView.builder(
+                  padding: EdgeInsets.only(top: 16.0),
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -156,12 +155,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
                     return Consumer(
                       builder: (context, ref, child) {
-                        final isFavorite = ref.watch(
-                          favoritesProvider.select(
-                            (state) =>
-                                state.favoriteStationName == station.name,
-                          ),
-                        );
+                        final isFavorite = favoritesState.isFavorite(station.name);
 
                         return ScrollScaleCard(
                           onTap: null,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
@@ -10,11 +12,31 @@ class RadioPlayer {
   final AudioPlayer? player;
   final RadioPlayerInterface? webPlayer;
   final bool isWeb;
+  
+  // Поток для метаданных треков
+  final _mediaItemController = StreamController<MediaItem?>.broadcast();
 
   RadioPlayer()
       : isWeb = kIsWeb,
         player = kIsWeb ? null : AudioPlayer(),
         webPlayer = kIsWeb ? createRadioPlayer() : null;
+
+  /// Поток метаданных текущего трека
+  Stream<MediaItem?> get mediaItemStream {
+    if (isWeb) {
+      return _mediaItemController.stream;
+    }
+    // Для не-Web платформ, возвращаем наш контроллер
+    // just_audio не имеет mediaItemStream в старых версиях
+    return _mediaItemController.stream;
+  }
+  
+  /// Обновление метаданных трека
+  void _updateMediaItem(MediaItem? mediaItem) {
+    if (!isWeb) {
+      _mediaItemController.add(mediaItem);
+    }
+  }
 
   /// Подключение к потоку радио с метаданными
   Future<void> playStream({
@@ -34,6 +56,14 @@ class RadioPlayer {
       if (isWeb) {
         // Web: используем HTML5 Audio
         await webPlayer!.loadStream(url);
+        // Для Web эмулируем метаданные
+        _mediaItemController.add(MediaItem(
+          id: url,
+          title: title,
+          artist: artist,
+          album: album ?? 'Sakha Radio',
+          artUri: artUri != null ? Uri.parse(artUri) : null,
+        ));
       } else {
         // Mobile/Desktop: используем just_audio
         final uri = Uri.parse(url);
@@ -42,18 +72,20 @@ class RadioPlayer {
           tag: 'RadioPlayer',
         );
 
-        await player!.setAudioSource(
-          AudioSource.uri(
-            uri,
-            tag: MediaItem(
-              id: url,
-              title: title,
-              artist: artist,
-              album: album ?? 'Sakha Radio',
-              artUri: artUri != null ? Uri.parse(artUri) : null,
-            ),
-          ),
+        final mediaItem = MediaItem(
+          id: url,
+          title: title,
+          artist: artist,
+          album: album ?? 'Sakha Radio',
+          artUri: artUri != null ? Uri.parse(artUri) : null,
         );
+
+        await player!.setAudioSource(
+          AudioSource.uri(uri, tag: mediaItem),
+        );
+        
+        // Обновляем метаданные
+        _updateMediaItem(mediaItem);
       }
 
       Logger.log("RadioPlayer: Stream loaded successfully", tag: 'RadioPlayer');
@@ -210,9 +242,11 @@ class RadioPlayer {
       Logger.log("RadioPlayer: Disposing", tag: 'RadioPlayer');
       if (isWeb) {
         await webPlayer!.dispose();
+        await _mediaItemController.close();
       } else {
         await player!.stop();
         await player!.dispose();
+        await _mediaItemController.close();
       }
       Logger.log("RadioPlayer: Disposed", tag: 'RadioPlayer');
     } catch (e) {

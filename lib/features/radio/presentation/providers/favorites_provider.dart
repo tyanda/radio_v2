@@ -4,37 +4,39 @@ import '../../domain/repositories/favorites_repository.dart';
 
 class FavoritesState {
   final List<Station> stations;
-  final String? favoriteStationName;
+  final Set<String> favoriteStationNames; // Несколько избранных
   final bool isLoading;
   final String? error;
 
   FavoritesState({
     required this.stations,
-    this.favoriteStationName,
+    Set<String>? favoriteStationNames,
     this.isLoading = false,
     this.error,
-  });
+  }) : favoriteStationNames = favoriteStationNames ?? {};
 
   FavoritesState copyWith({
     List<Station>? stations,
-    String? favoriteStationName,
+    Set<String>? favoriteStationNames,
     bool? isLoading,
     String? error,
   }) {
     return FavoritesState(
       stations: stations ?? this.stations,
-      favoriteStationName: favoriteStationName ?? this.favoriteStationName,
+      favoriteStationNames: favoriteStationNames ?? this.favoriteStationNames,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
   }
 
-  Station? get favoriteStation {
-    if (favoriteStationName == null) return null;
-    return stations.firstWhere(
-      (station) => station.name == favoriteStationName,
-      orElse: () => stations.first,
-    );
+  List<Station> get favoriteStations {
+    return stations
+        .where((station) => favoriteStationNames.contains(station.name))
+        .toList();
+  }
+
+  bool isFavorite(String stationName) {
+    return favoriteStationNames.contains(stationName);
   }
 }
 
@@ -50,10 +52,10 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       final stations = await _repository.loadStationList();
-      final favoriteName = await _repository.loadFavorite();
+      final favoriteNames = await _repository.loadFavorites();
       state = FavoritesState(
         stations: stations,
-        favoriteStationName: favoriteName,
+        favoriteStationNames: favoriteNames,
       );
     } catch (e) {
       state = state.copyWith(
@@ -63,37 +65,29 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
     }
   }
 
-  Future<void> setFavorite(Station station) async {
-    try {
-      await _repository.saveFavorite(station.name);
-      state = state.copyWith(favoriteStationName: station.name);
-    } catch (e) {
-      state = state.copyWith(error: 'Failed to save favorite: $e');
-    }
-  }
-
-  Future<void> clearFavorite() async {
-    try {
-      await _repository.saveFavorite(null);
-      state = state.copyWith(favoriteStationName: null);
-    } catch (e) {
-      state = state.copyWith(error: 'Failed to clear favorite: $e');
-    }
-  }
-
   Future<void> toggleFavorite(String stationName) async {
     try {
-      if (state.favoriteStationName == stationName) {
-        await clearFavorite();
+      final newFavorites = Set<String>.from(state.favoriteStationNames);
+      
+      if (newFavorites.contains(stationName)) {
+        newFavorites.remove(stationName);
       } else {
-        final station = state.stations.firstWhere(
-          (s) => s.name == stationName,
-          orElse: () => throw Exception('Station not found: $stationName'),
-        );
-        await setFavorite(station);
+        newFavorites.add(stationName);
       }
+      
+      await _repository.saveFavorites(newFavorites);
+      state = state.copyWith(favoriteStationNames: newFavorites);
     } catch (e) {
       state = state.copyWith(error: 'Failed to toggle favorite: $e');
+    }
+  }
+
+  Future<void> clearAllFavorites() async {
+    try {
+      await _repository.saveFavorites({});
+      state = state.copyWith(favoriteStationNames: {});
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to clear favorites: $e');
     }
   }
 }

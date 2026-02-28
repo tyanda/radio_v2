@@ -210,7 +210,12 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
 
                     // Основной контент
                     Padding(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.only(
+                        top: 8.0,
+                        left: 12.0,
+                        right: 12.0,
+                        bottom: 12.0,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

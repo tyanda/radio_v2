@@ -17,6 +17,8 @@ import '../../../../../core/utils/logger.dart';
 class PlayerState {
   final bool isPlaying;
   final Station? currentStation;
+  final String? trackTitle;  // Название текущего трека
+  final String? trackArtist; // Артист трека
   final double volume;
   final bool showVolumeSlider;
   final bool isBuffering;
@@ -24,6 +26,8 @@ class PlayerState {
   const PlayerState({
     this.isPlaying = false,
     this.currentStation,
+    this.trackTitle,
+    this.trackArtist,
     this.volume = 0.65,
     this.showVolumeSlider = false,
     this.isBuffering = false,
@@ -32,6 +36,8 @@ class PlayerState {
   PlayerState copyWith({
     bool? isPlaying,
     Station? currentStation,
+    String? trackTitle,
+    String? trackArtist,
     double? volume,
     bool? showVolumeSlider,
     bool? isBuffering,
@@ -39,6 +45,8 @@ class PlayerState {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
       currentStation: currentStation ?? this.currentStation,
+      trackTitle: trackTitle ?? this.trackTitle,
+      trackArtist: trackArtist ?? this.trackArtist,
       volume: volume ?? this.volume,
       showVolumeSlider: showVolumeSlider ?? this.showVolumeSlider,
       isBuffering: isBuffering ?? this.isBuffering,
@@ -50,6 +58,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   late final RadioPlayer _radioPlayer;
   StreamSubscription? _playerStateSubscription;
   StreamSubscription? _processingStateSubscription;
+  StreamSubscription? _mediaItemSubscription;
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
@@ -113,9 +122,30 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       }
     });
 
+    // Listen to media item changes (track metadata)
+    _mediaItemSubscription = _radioPlayer.mediaItemStream.listen((mediaItem) {
+      final currentState = state.asData?.value;
+      if (currentState != null && mediaItem != null) {
+        Logger.log(
+          "🎵 MediaItem changed: title='${mediaItem.title}', artist='${mediaItem.artist}'",
+          tag: 'Player',
+        );
+        state = AsyncData(currentState.copyWith(
+          trackTitle: mediaItem.title,
+          trackArtist: mediaItem.artist,
+        ));
+      } else if (currentState != null && mediaItem == null) {
+        Logger.log(
+          "🎵 MediaItem is null (no metadata available)",
+          tag: 'Player',
+        );
+      }
+    });
+
     ref.onDispose(() {
       _playerStateSubscription?.cancel();
       _processingStateSubscription?.cancel();
+      _mediaItemSubscription?.cancel();
       _radioPlayer.dispose();
     });
 
@@ -374,6 +404,44 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       await prefs.setBool('showVolume', newShowVolume);
       return currentState.copyWith(showVolumeSlider: newShowVolume);
     });
+  }
+
+  /// Переключение на следующую станцию
+  Future<void> playNextStation() async {
+    final currentState = state.asData?.value;
+    if (currentState?.currentStation == null) return;
+
+    final stations = ref.read(stationListProvider);
+    final currentIndex = stations.indexWhere(
+      (s) => s.name == currentState!.currentStation!.name,
+    );
+
+    if (currentIndex < 0) return;
+
+    final nextIndex = (currentIndex + 1) % stations.length;
+    final nextStation = stations[nextIndex];
+
+    await playStation(nextStation);
+  }
+
+  /// Переключение на предыдущую станцию
+  Future<void> playPreviousStation() async {
+    final currentState = state.asData?.value;
+    if (currentState?.currentStation == null) return;
+
+    final stations = ref.read(stationListProvider);
+    final currentIndex = stations.indexWhere(
+      (s) => s.name == currentState!.currentStation!.name,
+    );
+
+    if (currentIndex < 0) return;
+
+    final previousIndex = currentIndex - 1 < 0
+        ? stations.length - 1
+        : currentIndex - 1;
+    final previousStation = stations[previousIndex];
+
+    await playStation(previousStation);
   }
 }
 

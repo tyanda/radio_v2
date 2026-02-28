@@ -38,7 +38,6 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   late Animation<double> _bounceAnimation;
 
   double _dragOffsetX = 0;
-  double _dragOffsetY = 0;
 
   @override
   void initState() {
@@ -110,14 +109,12 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   void _handleDragStart(DragStartDetails details) {
     setState(() {
       _dragOffsetX = 0;
-      _dragOffsetY = 0;
     });
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
     setState(() {
       _dragOffsetX += details.delta.dx;
-      _dragOffsetY += details.delta.dy;
     });
   }
 
@@ -126,23 +123,6 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     final playerState = ref.read(playerProvider).value;
 
     if (playerState == null) return;
-
-    // Свайп вверх/вниз для громкости
-    if (_dragOffsetY.abs() > 50) {
-      if (_dragOffsetY < 0) {
-        // Свайп вверх - показать громкость
-        if (!playerState.showVolumeSlider) {
-          playerNotifier.toggleVolumeSlider();
-          HapticFeedback.mediumImpact();
-        }
-      } else {
-        // Свайп вниз - скрыть громкость
-        if (playerState.showVolumeSlider) {
-          playerNotifier.toggleVolumeSlider();
-          HapticFeedback.lightImpact();
-        }
-      }
-    }
 
     // Свайп влево/вправо для переключения станций
     if (_dragOffsetX.abs() > 80) {
@@ -166,7 +146,6 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
     setState(() {
       _dragOffsetX = 0;
-      _dragOffsetY = 0;
     });
   }
 
@@ -183,71 +162,17 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Слайдер громкости с анимацией
-        AnimatedCrossFade(
-          duration: AppEffects.durationNormal,
-          crossFadeState: playerState.showVolumeSlider
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          firstChild: const SizedBox.shrink(),
-          secondChild: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : Colors.black.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(AppEffects.radiusFull),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.05),
-                ),
-                boxShadow: AppEffects.shadowMd,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.volume_mute_rounded,
-                    color: theme.colorScheme.onSurface,
-                    size: 18,
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: playerState.volume,
-                      min: 0.0,
-                      max: 1.0,
-                      divisions: 20,
-                      activeColor: theme.primaryColor,
-                      inactiveColor:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      thumbColor: theme.primaryColor,
-                      onChanged: (v) =>
-                          ref.read(playerProvider.notifier).setVolume(v),
-                    ),
-                  ),
-                  Icon(
-                    Icons.volume_up_rounded,
-                    color: theme.colorScheme.onSurface,
-                    size: 18,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
         // Основной контейнер мини-плеера
         GestureDetector(
           onTap: () {
             _triggerBounce();
             HapticFeedback.lightImpact();
-            ref.read(playerProvider.notifier).toggleVolumeSlider();
+            // Открыть полный плеер
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const FullPlayerScreen(),
+              ),
+            );
           },
           onDoubleTap: () {
             _triggerBounce();
@@ -323,27 +248,22 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Анимированная обложка
-                        GestureDetector(
-                          onTap: () => ref
-                              .read(playerProvider.notifier)
-                              .toggleVolumeSlider(),
-                          child: AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: playerState.isPlaying && !isBuffering
-                                    ? _pulseAnimation.value
-                                    : 1.0,
-                                child: _buildAlbumArt(
-                                  context,
-                                  ref,
-                                  playerState,
-                                  currentStation,
-                                  isDark,
-                                ),
-                              );
-                            },
-                          ),
+                        AnimatedBuilder(
+                          animation: _pulseAnimation,
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: playerState.isPlaying && !isBuffering
+                                  ? _pulseAnimation.value
+                                  : 1.0,
+                              child: _buildAlbumArt(
+                                context,
+                                ref,
+                                playerState,
+                                currentStation,
+                                isDark,
+                              ),
+                            );
+                          },
                         ),
                         SizedBox(width: AppSpacing.sm),
                         // Информация о станции
@@ -416,109 +336,69 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                         ),
                         SizedBox(width: AppSpacing.sm),
                         // Кнопка Play/Pause с анимацией
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Кнопка Expand
-                            MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () {
-                                  _triggerBounce();
-                                  HapticFeedback.lightImpact();
-                                  // Открыть полный плеер
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const FullPlayerScreen(),
-                                    ),
-                                  );
-                                },
-                                child: AnimatedContainer(
-                                  duration: AppEffects.durationFast,
-                                  curve: AppEffects.curve,
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.1)
-                                        : Colors.black.withValues(alpha: 0.05),
-                                  ),
-                                  child: Icon(
-                                    Icons.fullscreen_rounded,
-                                    color: theme.colorScheme.onSurface,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: AppSpacing.xs),
-                            // Кнопка Play/Pause
-                            MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  _triggerBounce();
-                                  HapticFeedback.lightImpact();
-                                  if (playerState.isPlaying) {
-                                    ref.read(playerProvider.notifier).stop();
-                                  } else {
-                                    try {
-                                      await ref
-                                          .read(playerProvider.notifier)
-                                          .playStation(currentStation);
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        SnackbarHelper.showError(
-                                          context: context,
-                                          message: e.toString(),
-                                        );
-                                      }
-                                    }
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () async {
+                              _triggerBounce();
+                              HapticFeedback.lightImpact();
+                              if (playerState.isPlaying) {
+                                ref.read(playerProvider.notifier).stop();
+                              } else {
+                                try {
+                                  await ref
+                                      .read(playerProvider.notifier)
+                                      .playStation(currentStation);
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    SnackbarHelper.showError(
+                                      context: context,
+                                      message: e.toString(),
+                                    );
                                   }
-                                },
-                                child: AnimatedContainer(
-                                  duration: AppEffects.durationFast,
-                                  curve: AppEffects.curve,
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        theme.primaryColor,
-                                        theme.primaryColor.withValues(alpha: 0.8),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    boxShadow: _isHovered
-                                        ? AppEffects.glowPrimary
-                                        : AppEffects.shadowPrimary,
-                                  ),
-                                  child: isBuffering
-                                      ? SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              isDark ? Colors.white : Colors.black,
-                                            ),
-                                          ),
-                                        )
-                                      : Icon(
-                                          playerState.isPlaying
-                                              ? Icons.pause_rounded
-                                              : Icons.play_arrow_rounded,
-                                          color: Colors.black,
-                                          size: 22,
-                                        ),
+                                }
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: AppEffects.durationFast,
+                              curve: AppEffects.curve,
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.primaryColor,
+                                    theme.primaryColor.withValues(alpha: 0.8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                                boxShadow: _isHovered
+                                    ? AppEffects.glowPrimary
+                                    : AppEffects.shadowPrimary,
                               ),
+                              child: isBuffering
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          isDark ? Colors.white : Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : Icon(
+                                      playerState.isPlaying
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: Colors.black,
+                                      size: 22,
+                                    ),
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),

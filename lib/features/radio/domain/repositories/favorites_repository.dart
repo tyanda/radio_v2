@@ -1,7 +1,7 @@
 import '../../domain/station.dart';
 
 abstract class FavoritesRepository {
-  Future<String?> loadFavorite();
-  Future<void> saveFavorite(String? stationName);
+  Future<Set<String>> loadFavorites();
+  Future<void> saveFavorites(Set<String> stationNames);
   Future<List<Station>> loadStationList();
 }

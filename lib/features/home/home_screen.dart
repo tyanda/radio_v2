@@ -300,7 +300,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
     _rotateAnimation = Tween<double>(
       begin: 0.0,
       end: 2 * 3.14159,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
+    ).animate(_controller);
   }
 
   @override

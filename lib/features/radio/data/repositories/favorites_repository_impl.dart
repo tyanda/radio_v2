@@ -4,22 +4,19 @@ import '../../domain/station.dart';
 import '../datasources/local_station_source.dart';
 
 class FavoritesRepositoryImpl implements FavoritesRepository {
-  static const String _favoriteKey = 'favorite_station';
+  static const String _favoritesKey = 'favorite_stations_v2';
 
   @override
-  Future<String?> loadFavorite() async {
+  Future<Set<String>> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_favoriteKey);
+    final favorites = prefs.getStringList(_favoritesKey) ?? [];
+    return favorites.toSet();
   }
 
   @override
-  Future<void> saveFavorite(String? stationName) async {
+  Future<void> saveFavorites(Set<String> stationNames) async {
     final prefs = await SharedPreferences.getInstance();
-    if (stationName == null) {
-      await prefs.remove(_favoriteKey);
-    } else {
-      await prefs.setString(_favoriteKey, stationName);
-    }
+    await prefs.setStringList(_favoritesKey, stationNames.toList());
   }
 
   @override

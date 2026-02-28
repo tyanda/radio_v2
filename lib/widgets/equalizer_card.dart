@@ -52,12 +52,15 @@ class _EqualizerCardState extends State<EqualizerCard>
 
     // Создаем независимые анимации для каждого бара
     _barAnimations = List.generate(8, (index) {
+      final start = index * 0.1;
+      final end = (0.7 + index * 0.1).clamp(0.0, 1.0);
+      
       return Tween<double>(begin: 0.1, end: 1.0).animate(
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
-            index * 0.1,
-            0.7 + index * 0.1,
+            start,
+            end,
             curve: Curves.easeInOut,
           ),
         ),

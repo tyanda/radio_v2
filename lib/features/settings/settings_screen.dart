@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
+import '../../core/providers/settings_provider.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final settings = ref.watch(settingsProvider);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
@@ -73,10 +75,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: 'Играть в фоне',
             isDark: isDark,
             trailing: Switch(
-              value: true,
+              value: settings.backgroundPlayback,
               onChanged: (value) {
                 HapticFeedback.lightImpact();
-                // TODO: Сохранить настройку
+                ref.read(settingsProvider.notifier).toggleBackgroundPlayback(value);
               },
             ),
           ),
@@ -99,7 +101,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             isDark: isDark,
             onTap: () {
               HapticFeedback.lightImpact();
-              // TODO: Экран уведомлений
+              _showNotificationsDialog(context, isDark);
             },
           ),
 
@@ -231,19 +233,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showVolumeDialog(BuildContext context) {
+    final settings = ref.read(settingsProvider);
+    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
         title: const Text('Громкость по умолчанию'),
-        content: Slider(
-          value: 0.5,
-          min: 0.0,
-          max: 1.0,
-          divisions: 20,
-          label: '50%',
-          onChanged: (value) {
-            // TODO: Сохранить настройку
-          },
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Slider(
+              value: settings.defaultVolume,
+              min: 0.0,
+              max: 1.0,
+              divisions: 20,
+              label: '${(settings.defaultVolume * 100).round()}%',
+              activeColor: AppColors.primary,
+              onChanged: (value) {
+                ref.read(settingsProvider.notifier).setDefaultVolume(value);
+              },
+            ),
+            Text(
+              '${(settings.defaultVolume * 100).round()}%',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -301,6 +321,105 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: const Text('Закрыть'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showNotificationsDialog(BuildContext context, bool isDark) {
+    final settings = ref.read(settingsProvider);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+        ),
+        title: Text(
+          'Уведомления',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildNotificationOption(
+              icon: Icons.play_circle_outline_rounded,
+              title: 'Уведомления о воспроизведении',
+              subtitle: 'Показывать уведомление при старте',
+              enabled: settings.notificationsEnabled,
+              isDark: isDark,
+              onChanged: (value) {
+                ref.read(settingsProvider.notifier).toggleNotifications(value);
+              },
+            ),
+            Divider(color: isDark ? Colors.white12 : Colors.black12),
+            _buildNotificationOption(
+              icon: Icons.info_outline_rounded,
+              title: 'Информационные уведомления',
+              subtitle: 'Новости и обновления',
+              enabled: settings.notificationsEnabled,
+              isDark: isDark,
+              onChanged: (value) {
+                ref.read(settingsProvider.notifier).toggleNotifications(value);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required bool isDark,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.primary,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: isDark ? Colors.white : Colors.black,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w400,
+          fontSize: 12,
+          color: isDark ? Colors.white54 : Colors.black54,
+        ),
+      ),
+      trailing: Switch(
+        value: enabled,
+        onChanged: onChanged,
       ),
     );
   }

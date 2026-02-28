@@ -1,0 +1,143 @@
+---
+description: Основные правила разработки Flutter
+globs: **/*.dart
+---
+
+# Flutter Superpowers Rules
+
+## При изменении кода всегда следуй этим правилам:
+
+### 1. TDD — Test-Driven Development
+
+- **Сначала пиши тест**, потом реализацию
+- Следуй циклу RED-GREEN-REFACTOR
+- Называй тесты по-русски: `должен_загружать_станции()`
+- Используй `ProviderContainer` для тестирования Riverpod
+
+```dart
+// 1. RED - Пишем падающий тест
+test('должен_загружать_список_станций', () async {
+  final container = ProviderContainer();
+  addTearDown(container.dispose);
+  
+  final state = container.read(radioProvider);
+  expect(state.isLoading, isTrue);
+});
+
+// 2. GREEN - Реализуем минимум кода
+// 3. REFACTOR - Улучшаем код
+```
+
+### 2. Feature-First Архитектура
+
+- Новые функции создавай в `lib/features/<feature_name>/`
+- Структура feature:
+  ```
+  features/radio/
+  ├── data/
+  │   ├── repositories/
+  │   └── models/
+  ├── providers/
+  └── widgets/
+  ```
+
+### 3. Riverpod для состояния
+
+- Используй `StateNotifierProvider` для сложного состояния
+- Используй `Provider` для синглтонов (repositories)
+- Используй `ref.watch()` для подписки в виджетах
+- Используй `ref.read()` для однократного чтения
+
+```dart
+final radioProvider = StreamNotifierProvider<RadioNotifier, RadioState>((ref) {
+  return RadioNotifier();
+});
+
+// В виджете:
+final state = ref.watch(radioProvider);  // Подписка
+final repository = ref.read(radioRepositoryProvider);  // Чтение
+```
+
+### 4. i18n — Все строки локализуемы
+
+- **Никаких хардкод строк** в виджетах
+- Добавляй строки через `.arb` файлы
+- Все строки в `lib/l10n/app_ru.arb` и `app_en.arb`
+
+```dart
+// ❌ ПЛОХО
+Text("Привет")
+
+// ✅ ХОРОШО
+Text(AppLocalizations.of(context)!.welcome)
+```
+
+### 5. Firebase через Repository
+
+- Не вызывай Firebase напрямую в виджетах
+- Инкапсулируй в Repository
+- Используй Stream для реального времени
+
+```dart
+// ❌ ПЛОХО
+final snapshot = await FirebaseDatabase.instance.ref().get();
+
+// ✅ ХОРОШО
+final stations = await repository.getStations();
+```
+
+### 6. Обработка ошибок
+
+- Всегда обрабатывай ошибки в async кодах
+- Показывай пользователю понятные сообщения
+- Логируй ошибки для отладки
+
+```dart
+try {
+  await repository.loadStations();
+} catch (e, st) {
+  debugPrint('Ошибка загрузки: $e\n$st');
+  state = RadioState(error: 'Не удалось загрузить станции');
+}
+```
+
+### 7. Dispose ресурсов
+
+- Отписывайся от StreamSubscription
+- Освобождай ProviderContainer в тестах
+- Закрывай контроллеры
+
+```dart
+StreamSubscription? _subscription;
+
+@override
+void dispose() {
+  _subscription?.cancel();
+  super.dispose();
+}
+```
+
+### 8. Проверка перед коммитом
+
+Перед завершением задачи убедись:
+
+```bash
+# Все тесты проходят
+flutter test
+
+# Нет ошибок анализа
+flutter analyze
+
+# Код отформатирован
+dart format lib/ test/
+
+# Генерация работает
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+## Ссылки на навыки
+
+- [TDD](../skills/core/test-driven-development.md)
+- [Debugging](../skills/core/systematic-debugging.md)
+- [Firebase](../skills/firebase/realtime-database.md)
+- [i18n](../skills/i18n/arb-workflow.md)

@@ -1,0 +1,221 @@
+---
+description: UI/UX Pro Max правила для Flutter
+globs: **/*.dart
+---
+
+# UI/UX Pro Max Rules для Flutter
+
+## Дизайн-токены
+
+### ✅ Используй дизайн-токены
+
+```dart
+// ❌ ПЛОХО - Хардкод значения
+Container(
+  padding: EdgeInsets.all(16),
+  decoration: BoxDecoration(
+    color: Color(0xFF10B981),
+    borderRadius: BorderRadius.circular(8),
+  ),
+)
+
+// ✅ ХОРОШО - Дизайн-токены
+Container(
+  padding: EdgeInsets.all(AppSpacing.lg),
+  decoration: BoxDecoration(
+    color: AppColors.primary,
+    borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+  ),
+)
+```
+
+### Доступные токены
+
+**Цвета:**
+- `AppColors.primary`, `primaryDark`, `primaryLight`
+- `AppColors.secondary`, `secondaryDark`, `secondaryLight`
+- `AppColors.background`, `surface`, `backgroundDark`
+- `AppColors.textPrimary`, `textSecondary`, `textTertiary`
+- `AppColors.success`, `warning`, `error`, `info`
+
+**Отступы:**
+- `AppSpacing.xs` (4px), `sm` (8px), `md` (12px)
+- `AppSpacing.lg` (16px), `xl` (20px), `xxl` (24px)
+- `AppSpacing.xxxl` (32px), `huge` (48px)
+
+**Эффекты:**
+- `AppEffects.shadowSm`, `shadowMd`, `shadowLg`, `shadowXl`
+- `AppEffects.radiusSm` (4px), `radiusMd` (8px), `radiusLg` (12px)
+- `AppEffects.durationFast` (150ms), `durationNormal` (200ms)
+- `AppEffects.curve`, `curveEmphasis`
+
+**Типография:**
+- `AppTypography.h1`, `h2`, `h3`
+- `AppTypography.bodyLarge`, `bodyMedium`, `bodySmall`
+- `AppTypography.button`, `labelLarge`
+
+## Pre-delivery Checklist
+
+Перед завершением задачи проверь:
+
+### 1. Дизайн-токены
+- [ ] Нет хардкод цветов (`Color(0xFF...)`)
+- [ ] Нет хардкод отступов (`EdgeInsets.all(16)`)
+- [ ] Нет хардкод радиусов (`BorderRadius.circular(8)`)
+- [ ] Нет хардкод длительностей (`Duration(milliseconds: 200)`)
+
+### 2. Кликабельные элементы
+- [ ] Все кнопки имеют `onPressed`
+- [ ] Есть визуальный feedback (InkWell, splash)
+- [ ] Hover states с `MouseRegion` или `HoverBuilder`
+- [ ] `cursor: SystemMouseCursors.click` на кнопках
+
+### 3. Анимации
+- [ ] Плавные transitions (150-300ms)
+- [ ] `curve: AppEffects.curve`
+- [ ] `prefers-reduced-motion` respected (через `AnimationStyle`)
+
+### 4. Доступность
+- [ ] Контраст текста 4.5:1 minimum
+- [ ] Focus states visible (`FocusableActionDetector`)
+- [ ] Семантические лейблы (`Semantics`, `ExcludeSemantics`)
+- [ ] Поддержка keyboard navigation
+
+### 5. Responsive
+- [ ] Проверено на 375px (mobile)
+- [ ] Проверено на 768px (tablet)
+- [ ] Проверено на 1024px+ (desktop)
+- [ ] Используется `LayoutBuilder`, `MediaQuery`
+
+### 6. i18n
+- [ ] Нет хардкод строк в виджетах
+- [ ] Все строки через `AppLocalizations`
+- [ ] Проверено в `check-l10n.sh`
+
+### 7. Dark Mode
+- [ ] Использует `Theme.of(context).brightness`
+- [ ] Цвета из `AppColors` для обоих режимов
+- [ ] Проверено в тёмной теме
+
+## Пример правильного виджета
+
+```dart
+import 'package:flutter/material.dart';
+import '../../core/design/design.dart';
+import '../../l10n/app_localizations.dart';
+
+class RadioStationCard extends StatefulWidget {
+  final String name;
+  final String streamUrl;
+  final VoidCallback onPlay;
+  
+  const RadioStationCard({
+    super.key,
+    required this.name,
+    required this.streamUrl,
+    required this.onPlay,
+  });
+  
+  @override
+  State<RadioStationCard> createState() => _RadioStationCardState();
+}
+
+class _RadioStationCardState extends State<RadioStationCard> {
+  bool _isHovered = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: AppEffects.durationNormal,
+        curve: AppEffects.curve,
+        padding: EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppEffects.radiusLg),
+          border: Border.all(
+            color: _isHovered ? AppColors.primary : AppColors.border,
+            width: 1,
+          ),
+          boxShadow: _isHovered 
+              ? AppEffects.shadowMd 
+              : AppEffects.shadowSm,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Название станции
+            Text(
+              widget.name,
+              style: AppTypography.titleMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            
+            SizedBox(height: AppSpacing.sm),
+            
+            // Кнопка Play
+            ElevatedButton(
+              onPressed: widget.onPlay,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textLight,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.play_arrow, size: 20),
+                  SizedBox(width: AppSpacing.sm),
+                  Text(l10n.play, style: AppTypography.button),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Анти-паттерны
+
+### ❌ Хардкод цветов
+```dart
+color: Color(0xFF10B981)  // ПЛОХО
+```
+
+### ❌ Хардкод отступов
+```dart
+padding: EdgeInsets.all(16)  // ПЛОХО
+```
+
+### ❌ Нет hover состояния
+```dart
+ElevatedButton(
+  onPressed: () {},  // Нет визуального feedback
+)
+```
+
+### ❌ Нет accessibility
+```dart
+Text('Play')  // Нет семантического лейбла
+```
+
+## Ресурсы
+
+- [UI/UX Pro Max Original](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+- [Design Tokens](../lib/core/design/design_tokens.dart)
+- [Effects](../lib/core/design/effects.dart)

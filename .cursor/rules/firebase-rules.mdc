@@ -1,0 +1,150 @@
+---
+description: Правила работы с Firebase
+globs: **/*.dart
+---
+
+# Firebase Rules
+
+## Архитектура
+
+### Repository Pattern
+
+```dart
+// ✅ ХОРОШО - Repository инкапсулирует Firebase
+class RadioRepository {
+  final DatabaseReference _ref;
+  
+  RadioRepository({FirebaseDatabase? database})
+      : _ref = (database ?? FirebaseDatabase.instance).ref();
+  
+  Future<List<RadioStation>> getStations() async {
+    final snapshot = await _ref.child('stations').get();
+    // ...
+  }
+}
+
+// В Provider:
+final radioRepositoryProvider = Provider<RadioRepository>((ref) {
+  return RadioRepository();
+});
+```
+
+```dart
+// ❌ ПЛОХО - Прямой вызов в виджете
+final snapshot = await FirebaseDatabase.instance
+    .ref()
+    .child('stations')
+    .get();
+```
+
+## Безопасность
+
+### Никогда не коммить чувствительные данные
+
+```dart
+// ❌ ЗАПРЕЩЕНО - API ключи в коде
+final app = Firebase.initializeApp(
+  apiKey: 'AIzaSy...',  // Никогда так не делай!
+);
+
+// ✅ ХОРОШО - Используй firebase_options.dart
+await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
+```
+
+### Проверка правил Firebase
+
+Перед деплоем проверь правила:
+
+```bash
+# Проверка синтаксиса
+firebase deploy --only database:dry-run
+
+# Запуск тестов правил
+firebase emulators:exec --only database "npm test"
+```
+
+## Stream для реального времени
+
+```dart
+// ✅ Stream для реактивных данных
+Stream<List<RadioStation>> watchStations() {
+  return _ref.child('stations').onValue.map((event) {
+    final snapshot = event.snapshot;
+    if (!snapshot.exists) return [];
+    // ...
+  });
+}
+
+// В Riverpod:
+final radioProvider = StreamNotifierProvider<RadioNotifier, RadioState>((ref) {
+  return RadioNotifier();
+});
+
+class RadioNotifier extends StreamNotifier<RadioState> {
+  @override
+  Stream<RadioState> build() {
+    return repository.watchStations().map(...);
+  }
+}
+```
+
+## Обработка ошибок
+
+```dart
+try {
+  final stations = await repository.getStations();
+  state = RadioState(stations: stations);
+} on FirebaseException catch (e) {
+  debugPrint('Firebase ошибка: ${e.code} - ${e.message}');
+  state = RadioState(error: 'Ошибка подключения к серверу');
+} catch (e, st) {
+  debugPrint('Неизвестная ошибка: $e\n$st');
+  state = RadioState(error: 'Произошла неизвестная ошибка');
+}
+```
+
+## Тестирование
+
+### Mock для unit-тестов
+
+```dart
+@GenerateMocks([DatabaseReference, DataSnapshot, FirebaseDatabase])
+import 'radio_repository_test.mocks.dart';
+
+test('должен_возвращать_пустой_список', () async {
+  final mockRef = MockDatabaseReference();
+  final mockSnapshot = MockDataSnapshot();
+  
+  when(mockSnapshot.exists).thenReturn(false);
+  when(mockRef.get()).thenAnswer((_) async => mockSnapshot);
+  
+  final repository = RadioRepository(database: mockDatabase);
+  final stations = await repository.getStations();
+  
+  expect(stations, isEmpty);
+});
+```
+
+### Emulator для integration-тестов
+
+```dart
+setUpAll(() async {
+  await Firebase.initializeApp();
+  
+  // Подключение к эмулятору
+  FirebaseDatabase.instance.setSettings(
+    Settings(host: 'localhost:9000', sslEnabled: false),
+  );
+});
+```
+
+## Чеклист перед коммитом
+
+- [ ] Firebase вызовы в Repository, не в виджетах
+- [ ] Обработаны ошибки (FirebaseException)
+- [ ] Stream используется для реального времени
+- [ ] Нет чувствительных данных в коде
+- [ ] Правила безопасности проверены
+- [ ] Тесты написаны

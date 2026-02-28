@@ -40,7 +40,7 @@ class RadioPlayer {
   /// Подписка на ICY-метаданные из потока
   void _subscribeToIcyMetadata() {
     if (isWeb || player == null) return;
-    
+
     _icyMetadataSubscription?.cancel();
     _icyMetadataSubscription = player!.icyMetadataStream.listen((icyMetadata) {
       if (icyMetadata != null && icyMetadata.info != null) {
@@ -49,12 +49,22 @@ class RadioPlayer {
           "🎵 ICY Metadata: title=$title",
           tag: 'RadioPlayer',
         );
-        
+
         if (title != null && title.isNotEmpty) {
+          // Парсим "Artist - Title" формат
+          String? artist;
+          String trackTitle = title;
+          
+          final separatorIndex = title.indexOf(' - ');
+          if (separatorIndex != -1) {
+            artist = title.substring(0, separatorIndex).trim();
+            trackTitle = title.substring(separatorIndex + 3).trim();
+          }
+          
           _updateMediaItem(MediaItem(
             id: 'icy_metadata',
-            title: title,
-            artist: null,
+            title: trackTitle,
+            artist: artist,
             album: 'Sakha Radio',
           ));
         }

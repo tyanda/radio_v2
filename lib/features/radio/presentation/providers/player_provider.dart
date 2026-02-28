@@ -12,14 +12,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/data/radio_player.dart';
 import 'package:radio_v2/features/radio/services/radio_browser_metadata_service.dart';
+import 'package:radio_v2/features/radio/services/album_art_service.dart';
 import '../../../../../core/utils/logger.dart';
 
 @immutable
 class PlayerState {
   final bool isPlaying;
   final Station? currentStation;
-  final String? trackTitle;  // Название текущего трека
+  final String? trackTitle; // Название текущего трека
   final String? trackArtist; // Артист трека
+  final String? albumArt; // Обложка альбома из метаданных
   final double volume;
   final bool showVolumeSlider;
   final bool isBuffering;
@@ -29,6 +31,7 @@ class PlayerState {
     this.currentStation,
     this.trackTitle,
     this.trackArtist,
+    this.albumArt,
     this.volume = 0.65,
     this.showVolumeSlider = false,
     this.isBuffering = false,
@@ -39,6 +42,7 @@ class PlayerState {
     Station? currentStation,
     String? trackTitle,
     String? trackArtist,
+    String? albumArt,
     double? volume,
     bool? showVolumeSlider,
     bool? isBuffering,
@@ -48,6 +52,7 @@ class PlayerState {
       currentStation: currentStation ?? this.currentStation,
       trackTitle: trackTitle ?? this.trackTitle,
       trackArtist: trackArtist ?? this.trackArtist,
+      albumArt: albumArt ?? this.albumArt,
       volume: volume ?? this.volume,
       showVolumeSlider: showVolumeSlider ?? this.showVolumeSlider,
       isBuffering: isBuffering ?? this.isBuffering,
@@ -57,11 +62,14 @@ class PlayerState {
 
 class PlayerNotifier extends AsyncNotifier<PlayerState> {
   late final RadioPlayer _radioPlayer;
-  final RadioBrowserMetadataService _metadataService = RadioBrowserMetadataService();
+  final RadioBrowserMetadataService _metadataService =
+      RadioBrowserMetadataService();
+  final AlbumArtService _albumArtService = AlbumArtService();
   StreamSubscription? _playerStateSubscription;
   StreamSubscription? _processingStateSubscription;
   StreamSubscription? _mediaItemSubscription;
   StreamSubscription? _metadataSubscription;
+  String? _lastSearchKey; // Для кэширования последнего поиска обложки
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
@@ -130,13 +138,32 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       final currentState = state.asData?.value;
       if (currentState != null && mediaItem != null) {
         Logger.log(
-          "🎵 ICY MediaItem changed: title='${mediaItem.title}', artist='${mediaItem.artist}'",
+          "🎵 ICY MediaItem changed: title='${mediaItem.title}', artist='${mediaItem.artist}', artUri='${mediaItem.artUri}'",
           tag: 'Player',
         );
-        state = AsyncData(currentState.copyWith(
-          trackTitle: mediaItem.title,
-          trackArtist: mediaItem.artist,
-        ));
+
+        // Если есть artUri из метаданных - используем его
+        String? albumArt = mediaItem.artUri?.toString();
+
+        // Если artUri нет, но есть artist и title - ищем обложку через iTunes API
+        if (albumArt == null) {
+          final searchKey =
+              '${mediaItem.artist}-${mediaItem.title}';
+
+          // Не делаем запрос, если уже искали эту комбинацию
+          if (_lastSearchKey != searchKey) {
+            _lastSearchKey = searchKey;
+            _fetchAlbumArt(mediaItem.artist, mediaItem.title);
+          }
+        }
+
+        state = AsyncData(
+          currentState.copyWith(
+            trackTitle: mediaItem.title,
+            trackArtist: mediaItem.artist,
+            albumArt: albumArt ?? currentState.albumArt,
+          ),
+        );
       } else if (currentState != null && mediaItem == null) {
         Logger.log(
           "🎵 ICY MediaItem is null (no metadata available)",
@@ -223,7 +250,10 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         Logger.error("Auto-play failed: $e", tag: 'Player');
         // Показываем ошибку только если есть контекст (для web)
         if (!kIsWeb) {
-          Logger.error("Auto-play error details: ${e.toString()}", tag: 'Player');
+          Logger.error(
+            "Auto-play error details: ${e.toString()}",
+            tag: 'Player',
+          );
         }
       }
     }
@@ -282,10 +312,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           // Обновляем состояние после play
           final afterPlayState = state.asData?.value;
           if (afterPlayState != null) {
-            state = AsyncData(afterPlayState.copyWith(
-              isPlaying: true,
-              isBuffering: false,
-            ));
+            state = AsyncData(
+              afterPlayState.copyWith(isPlaying: true, isBuffering: false),
+            );
             Logger.log(
               "playStation(): updated isPlaying to true",
               tag: 'Player',
@@ -346,21 +375,28 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           tag: 'Player',
         );
         _metadataService.startFetchingMetadata(radioBrowserUuid);
-        
+
         // Подписка на метаданные
         _metadataSubscription?.cancel();
-        _metadataSubscription = _metadataService.metadataStream.listen((songTitle) {
+        _metadataSubscription = _metadataService.metadataStream.listen((
+          songTitle,
+        ) {
           final currentState = state.asData?.value;
           if (currentState != null) {
-            final trackTitle = songTitle?.isNotEmpty == true ? songTitle : station.name;
+            final trackTitle = songTitle?.isNotEmpty == true
+                ? songTitle
+                : station.name;
             Logger.log(
               "🎵 Metadata update: trackTitle='$trackTitle'",
               tag: 'Player',
             );
-            state = AsyncData(currentState.copyWith(
-              trackTitle: trackTitle,
-              trackArtist: null, // Radio-Browser не возвращает отдельного артиста
-            ));
+            state = AsyncData(
+              currentState.copyWith(
+                trackTitle: trackTitle,
+                trackArtist:
+                    null, // Radio-Browser не возвращает отдельного артиста
+              ),
+            );
           }
         });
       }
@@ -372,10 +408,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         // Обновляем состояние после успешного play
         final afterPlayState = state.asData?.value;
         if (afterPlayState != null) {
-          state = AsyncData(afterPlayState.copyWith(
-            isPlaying: true,
-            isBuffering: false,
-          ));
+          state = AsyncData(
+            afterPlayState.copyWith(isPlaying: true, isBuffering: false),
+          );
           Logger.log(
             "playStation(): updated isPlaying to true, cleared buffering",
             tag: 'Player',
@@ -476,6 +511,31 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     final previousStation = stations[previousIndex];
 
     await playStation(previousStation);
+  }
+
+  /// Поиск обложки альбома через iTunes API
+  Future<void> _fetchAlbumArt(String? artist, String? title) async {
+    try {
+      final artUrl = await _albumArtService.searchAlbumArt(
+        artist: artist,
+        title: title,
+      );
+
+      if (artUrl != null) {
+        final currentState = state.asData?.value;
+        if (currentState != null &&
+            currentState.trackTitle == title &&
+            currentState.trackArtist == artist) {
+          state = AsyncData(currentState.copyWith(albumArt: artUrl));
+          Logger.log(
+            "🎨 AlbumArt: Updated for '$artist - $title'",
+            tag: 'Player',
+          );
+        }
+      }
+    } catch (e) {
+      Logger.log("AlbumArt: Error fetching: $e", tag: 'Player');
+    }
   }
 }
 

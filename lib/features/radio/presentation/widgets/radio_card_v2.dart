@@ -344,39 +344,6 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
             ),
           ),
 
-        // Кнопка Play по центру для активной станции
-        if (widget.isActive)
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppEffects.radiusXl),
-                color: Colors.black.withValues(alpha: 0.4),
-              ),
-              child: Center(
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withValues(alpha: 0.5),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.black,
-                    size: 28,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
         // Иконка избранного с пульсацией
         Positioned(
           top: 8,

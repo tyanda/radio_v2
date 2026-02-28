@@ -59,10 +59,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
                     AppColors.primary.withValues(alpha: 0.15),
                     AppColors.background,
                   ]
-                : [
-                    AppColors.primary.withValues(alpha: 0.1),
-                    Colors.white,
-                  ],
+                : [AppColors.primary.withValues(alpha: 0.1), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -144,7 +141,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
       context: context,
       backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppEffects.radiusXl)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppEffects.radiusXl),
+        ),
       ),
       builder: (context) => SafeArea(
         child: Column(
@@ -152,7 +151,10 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           children: [
             // Handle bar
             Container(
-              margin: EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
+              margin: EdgeInsets.only(
+                top: AppSpacing.md,
+                bottom: AppSpacing.lg,
+              ),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
@@ -167,7 +169,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
-                ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                ref
+                    .read(favoritesProvider.notifier)
+                    .toggleFavorite(station.name);
                 HapticFeedback.lightImpact();
               },
             ),
@@ -182,7 +186,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
 
                 // Простая реализация share через clipboard
                 await Clipboard.setData(
-                  ClipboardData(text: 'Слушаю ${currentStation.name} на SakhaLive Radio!'),
+                  ClipboardData(
+                    text: 'Слушаю ${currentStation.name} на SakhaLive Radio!',
+                  ),
                 );
 
                 // Показываем уведомление после закрытия modal
@@ -195,7 +201,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
                       backgroundColor: AppColors.primary,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppEffects.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppEffects.radiusLg,
+                        ),
                       ),
                     ),
                   );
@@ -299,6 +307,8 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
 
   Widget _buildAlbumArt(AsyncValue<PlayerState> playerAsync, bool isDark) {
     final station = playerAsync.value?.currentStation;
+    final albumArtUrl = playerAsync.value?.albumArt;
+    final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
 
     return ScaleTransition(
       scale: _scaleAnimation,
@@ -317,15 +327,56 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppEffects.radiusXl),
-          child: station?.art.isNotEmpty ?? false
-              ? Image.asset(
-                  station!.art,
+          child: hasAlbumArt
+              ? Image.network(
+                  albumArtUrl,
                   fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return _buildLoadingContainer(
+                      isDark,
+                      loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded.toDouble() /
+                                loadingProgress.expectedTotalBytes!.toDouble()
+                          : null,
+                    );
+                  },
                   errorBuilder: (context, error, stackTrace) {
-                    return _buildPlaceholder(isDark);
+                    // Fallback на картинку станции
+                    return _buildStationImage(station, isDark);
                   },
                 )
-              : _buildPlaceholder(isDark),
+              : _buildStationImage(station, isDark),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStationImage(Station? station, bool isDark) {
+    if (station?.art.isNotEmpty ?? false) {
+      return Image.asset(
+        station!.art,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholder(isDark);
+        },
+      );
+    }
+    return _buildPlaceholder(isDark);
+  }
+
+  Widget _buildLoadingContainer(bool isDark, double? progress) {
+    return Container(
+      color: isDark ? AppColors.cardBackground : Colors.grey.shade200,
+      child: Center(
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            value: progress,
+          ),
         ),
       ),
     );
@@ -370,7 +421,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
         ),
         SizedBox(height: AppSpacing.md),
         // Информация о треке или статус
-        if (trackTitle != null && trackTitle.isNotEmpty && trackTitle != station?.name) ...[
+        if (trackTitle != null &&
+            trackTitle.isNotEmpty &&
+            trackTitle != station?.name) ...[
           // Бегущая строка с названием трека
           SizedBox(
             width: double.infinity,
@@ -455,7 +508,11 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
     return _buildStationMetadata(station, isPlaying, trackTitle);
   }
 
-  Widget _buildStationMetadata(Station? station, bool isPlaying, String? trackTitle) {
+  Widget _buildStationMetadata(
+    Station? station,
+    bool isPlaying,
+    String? trackTitle,
+  ) {
     if (station == null) {
       // Плейсхолдер с логотипом приложения
       return Container(
@@ -585,7 +642,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
                 ),
                 SizedBox(height: AppSpacing.xs),
                 // Отображение названия трека из метаданных
-                if (trackTitle != null && trackTitle.isNotEmpty && trackTitle != station.name)
+                if (trackTitle != null &&
+                    trackTitle.isNotEmpty &&
+                    trackTitle != station.name)
                   Text(
                     trackTitle,
                     style: GoogleFonts.inter(
@@ -616,7 +675,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+                      borderRadius: BorderRadius.circular(
+                        AppEffects.radiusFull,
+                      ),
                     ),
                     child: Text(
                       station.frequency,
@@ -657,11 +718,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
     return Container(
       color: AppColors.cardBackground,
       child: Center(
-        child: Icon(
-          Icons.radio_rounded,
-          color: Colors.white54,
-          size: 24,
-        ),
+        child: Icon(Icons.radio_rounded, color: Colors.white54, size: 24),
       ),
     );
   }
@@ -723,10 +780,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.primaryDark,
-              ],
+              colors: [AppColors.primary, AppColors.primaryDark],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -774,9 +828,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isDark
-                ? AppColors.cardBackground
-                : Colors.white,
+            color: isDark ? AppColors.cardBackground : Colors.white,
             border: Border.all(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.1)
@@ -794,9 +846,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
   }
 
   Widget _buildVolumeControl(bool isDark) {
-    final volume = ref.watch(playerProvider.select(
-      (state) => state.value?.volume ?? 0.5,
-    ));
+    final volume = ref.watch(
+      playerProvider.select((state) => state.value?.volume ?? 0.5),
+    );
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -813,7 +865,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
         children: [
           Icon(
             Icons.volume_mute_rounded,
-            color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.7)
+                : Colors.black.withValues(alpha: 0.7),
             size: 20,
           ),
           Expanded(
@@ -834,7 +888,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
           ),
           Icon(
             Icons.volume_up_rounded,
-            color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.7)
+                : Colors.black.withValues(alpha: 0.7),
             size: 20,
           ),
         ],

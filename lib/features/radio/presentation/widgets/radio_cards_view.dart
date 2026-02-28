@@ -218,6 +218,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     Set<String> favoriteNames,
   ) {
     return GridView.builder(
+      controller: _scrollController,
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
         0,
@@ -230,7 +231,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         mainAxisSpacing: AppSpacing.lg,
         childAspectRatio: 0.88,
       ),
-      clipBehavior: Clip.none,
+      clipBehavior: Clip.antiAlias,
+      primary: false,
       itemCount: stations.length,
       itemBuilder: (context, index) {
         final station = stations[index];

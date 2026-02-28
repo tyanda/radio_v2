@@ -170,9 +170,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
             HapticFeedback.lightImpact();
             // Открыть полный плеер
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const FullPlayerScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const FullPlayerScreen()),
             );
           },
           onDoubleTap: () {
@@ -203,7 +201,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                       gradient: LinearGradient(
                         colors: isDark
                             ? [
-                                AppColors.cardBackground.withValues(alpha: 0.98),
+                                AppColors.cardBackground.withValues(
+                                  alpha: 0.98,
+                                ),
                                 AppColors.surface.withValues(alpha: 0.95),
                               ]
                             : [
@@ -213,8 +213,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius:
-                          BorderRadius.circular(AppEffects.radiusFull),
+                      borderRadius: BorderRadius.circular(
+                        AppEffects.radiusFull,
+                      ),
                       border: Border.all(
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.08)
@@ -224,7 +225,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                           ? [
                               ...AppEffects.shadowLg,
                               BoxShadow(
-                                color: theme.primaryColor.withValues(alpha: 0.1),
+                                color: theme.primaryColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 blurRadius: 20,
                                 spreadRadius: 1,
                               ),
@@ -310,56 +313,59 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       ),
                                     )
                                   : playerState.trackTitle != null &&
-                                          playerState.trackTitle!.isNotEmpty
-                                      ? // Бегущая строка с названием трека
-                                      SizedBox(
-                                          height: 14,
-                                          child: Marquee(
-                                            text: playerState.trackTitle!,
-                                            style: GoogleFonts.inter(
-                                              color: theme.primaryColor,
-                                              fontSize: 8.5,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.5,
-                                              height: 1.0,
-                                            ),
-                                            velocity: 30,
-                                            blankSpace: 50,
-                                            startPadding: 0,
-                                            accelerationDuration:
-                                                const Duration(milliseconds: 500),
-                                            accelerationCurve: Curves.easeInOut,
-                                            decelerationDuration:
-                                                const Duration(milliseconds: 500),
-                                            decelerationCurve: Curves.easeInOut,
-                                          ),
-                                        )
-                                      : // "ПРЯМОЙ ЭФИР" если нет названия трека
-                                      Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 5,
-                                              height: 5,
-                                              decoration: BoxDecoration(
-                                                color: theme.primaryColor,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            SizedBox(width: AppSpacing.xs),
-                                            Text(
-                                              AppLocalizations.of(context)
-                                                  .live_broadcast,
-                                              style: GoogleFonts.inter(
-                                                color: theme.primaryColor,
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 1.2,
-                                                height: 1.0,
-                                              ),
-                                            ),
-                                          ],
+                                        playerState.trackTitle!.isNotEmpty
+                                  ? // Бегущая строка с названием трека
+                                    SizedBox(
+                                      height: 14,
+                                      child: Marquee(
+                                        text: playerState.trackTitle!,
+                                        style: GoogleFonts.inter(
+                                          color: theme.primaryColor,
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                          height: 1.0,
                                         ),
+                                        velocity: 30,
+                                        blankSpace: 50,
+                                        startPadding: 0,
+                                        accelerationDuration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        accelerationCurve: Curves.easeInOut,
+                                        decelerationDuration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        decelerationCurve: Curves.easeInOut,
+                                      ),
+                                    )
+                                  : // "ПРЯМОЙ ЭФИР" если нет названия трека
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 5,
+                                          height: 5,
+                                          decoration: BoxDecoration(
+                                            color: theme.primaryColor,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        SizedBox(width: AppSpacing.xs),
+                                        Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          ).live_broadcast,
+                                          style: GoogleFonts.inter(
+                                            color: theme.primaryColor,
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 1.2,
+                                            height: 1.0,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                             ],
                           ),
                         ),
@@ -415,8 +421,10 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                         strokeWidth: 2.5,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                          isDark ? Colors.white : Colors.black,
-                                        ),
+                                              isDark
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
                                       ),
                                     )
                                   : Icon(
@@ -451,6 +459,10 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     final theme = Theme.of(context);
     final isBuffering = playerState.isBuffering;
 
+    // Используем обложку из метаданных или картинку станции
+    final albumArtUrl = playerState.albumArt;
+    final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -465,8 +477,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                       color: isDark
                           ? AppColors.cardBackground
                           : Colors.grey.shade200,
-                      borderRadius:
-                          BorderRadius.circular(AppEffects.radiusMd),
+                      borderRadius: BorderRadius.circular(AppEffects.radiusMd),
                     ),
                     child: Center(
                       child: SizedBox(
@@ -481,24 +492,47 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                       ),
                     ),
                   )
-                : Image.asset(
-                    currentStation.art,
+                : hasAlbumArt
+                ? Image.network(
+                    albumArtUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade800,
-                          borderRadius:
-                              BorderRadius.circular(AppEffects.radiusMd),
+                          color: isDark
+                              ? AppColors.cardBackground
+                              : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(
+                            AppEffects.radiusMd,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.music_note,
-                          color: Colors.white,
-                          size: 20,
+                        child: Center(
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                theme.primaryColor,
+                              ),
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded
+                                            .toDouble() /
+                                        loadingProgress.expectedTotalBytes!
+                                            .toDouble()
+                                  : null,
+                            ),
+                          ),
                         ),
                       );
                     },
-                  ),
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback на картинку станции
+                      return _buildStationArt(currentStation);
+                    },
+                  )
+                : _buildStationArt(currentStation),
           ),
         ),
         if (playerState.isPlaying && !isBuffering) ...[
@@ -522,15 +556,28 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                 color: Colors.black.withValues(alpha: 0.40),
               ),
               child: Center(
-                child: EqualizerAnimation(
-                  isActive: true,
-                  size: 20,
-                ),
+                child: EqualizerAnimation(isActive: true, size: 20),
               ),
             ),
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildStationArt(Station currentStation) {
+    return Image.asset(
+      currentStation.art,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+          ),
+          child: const Icon(Icons.music_note, color: Colors.white, size: 20),
+        );
+      },
     );
   }
 }

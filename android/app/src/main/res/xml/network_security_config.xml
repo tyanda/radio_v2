@@ -9,13 +9,10 @@
         <domain includeSubdomains="true">icecast-saha.cdnvideo.ru</domain>
         <domain includeSubdomains="true">5.129.229.244.nip.io</domain>
         <domain includeSubdomains="true">ep256.hostingradio.ru</domain>
-        <domain includeSubdomains="true">hostingradio.ru</domain>
         <domain includeSubdomains="true">radiorecord.hostingradio.ru</domain>
         <domain includeSubdomains="true">stream.radioparadise.com</domain>
         <domain includeSubdomains="true">radioparadise.com</domain>
         <domain includeSubdomains="true">russianradio.eu</domain>
-        <domain includeSubdomains="true">stream.loveradio.ru</domain>
-        <domain includeSubdomains="true">loveradio.ru</domain>
         <domain includeSubdomains="true">stv-radio.ru</domain>
         <!-- RSS лента новостей -->
         <domain includeSubdomains="true">ysia.ru</domain>

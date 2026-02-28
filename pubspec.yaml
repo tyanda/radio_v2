@@ -69,7 +69,8 @@ dependencies:
   audio_session: ^0.2.2
   web: ^1.1.0
   flutter_svg: ^2.2.0
-  
+  share_plus: ^10.1.2
+
   # --- ШРИФТЫ ---
   google_fonts: ^6.2.1
 

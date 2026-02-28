@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:marquee/marquee.dart';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
@@ -370,18 +371,27 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
         SizedBox(height: AppSpacing.md),
         // Информация о треке или статус
         if (trackTitle != null && trackTitle.isNotEmpty && trackTitle != station?.name) ...[
-          // Название трека
-          Text(
-            trackTitle,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: isDark ? Colors.white : Colors.black,
+          // Бегущая строка с названием трека
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: Marquee(
+              text: trackTitle,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              velocity: 25,
+              blankSpace: 80,
+              startPadding: 0,
+              accelerationDuration: const Duration(milliseconds: 800),
+              accelerationCurve: Curves.easeInOut,
+              decelerationDuration: const Duration(milliseconds: 800),
+              decelerationCurve: Curves.easeInOut,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
+          // Артист (если есть)
           if (trackArtist != null && trackArtist.isNotEmpty) ...[
             SizedBox(height: AppSpacing.xs),
             Text(

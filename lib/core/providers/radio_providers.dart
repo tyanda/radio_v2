@@ -18,8 +18,7 @@ final stationListProvider = Provider<List<Station>>((ref) {
       desc: 'Главное радио Якутии',
       art: 'assets/images/viktoria.jpg',
       icon: 'V',
-      url:
-          'https://stream2.sakhafm.ru/stream/viktoria/af62bbdf-2e52-45da-9ef5-a2f60a66ef8a/e625247a-13b8-4c31-aaeb-06415c8b1657',
+      url: 'https://stream2.sakhafm.ru/stream/viktoria/af62bbdf-2e52-45da-9ef5-a2f60a66ef8a/e625247a-13b8-4c31-aaeb-06415c8b1657',
       frequency: '101.8 FM',
     ),
     Station(
@@ -48,9 +47,6 @@ final stationListProvider = Provider<List<Station>>((ref) {
       icon: 'E',
       url: 'http://ep256.hostingradio.ru:8052/europaplus256.mp3',
       frequency: '105.2 FM',
-      metadata: {
-        'radio_browser_uuid': '9622cd46-0601-11e8-ae97-52543be04c81',
-      },
     ),
     Station(
       id: '5',
@@ -81,15 +77,6 @@ final stationListProvider = Provider<List<Station>>((ref) {
     ),
     Station(
       id: '8',
-      name: 'Love Radio',
-      desc: 'Хиты и новинки',
-      art: 'assets/images/load.png',
-      icon: 'L',
-      url: 'https://stream.loveradio.ru/main128',
-      frequency: '106.3 FM',
-    ),
-    Station(
-      id: '9',
       name: 'Радио Record',
       desc: 'Танцевальная музыка',
       art: 'assets/images/load.png',
@@ -112,7 +99,7 @@ final stationListProvider = Provider<List<Station>>((ref) {
       desc: 'Русские хиты',
       art: 'assets/images/load.png',
       icon: 'RH',
-      url: 'https://radiorecord.hostingradio.ru/russianhits64.aacp',
+      url: 'https://radiorecord.hostingradio.ru/rus96.aacp',
       frequency: 'Online',
     ),
     Station(
@@ -121,7 +108,7 @@ final stationListProvider = Provider<List<Station>>((ref) {
       desc: 'Светлое радио',
       art: 'assets/images/load.png',
       icon: 'С',
-      url: 'http://stv-radio.ru:8000/STV-Radio128k',
+      url: 'http://stream2.radiotoday.ru:8000/stv',
       frequency: 'Online',
     ),
   ];

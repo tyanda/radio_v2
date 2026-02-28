@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:marquee/marquee.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../widgets/equalizer_animation.dart';
@@ -272,6 +273,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              // Название станции
                               isBuffering
                                   ? ShimmerWidget.text(
                                       width: 120,
@@ -295,6 +297,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       overflow: TextOverflow.ellipsis,
                                     ),
                               SizedBox(height: AppSpacing.xs),
+                              // Название трека (бегущая строка) или "ПРЯМОЙ ЭФИР"
                               isBuffering
                                   ? ShimmerWidget.text(
                                       width: 80,
@@ -306,31 +309,57 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                         letterSpacing: 1.2,
                                       ),
                                     )
-                                  : Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 5,
-                                          height: 5,
-                                          decoration: BoxDecoration(
-                                            color: theme.primaryColor,
-                                            shape: BoxShape.circle,
+                                  : playerState.trackTitle != null &&
+                                          playerState.trackTitle!.isNotEmpty
+                                      ? // Бегущая строка с названием трека
+                                      SizedBox(
+                                          height: 14,
+                                          child: Marquee(
+                                            text: playerState.trackTitle!,
+                                            style: GoogleFonts.inter(
+                                              color: theme.primaryColor,
+                                              fontSize: 8.5,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.5,
+                                              height: 1.0,
+                                            ),
+                                            velocity: 30,
+                                            blankSpace: 50,
+                                            startPadding: 0,
+                                            accelerationDuration:
+                                                const Duration(milliseconds: 500),
+                                            accelerationCurve: Curves.easeInOut,
+                                            decelerationDuration:
+                                                const Duration(milliseconds: 500),
+                                            decelerationCurve: Curves.easeInOut,
                                           ),
+                                        )
+                                      : // "ПРЯМОЙ ЭФИР" если нет названия трека
+                                      Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 5,
+                                              height: 5,
+                                              decoration: BoxDecoration(
+                                                color: theme.primaryColor,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            SizedBox(width: AppSpacing.xs),
+                                            Text(
+                                              AppLocalizations.of(context)
+                                                  .live_broadcast,
+                                              style: GoogleFonts.inter(
+                                                color: theme.primaryColor,
+                                                fontSize: 8.5,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 1.2,
+                                                height: 1.0,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          AppLocalizations.of(context)
-                                              .live_broadcast,
-                                          style: GoogleFonts.inter(
-                                            color: theme.primaryColor,
-                                            fontSize: 8.5,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 1.2,
-                                            height: 1.0,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
                             ],
                           ),
                         ),

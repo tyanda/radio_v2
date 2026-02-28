@@ -9,15 +9,22 @@ import '../../../../core/providers/radio_providers.dart';
 import '../../../../core/providers.dart';
 import '../providers/player_provider.dart';
 import '../../domain/station.dart';
-import 'vertical_radio_card.dart';
-import '../../../../widgets/scroll_scale_card.dart';
+import 'radio_card_v2.dart';
+import 'view_type_selector.dart';
+import 'station_context_menu.dart';
+import 'horizontal_radio_cards.dart';
 
-/// RadioCardsView с фильтрацией и поиском
+/// Улучшенный RadioCardsView со всеми новыми функциями
 ///
 /// Особенности:
+/// - Переключение видов: Плитка / Список / Горизонтальный
 /// - Поиск по названию станции
 /// - Фильтр: Все / Избранные
-/// - Анимированное появление карточек
+/// - Каскадная анимация появления
+/// - 3D tilt эффект при наведении
+/// - LIVE бейдж для активной станции
+/// - Частота на карточке
+/// - Контекстное меню по long press (Share, Favorites)
 /// - Плавный скролл к активной станции
 class RadioCardsView extends ConsumerStatefulWidget {
   const RadioCardsView({super.key});
@@ -33,6 +40,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   int? _lastActiveIndex;
 
   bool _showFavoritesOnly = false;
+  ViewType _currentViewType = ViewType.grid;
 
   @override
   void initState() {
@@ -72,15 +80,17 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
     _lastActiveIndex = activeIndex;
 
-    final row = (activeIndex / 2).floor();
-    final rowHeight = 196.0;
-    final targetOffset = (row * rowHeight) - AppSpacing.md;
+    if (_currentViewType == ViewType.grid) {
+      final row = (activeIndex / 2).floor();
+      final rowHeight = 196.0;
+      final targetOffset = (row * rowHeight) - AppSpacing.md;
 
-    _scrollController!.animateTo(
-      targetOffset.clamp(0.0, _scrollController!.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-    );
+      _scrollController!.animateTo(
+        targetOffset.clamp(0.0, _scrollController!.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   List<Station> _filterStations(List<Station> stations, Set<String> favoriteNames) {
@@ -119,92 +129,45 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        return SingleChildScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.lg,
-            AppSpacing.lg,
-            140.0, // kBottomBarTotalHeight
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Поиск и фильтры
-              _buildSearchBar(),
-              // Сетка станций
-              if (stations.isEmpty)
-                _buildEmptyState()
-              else
-                GridView.builder(
-                  padding: EdgeInsets.only(top: 16.0),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppSpacing.lg,
-                    mainAxisSpacing: AppSpacing.lg,
-                    childAspectRatio: 0.88,
-                  ),
-                  clipBehavior: Clip.none,
-                  itemCount: stations.length,
-                  itemBuilder: (context, index) {
-                    final station = stations[index];
-                    final bool isActive = currentStation?.id == station.id;
-
-                    return Consumer(
-                      builder: (context, ref, child) {
-                        final isFavorite = favoritesState.isFavorite(station.name);
-
-                        return ScrollScaleCard(
-                          onTap: null,
-                          child: _AnimatedCard(
-                            index: index,
-                            controller: _animationController,
-                            child: VerticalRadioCard(
-                              station: station,
-                              isActive: isActive,
-                              isFavorite: isFavorite,
-                              onTap: () {
-                                Logger.log(
-                                  "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
-                                  tag: 'RadioUI',
-                                );
-                                ref
-                                    .read(playerProvider.notifier)
-                                    .playStation(station);
-                              },
-                              onFavoriteTap: () {
-                                ref
-                                    .read(favoritesProvider.notifier)
-                                    .toggleFavorite(station.name);
-                              },
-                              onLongPress: () {
-                                ref
-                                    .read(favoritesProvider.notifier)
-                                    .toggleFavorite(station.name);
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-            ],
-          ),
+        return Column(
+          children: [
+            // Верхняя панель с фильтрами и переключателем видов
+            _buildTopBar(),
+            // Контент
+            Expanded(
+              child: stations.isEmpty
+                  ? _buildEmptyState()
+                  : _buildContentView(stations, currentStation, favoriteNames),
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildSearchBar() {
-    return Row(
-      children: [
-        // Фильтры
-        Expanded(
-          child: SingleChildScrollView(
+  Widget _buildTopBar() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Переключатель видов
+          ViewTypeSelector(
+            currentType: _currentViewType,
+            onChanged: (type) {
+              setState(() {
+                _currentViewType = type;
+              });
+            },
+          ),
+          SizedBox(height: AppSpacing.md),
+          // Фильтры
+          SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
@@ -230,8 +193,354 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContentView(
+    List<Station> stations,
+    Station? currentStation,
+    Set<String> favoriteNames,
+  ) {
+    if (_currentViewType == ViewType.horizontal) {
+      return const HorizontalRadioCards();
+    } else if (_currentViewType == ViewType.list) {
+      return _buildListView(stations, currentStation, favoriteNames);
+    } else {
+      return _buildGridView(stations, currentStation, favoriteNames);
+    }
+  }
+
+  Widget _buildGridView(
+    List<Station> stations,
+    Station? currentStation,
+    Set<String> favoriteNames,
+  ) {
+    return GridView.builder(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        140.0,
+      ),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppSpacing.lg,
+        mainAxisSpacing: AppSpacing.lg,
+        childAspectRatio: 0.88,
+      ),
+      clipBehavior: Clip.none,
+      itemCount: stations.length,
+      itemBuilder: (context, index) {
+        final station = stations[index];
+        final bool isActive = currentStation?.id == station.id;
+        final isFavorite = favoriteNames.contains(station.name);
+
+        return _AnimatedCard(
+          index: index,
+          controller: _animationController,
+          child: RadioCardV2(
+            station: station,
+            isActive: isActive,
+            isFavorite: isFavorite,
+            viewType: ViewType.grid,
+            onTap: () {
+              Logger.log(
+                "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
+                tag: 'RadioUI',
+              );
+              ref.read(playerProvider.notifier).playStation(station);
+            },
+            onFavoriteTap: () {
+              ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+            },
+            onLongPress: () {
+              StationContextMenu.show(
+                context: context,
+                station: station,
+                isFavorite: isFavorite,
+                onToggleFavorite: () {
+                  ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListView(
+    List<Station> stations,
+    Station? currentStation,
+    Set<String> favoriteNames,
+  ) {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        140.0,
+      ),
+      child: Column(
+        children: stations.map((station) {
+          final isActive = currentStation?.id == station.id;
+          final isFavorite = favoriteNames.contains(station.name);
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: AppSpacing.md),
+            child: _buildListCard(station, isActive, isFavorite),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildListCard(Station station, bool isActive, bool isFavorite) {
+    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final accentColor = Theme.of(context).primaryColor;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          ref.read(playerProvider.notifier).playStation(station);
+        },
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          StationContextMenu.show(
+            context: context,
+            station: station,
+            isFavorite: isFavorite,
+            onToggleFavorite: () {
+              ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+            },
+          );
+        },
+        child: AnimatedContainer(
+          duration: AppEffects.durationNormal,
+          curve: AppEffects.curve,
+          padding: EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: isActive
+                ? LinearGradient(
+                    colors: [
+                      accentColor,
+                      accentColor.withValues(alpha: 0.9),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  )
+                : null,
+            color: isActive ? null : isDark ? AppColors.cardBackground : Colors.white,
+            borderRadius: BorderRadius.circular(AppEffects.radiusLg),
+            border: Border.all(
+              color: isActive
+                  ? accentColor
+                  : isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.05),
+              width: isActive ? 2 : 1,
+            ),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+          ),
+          child: Row(
+            children: [
+              // Изображение
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+                  color: const Color(0xFF000000),
+                ),
+                child: station.art.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+                        child: Image.asset(
+                          station.art,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Text(
+                                station.icon,
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 20,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          station.icon,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ),
+              ),
+
+              SizedBox(width: AppSpacing.md),
+
+              // Информация
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            station.name.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: isActive ? Colors.black : isDark ? Colors.white : Colors.black,
+                              letterSpacing: -0.3,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isActive) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.red,
+                              borderRadius: BorderRadius.circular(AppEffects.radiusSm),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(width: 2),
+                                Text(
+                                  'LIVE',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 8,
+                                    color: isActive ? Colors.black.withValues(alpha: 0.7) : Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+
+                    SizedBox(height: 2),
+
+                    Row(
+                      children: [
+                        if (station.frequency.isNotEmpty && station.frequency != 'Online') ...[
+                          Text(
+                            station.frequency,
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 11,
+                              color: isActive
+                                  ? Colors.black.withValues(alpha: 0.7)
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.xs),
+                          Text(
+                            '•',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: isActive
+                                  ? Colors.black.withValues(alpha: 0.5)
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.xs),
+                        ],
+                        Expanded(
+                          child: Text(
+                            station.desc,
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 11,
+                              color: isActive
+                                  ? Colors.black.withValues(alpha: 0.6)
+                                  : AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Кнопка избранного
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isFavorite ? Colors.red.withValues(alpha: 0.1) : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                    color: isFavorite
+                        ? Colors.red
+                        : isActive
+                            ? Colors.black.withValues(alpha: 0.5)
+                            : AppColors.iconGrey,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -344,11 +653,11 @@ class _AnimatedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Уменьшенная задержка для более плавного последовательного появления
+    // Каскадная задержка для последовательного появления
     final delay = index * 0.05;
     final beginTime = delay.clamp(0.0, 0.8);
 
-    // Более плавная кривая анимации с естественным движением
+    // Плавная кривая анимации с естественным движением
     final tween = Tween(
       begin: 0.0,
       end: 1.0,

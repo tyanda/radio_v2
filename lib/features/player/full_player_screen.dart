@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
 import '../../core/providers/radio_providers.dart';
+import '../../core/utils/logger.dart';
 import '../radio/presentation/providers/player_provider.dart';
 import '../radio/domain/station.dart';
 
@@ -348,6 +349,12 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
     final trackArtist = playerAsync.value?.trackArtist;
     final isPlaying = playerAsync.value?.isPlaying ?? false;
 
+    // Отладка: выводим trackTitle в лог
+    Logger.log(
+      "🎵 FullPlayer: trackTitle='$trackTitle', station='${station?.name}'",
+      tag: 'PlayerUI',
+    );
+
     return Column(
       children: [
         // Название станции
@@ -362,7 +369,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
         ),
         SizedBox(height: AppSpacing.md),
         // Информация о треке или статус
-        if (trackTitle != null && trackTitle.isNotEmpty) ...[
+        if (trackTitle != null && trackTitle.isNotEmpty && trackTitle != station?.name) ...[
           // Название трека
           Text(
             trackTitle,
@@ -432,12 +439,13 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
 
   Widget _buildVisualizer(AsyncValue<PlayerState> playerAsync) {
     final station = playerAsync.value?.currentStation;
+    final trackTitle = playerAsync.value?.trackTitle;
     final isPlaying = playerAsync.value?.isPlaying ?? false;
 
-    return _buildStationMetadata(station, isPlaying);
+    return _buildStationMetadata(station, isPlaying, trackTitle);
   }
 
-  Widget _buildStationMetadata(Station? station, bool isPlaying) {
+  Widget _buildStationMetadata(Station? station, bool isPlaying, String? trackTitle) {
     if (station == null) {
       // Плейсхолдер с логотипом приложения
       return Container(
@@ -566,7 +574,19 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: AppSpacing.xs),
-                if (station.desc.isNotEmpty)
+                // Отображение названия трека из метаданных
+                if (trackTitle != null && trackTitle.isNotEmpty && trackTitle != station.name)
+                  Text(
+                    trackTitle,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                else if (station.desc.isNotEmpty)
                   Text(
                     station.desc,
                     style: GoogleFonts.inter(

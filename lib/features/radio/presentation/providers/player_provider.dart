@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/data/radio_player.dart';
+import 'package:radio_v2/features/radio/services/radio_browser_metadata_service.dart';
 import '../../../../../core/utils/logger.dart';
 
 @immutable
@@ -56,9 +57,11 @@ class PlayerState {
 
 class PlayerNotifier extends AsyncNotifier<PlayerState> {
   late final RadioPlayer _radioPlayer;
+  final RadioBrowserMetadataService _metadataService = RadioBrowserMetadataService();
   StreamSubscription? _playerStateSubscription;
   StreamSubscription? _processingStateSubscription;
   StreamSubscription? _mediaItemSubscription;
+  StreamSubscription? _metadataSubscription;
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
@@ -122,12 +125,12 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       }
     });
 
-    // Listen to media item changes (track metadata)
+    // Listen to media item changes (track metadata from ICY)
     _mediaItemSubscription = _radioPlayer.mediaItemStream.listen((mediaItem) {
       final currentState = state.asData?.value;
       if (currentState != null && mediaItem != null) {
         Logger.log(
-          "🎵 MediaItem changed: title='${mediaItem.title}', artist='${mediaItem.artist}'",
+          "🎵 ICY MediaItem changed: title='${mediaItem.title}', artist='${mediaItem.artist}'",
           tag: 'Player',
         );
         state = AsyncData(currentState.copyWith(
@@ -136,7 +139,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         ));
       } else if (currentState != null && mediaItem == null) {
         Logger.log(
-          "🎵 MediaItem is null (no metadata available)",
+          "🎵 ICY MediaItem is null (no metadata available)",
           tag: 'Player',
         );
       }
@@ -146,6 +149,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       _playerStateSubscription?.cancel();
       _processingStateSubscription?.cancel();
       _mediaItemSubscription?.cancel();
+      _metadataSubscription?.cancel();
+      _metadataService.stopFetchingMetadata();
+      _metadataService.dispose();
       _radioPlayer.dispose();
     });
 
@@ -330,6 +336,34 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         album: 'Sakha Radio',
         artUri: artUri?.toString(),
       );
+
+      // Запуск получения метаданных для Европа Плюс
+      _metadataService.stopFetchingMetadata();
+      final radioBrowserUuid = station.metadata?['radio_browser_uuid'];
+      if (radioBrowserUuid != null) {
+        Logger.log(
+          "🎵 Starting metadata fetch for station: ${station.name}, UUID: $radioBrowserUuid",
+          tag: 'Player',
+        );
+        _metadataService.startFetchingMetadata(radioBrowserUuid);
+        
+        // Подписка на метаданные
+        _metadataSubscription?.cancel();
+        _metadataSubscription = _metadataService.metadataStream.listen((songTitle) {
+          final currentState = state.asData?.value;
+          if (currentState != null) {
+            final trackTitle = songTitle?.isNotEmpty == true ? songTitle : station.name;
+            Logger.log(
+              "🎵 Metadata update: trackTitle='$trackTitle'",
+              tag: 'Player',
+            );
+            state = AsyncData(currentState.copyWith(
+              trackTitle: trackTitle,
+              trackArtist: null, // Radio-Browser не возвращает отдельного артиста
+            ));
+          }
+        });
+      }
 
       try {
         Logger.log("playStation(): starting playback", tag: 'Player');

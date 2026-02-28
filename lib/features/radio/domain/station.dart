@@ -6,6 +6,7 @@ class Station {
   final String icon;
   final String url;
   final String frequency;
+  final Map<String, String>? metadata;
 
   Station({
     this.id,
@@ -15,5 +16,6 @@ class Station {
     required this.icon,
     required this.url,
     required this.frequency,
+    this.metadata,
   });
 }

@@ -15,6 +15,7 @@ class RadioPlayer {
   
   // Поток для метаданных треков
   final _mediaItemController = StreamController<MediaItem?>.broadcast();
+  StreamSubscription? _icyMetadataSubscription;
 
   RadioPlayer()
       : isWeb = kIsWeb,
@@ -33,9 +34,32 @@ class RadioPlayer {
   
   /// Обновление метаданных трека
   void _updateMediaItem(MediaItem? mediaItem) {
-    if (!isWeb) {
-      _mediaItemController.add(mediaItem);
-    }
+    _mediaItemController.add(mediaItem);
+  }
+  
+  /// Подписка на ICY-метаданные из потока
+  void _subscribeToIcyMetadata() {
+    if (isWeb || player == null) return;
+    
+    _icyMetadataSubscription?.cancel();
+    _icyMetadataSubscription = player!.icyMetadataStream.listen((icyMetadata) {
+      if (icyMetadata != null && icyMetadata.info != null) {
+        final title = icyMetadata.info!.title;
+        Logger.log(
+          "🎵 ICY Metadata: title=$title",
+          tag: 'RadioPlayer',
+        );
+        
+        if (title != null && title.isNotEmpty) {
+          _updateMediaItem(MediaItem(
+            id: 'icy_metadata',
+            title: title,
+            artist: null,
+            album: 'Sakha Radio',
+          ));
+        }
+      }
+    });
   }
 
   /// Подключение к потоку радио с метаданными
@@ -83,9 +107,12 @@ class RadioPlayer {
         await player!.setAudioSource(
           AudioSource.uri(uri, tag: mediaItem),
         );
-        
+
         // Обновляем метаданные
         _updateMediaItem(mediaItem);
+        
+        // Подписываемся на ICY-метаданные из потока
+        _subscribeToIcyMetadata();
       }
 
       Logger.log("RadioPlayer: Stream loaded successfully", tag: 'RadioPlayer');
@@ -242,10 +269,12 @@ class RadioPlayer {
       Logger.log("RadioPlayer: Disposing", tag: 'RadioPlayer');
       if (isWeb) {
         await webPlayer!.dispose();
+        await _icyMetadataSubscription?.cancel();
         await _mediaItemController.close();
       } else {
         await player!.stop();
         await player!.dispose();
+        await _icyMetadataSubscription?.cancel();
         await _mediaItemController.close();
       }
       Logger.log("RadioPlayer: Disposed", tag: 'RadioPlayer');

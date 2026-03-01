@@ -244,7 +244,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         AppSpacing.lg,
         0,
         AppSpacing.lg,
-        kBottomBarTotalHeight,
+        bottomPlayerHeight,
       ),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -308,7 +308,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         AppSpacing.lg,
         0,
         AppSpacing.lg,
-        kBottomBarTotalHeight,
+        bottomPlayerHeight,
       ),
       child: Column(
         children: stations.asMap().entries.map((entry) {

@@ -72,7 +72,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final weatherAsync = ref.watch(weatherProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.background
+          : AppColors.backgroundLight,
       body: weatherAsync.when(
         data: (weatherData) => weatherData != null
             ? _buildWeatherContent(weatherData, isDark)
@@ -115,7 +117,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         horizontalPadding,
         16,
         horizontalPadding,
-        kBottomBarTotalHeight,
+        bottomPlayerHeight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,8 +564,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     return Center(
       child: CircularProgressIndicator(
         color: Theme.of(context).primaryColor,
-        backgroundColor: isDark 
-            ? AppColors.cardBackground 
+        backgroundColor: isDark
+            ? AppColors.cardBackground
             : AppColors.backgroundLight,
       ),
     );
@@ -591,7 +593,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           Text(
             AppLocalizations.of(context).error_network,
             style: GoogleFonts.inter(
-              color: isDark ? AppColors.textPrimary : AppColors.textPrimaryLight,
+              color: isDark
+                  ? AppColors.textPrimary
+                  : AppColors.textPrimaryLight,
               fontWeight: FontWeight.w700,
             ),
           ),

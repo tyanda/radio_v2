@@ -13,6 +13,7 @@ import 'package:radio_v2/core/providers/radio_providers.dart';
 import 'package:radio_v2/features/radio/data/radio_player.dart';
 import 'package:radio_v2/features/radio/services/radio_browser_metadata_service.dart';
 import 'package:radio_v2/features/radio/services/album_art_service.dart';
+import 'package:radio_v2/core/providers.dart';
 import '../../../../../core/utils/logger.dart';
 
 @immutable
@@ -69,6 +70,8 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   StreamSubscription? _processingStateSubscription;
   StreamSubscription? _mediaItemSubscription;
   StreamSubscription? _metadataSubscription;
+  StreamSubscription? _nextSubscription;
+  StreamSubscription? _prevSubscription;
   String? _lastSearchKey; // Для кэширования последнего поиска обложки
 
   Future<Uri?> _getAssetUri(String assetPath) async {
@@ -96,7 +99,12 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
   @override
   Future<PlayerState> build() async {
-    _radioPlayer = RadioPlayer();
+    final audioHandler = ref.read(audioHandlerProvider);
+    _radioPlayer = RadioPlayer(audioHandler: audioHandler);
+
+    // Listen to skip actions from the notification
+    _nextSubscription = audioHandler.onNext.listen((_) => playNextStation());
+    _prevSubscription = audioHandler.onPrev.listen((_) => playPreviousStation());
 
     // Listen to player state changes
     _playerStateSubscription = _radioPlayer.playerStateStream.listen((
@@ -118,15 +126,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     ) {
       final currentState = state.asData?.value;
       if (currentState != null) {
-        // buffering/loading = показываем индикатор загрузки
-        // ready/ready = скрываем индикатор
         final isBuffering =
             processingState == ProcessingState.buffering ||
             processingState == ProcessingState.loading;
-        Logger.log(
-          "ProcessingState: $processingState, isBuffering: $isBuffering",
-          tag: 'Player',
-        );
         if (currentState.isBuffering != isBuffering) {
           state = AsyncData(currentState.copyWith(isBuffering: isBuffering));
         }
@@ -137,19 +139,10 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     _mediaItemSubscription = _radioPlayer.mediaItemStream.listen((mediaItem) {
       final currentState = state.asData?.value;
       if (currentState != null && mediaItem != null) {
-        Logger.log(
-          "🎵 ICY MediaItem changed: title='${mediaItem.title}', artist='${mediaItem.artist}', artUri='${mediaItem.artUri}'",
-          tag: 'Player',
-        );
-
-        // Если есть artUri из метаданных - используем его
         String? albumArt = mediaItem.artUri?.toString();
 
-        // Если artUri нет, но есть artist и title - ищем обложку через iTunes API
         if (albumArt == null) {
           final searchKey = '${mediaItem.artist}-${mediaItem.title}';
-
-          // Не делаем запрос, если уже искали эту комбинацию
           if (_lastSearchKey != searchKey) {
             _lastSearchKey = searchKey;
             _fetchAlbumArt(mediaItem.artist, mediaItem.title);
@@ -163,11 +156,6 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
             albumArt: albumArt ?? currentState.albumArt,
           ),
         );
-      } else if (currentState != null && mediaItem == null) {
-        Logger.log(
-          "🎵 ICY MediaItem is null (no metadata available)",
-          tag: 'Player',
-        );
       }
     });
 
@@ -176,6 +164,8 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       _processingStateSubscription?.cancel();
       _mediaItemSubscription?.cancel();
       _metadataSubscription?.cancel();
+      _nextSubscription?.cancel();
+      _prevSubscription?.cancel();
       _metadataService.stopFetchingMetadata();
       _metadataService.dispose();
       _radioPlayer.dispose();
@@ -202,7 +192,6 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
         if (stations.contains(station)) {
           initialStation = station;
-
           final artUri = station.art.isNotEmpty
               ? await _getAssetUri(station.art)
               : null;
@@ -215,129 +204,43 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
             artUri: artUri?.toString(),
           );
 
-          // Auto-play (non-blocking)
           if (!kIsWeb) {
             Future.microtask(() async {
               try {
-                Logger.log(
-                  "Auto-play: attempting to play ${station.name}",
-                  tag: 'Player',
-                );
                 await _radioPlayer.play();
-                Logger.log(
-                  "Auto-play: successfully playing ${station.name}",
-                  tag: 'Player',
-                );
               } catch (e) {
-                Logger.error(
-                  "Auto-play failed for ${station.name}: $e",
-                  tag: 'Player',
-                );
-                state = AsyncData(
-                  PlayerState(
-                    volume: volume,
-                    showVolumeSlider: showVolume,
-                    currentStation: station,
-                    isPlaying: false,
-                  ),
-                );
+                Logger.error("Auto-play failed: $e", tag: 'Player');
               }
             });
           }
         }
       } catch (e) {
-        Logger.error("Auto-play failed: $e", tag: 'Player');
-        // Показываем ошибку только если есть контекст (для web)
-        if (!kIsWeb) {
-          Logger.error(
-            "Auto-play error details: ${e.toString()}",
-            tag: 'Player',
-          );
-        }
+        Logger.error("Auto-play error: $e", tag: 'Player');
       }
     }
 
-    final result = PlayerState(
+    return PlayerState(
       volume: volume,
       showVolumeSlider: showVolume,
       currentStation: initialStation,
       isPlaying: initialPlaying,
     );
-    return result;
   }
 
   Future<void> playStation(Station station) async {
     final currentState = state.asData?.value;
-    Logger.log(
-      "playStation(): called for station ${station.name}",
-      tag: 'Player',
-    );
+    if (currentState == null) return;
 
-    if (currentState == null) {
-      Logger.error(
-        "playStation(): state is null (not ready yet)",
-        tag: 'Player',
-      );
-      return;
-    }
-
-    Logger.log(
-      "playStation(): current state - station: ${currentState.currentStation?.name}, isPlaying: ${currentState.isPlaying}",
-      tag: 'Player',
-    );
-
-    // 1. Tapping the same station: Toggle Play/Pause
     if (currentState.currentStation?.name == station.name) {
-      Logger.log(
-        "playStation(): same station, toggling play/pause",
-        tag: 'Player',
-      );
       if (currentState.isPlaying) {
-        Logger.log("playStation(): pausing current station", tag: 'Player');
         await _radioPlayer.pause();
-        // Обновляем состояние после pause
-        final afterPauseState = state.asData?.value;
-        if (afterPauseState != null) {
-          state = AsyncData(afterPauseState.copyWith(isPlaying: false));
-          Logger.log(
-            "playStation(): updated isPlaying to false",
-            tag: 'Player',
-          );
-        }
       } else {
-        try {
-          Logger.log("playStation(): playing current station", tag: 'Player');
-          await _radioPlayer.play();
-          // Обновляем состояние после play
-          final afterPlayState = state.asData?.value;
-          if (afterPlayState != null) {
-            state = AsyncData(
-              afterPlayState.copyWith(isPlaying: true, isBuffering: false),
-            );
-            Logger.log(
-              "playStation(): updated isPlaying to true",
-              tag: 'Player',
-            );
-          }
-        } catch (e) {
-          Logger.error("playStation(): play failed: $e", tag: 'Player');
-          Logger.error(
-            "playStation(): play error details - ${e.toString()}",
-            tag: 'Player',
-          );
-        }
+        await _radioPlayer.play();
       }
       return;
     }
 
-    // 2. Changing station
-    Logger.log(
-      "playStation(): changing station to ${station.name}",
-      tag: 'Player',
-    );
     try {
-      // Set buffering state (isPlaying пока false)
-      Logger.log("playStation(): setting buffering state", tag: 'Player');
       state = AsyncData(
         currentState.copyWith(
           currentStation: station,
@@ -346,17 +249,11 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         ),
       );
 
-      Logger.log("playStation(): stopping current stream", tag: 'Player');
       await _radioPlayer.stop();
-
-      Logger.log("playStation(): preparing artwork", tag: 'Player');
       final artUri = station.art.isNotEmpty
           ? await _getAssetUri(station.art)
           : null;
 
-      Logger.log("playStation(): artwork URI: $artUri", tag: 'Player');
-
-      Logger.log("playStation(): setting up new stream", tag: 'Player');
       await _radioPlayer.playStream(
         url: station.url,
         title: station.name,
@@ -365,179 +262,89 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         artUri: artUri?.toString(),
       );
 
-      // Запуск получения метаданных для Европа Плюс
       _metadataService.stopFetchingMetadata();
       final radioBrowserUuid = station.metadata?['radio_browser_uuid'];
       if (radioBrowserUuid != null) {
-        Logger.log(
-          "🎵 Starting metadata fetch for station: ${station.name}, UUID: $radioBrowserUuid",
-          tag: 'Player',
-        );
         _metadataService.startFetchingMetadata(radioBrowserUuid);
-
-        // Подписка на метаданные
         _metadataSubscription?.cancel();
-        _metadataSubscription = _metadataService.metadataStream.listen((
-          songTitle,
-        ) {
-          final currentState = state.asData?.value;
-          if (currentState != null) {
-            final trackTitle = songTitle?.isNotEmpty == true
-                ? songTitle
-                : station.name;
-            Logger.log(
-              "🎵 Metadata update: trackTitle='$trackTitle'",
-              tag: 'Player',
-            );
-            state = AsyncData(
-              currentState.copyWith(
-                trackTitle: trackTitle,
-                trackArtist:
-                    null, // Radio-Browser не возвращает отдельного артиста
-              ),
-            );
+        _metadataSubscription = _metadataService.metadataStream.listen((songTitle) {
+          final s = state.asData?.value;
+          if (s != null) {
+            state = AsyncData(s.copyWith(
+              trackTitle: songTitle?.isNotEmpty == true ? songTitle : station.name,
+              trackArtist: null,
+            ));
           }
         });
       }
 
-      try {
-        Logger.log("playStation(): starting playback", tag: 'Player');
-        await _radioPlayer.play();
-        Logger.log("playStation(): playing ${station.name}", tag: 'Player');
-        // Обновляем состояние после успешного play
-        final afterPlayState = state.asData?.value;
-        if (afterPlayState != null) {
-          state = AsyncData(
-            afterPlayState.copyWith(isPlaying: true, isBuffering: false),
-          );
-          Logger.log(
-            "playStation(): updated isPlaying to true, cleared buffering",
-            tag: 'Player',
-          );
-        }
-      } catch (e) {
-        Logger.error("playStation(): play failed: $e", tag: 'Player');
-        Logger.error(
-          "playStation(): play error details - ${e.toString()}",
-          tag: 'Player',
-        );
-        state = AsyncData(
-          currentState.copyWith(currentStation: station, isPlaying: false),
-        );
-      }
+      await _radioPlayer.play();
     } catch (e) {
-      Logger.error(
-        "playStation(): error setting up station: $e",
-        tag: 'Player',
-      );
-      Logger.error(
-        "playStation(): setup error details - ${e.toString()}",
-        tag: 'Player',
-      );
-      state = AsyncData(
-        (state.asData?.value ?? currentState).copyWith(isPlaying: false),
-      );
+      Logger.error("playStation error: $e", tag: 'Player');
+      state = AsyncData(currentState.copyWith(isPlaying: false, isBuffering: false));
     }
   }
 
   Future<void> stop() async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
-
-    state = await AsyncValue.guard(() async {
-      await _radioPlayer.stop();
-      return currentState.copyWith(isPlaying: false);
-    });
+    await _radioPlayer.stop();
+    state = AsyncData(currentState.copyWith(isPlaying: false));
   }
 
   Future<void> setVolume(double volume) async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
-
-    state = await AsyncValue.guard(() async {
-      await _radioPlayer.setVolume(volume);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble('volume', volume);
-      return currentState.copyWith(volume: volume);
-    });
+    await _radioPlayer.setVolume(volume);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('volume', volume);
+    state = AsyncData(currentState.copyWith(volume: volume));
   }
 
   Future<void> toggleVolumeSlider() async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
-
-    state = await AsyncValue.guard(() async {
-      final newShowVolume = !currentState.showVolumeSlider;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('showVolume', newShowVolume);
-      return currentState.copyWith(showVolumeSlider: newShowVolume);
-    });
+    final newShowVolume = !currentState.showVolumeSlider;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('showVolume', newShowVolume);
+    state = AsyncData(currentState.copyWith(showVolumeSlider: newShowVolume));
   }
 
-  /// Переключение на следующую станцию
   Future<void> playNextStation() async {
     final currentState = state.asData?.value;
     if (currentState?.currentStation == null) return;
 
     final stations = ref.read(stationListProvider);
-    final currentIndex = stations.indexWhere(
-      (s) => s.name == currentState!.currentStation!.name,
-    );
-
+    final currentIndex = stations.indexWhere((s) => s.name == currentState!.currentStation!.name);
     if (currentIndex < 0) return;
 
     final nextIndex = (currentIndex + 1) % stations.length;
-    final nextStation = stations[nextIndex];
-
-    await playStation(nextStation);
+    await playStation(stations[nextIndex]);
   }
 
-  /// Переключение на предыдущую станцию
   Future<void> playPreviousStation() async {
     final currentState = state.asData?.value;
     if (currentState?.currentStation == null) return;
 
     final stations = ref.read(stationListProvider);
-    final currentIndex = stations.indexWhere(
-      (s) => s.name == currentState!.currentStation!.name,
-    );
-
+    final currentIndex = stations.indexWhere((s) => s.name == currentState!.currentStation!.name);
     if (currentIndex < 0) return;
 
-    final previousIndex = currentIndex - 1 < 0
-        ? stations.length - 1
-        : currentIndex - 1;
-    final previousStation = stations[previousIndex];
-
-    await playStation(previousStation);
+    final prevIndex = currentIndex - 1 < 0 ? stations.length - 1 : currentIndex - 1;
+    await playStation(stations[prevIndex]);
   }
 
-  /// Поиск обложки альбома через iTunes API
   Future<void> _fetchAlbumArt(String? artist, String? title) async {
     try {
-      final artUrl = await _albumArtService.searchAlbumArt(
-        artist: artist,
-        title: title,
-      );
-
-      if (artUrl != null) {
-        final currentState = state.asData?.value;
-        if (currentState != null &&
-            currentState.trackTitle == title &&
-            currentState.trackArtist == artist) {
-          state = AsyncData(currentState.copyWith(albumArt: artUrl));
-          Logger.log(
-            "🎨 AlbumArt: Updated for '$artist - $title'",
-            tag: 'Player',
-          );
-        }
+      final artUrl = await _albumArtService.searchAlbumArt(artist: artist, title: title);
+      final currentState = state.asData?.value;
+      if (artUrl != null && currentState != null && currentState.trackTitle == title) {
+        state = AsyncData(currentState.copyWith(albumArt: artUrl));
       }
     } catch (e) {
-      Logger.log("AlbumArt: Error fetching: $e", tag: 'Player');
+      Logger.log("AlbumArt error: $e", tag: 'Player');
     }
   }
 }
 
-final playerProvider = AsyncNotifierProvider<PlayerNotifier, PlayerState>(
-  PlayerNotifier.new,
-);
+final playerProvider = AsyncNotifierProvider<PlayerNotifier, PlayerState>(PlayerNotifier.new);

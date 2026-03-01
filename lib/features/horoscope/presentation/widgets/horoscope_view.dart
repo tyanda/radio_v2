@@ -65,7 +65,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
         AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.lg,
-        kBottomBarTotalHeight,
+        bottomPlayerHeight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

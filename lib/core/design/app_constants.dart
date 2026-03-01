@@ -5,10 +5,12 @@ library;
 
 /// Высота нижней панели с мини-плеером и навигацией
 /// Вычисляется динамически на основе дизайн-токенов
-double get kBottomBarTotalHeight {
-  // MiniPlayer (64) + spacing (12) + bottom bar (56) + padding (8)
-  return 140.0;
-}
+/// MiniPlayer (64) + spacing (12) + bottom bar (56) + padding (8)
+const double bottomPlayerHeight = 140.0;
+
+/// @deprecated Используйте [bottomPlayerHeight]
+@Deprecated('Используйте bottomPlayerHeight')
+double get kBottomBarTotalHeight => bottomPlayerHeight;
 
 /// Максимальная ширина контента для responsive дизайна
 const double kMaxContentWidth = 1200.0;

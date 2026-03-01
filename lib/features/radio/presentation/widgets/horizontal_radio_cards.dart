@@ -92,7 +92,7 @@ class _HorizontalRadioCardsState extends ConsumerState<HorizontalRadioCards> {
         AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.lg,
-        kBottomBarTotalHeight,
+        bottomPlayerHeight,
       ),
       child: Row(
         children: allStations.map((station) {
@@ -163,7 +163,7 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
         AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.lg,
-        kBottomBarTotalHeight,
+        bottomPlayerHeight,
       ),
       child: Column(
         children: allStations.map((station) {

@@ -11,6 +11,14 @@ class PushNotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
+  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
+    'news_channel',
+    'Информационные уведомления',
+    description: 'Уведомления о новостях и обновлениях',
+    importance: Importance.max,
+    playSound: true,
+  );
+
   static Future<void> initialize() async {
     NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
@@ -32,34 +40,49 @@ class PushNotificationService {
 
     await _localNotifications.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {},
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        // Обработка нажатия на уведомление
+      },
     );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(_channel);
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       Logger.log('Got a message whilst in the foreground!', tag: 'PushNotifications');
-      _showLocalNotification(message);
+      showNotification(message);
+    });
+    
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      Logger.log('A new onMessageOpenedApp event was published!');
     });
   }
 
-  static Future<void> _showLocalNotification(RemoteMessage message) async {
+  static Future<void> showNotification(RemoteMessage message) async {
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
 
-    if (notification != null && android != null) {
+    if (notification != null) {
       await _localNotifications.show(
         id: notification.hashCode,
         title: notification.title,
         body: notification.body,
-        notificationDetails: const NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
-            'news_channel',
-            'Информационные уведомления',
-            channelDescription: 'Уведомления о новостях и обновлениях',
-            importance: Importance.max,
+            _channel.id,
+            _channel.name,
+            channelDescription: _channel.description,
+            importance: _channel.importance,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: android?.smallIcon ?? '@mipmap/ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
           ),
         ),
       );

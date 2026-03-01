@@ -265,10 +265,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               icon: Icons.info_outline_rounded,
               title: 'Информационные уведомления',
               subtitle: 'Новости и обновления',
-              enabled: settings.notificationsEnabled,
+              enabled: settings.newsNotificationsEnabled,
               isDark: isDark,
               onChanged: (value) {
-                ref.read(settingsProvider.notifier).toggleNotifications(value);
+                ref.read(settingsProvider.notifier).toggleNewsNotifications(value);
               },
             ),
           ],

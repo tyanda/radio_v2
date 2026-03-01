@@ -5,36 +5,37 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/utils/logger.dart';
 import 'web_radio_player.dart';
+import '../../../services/audio_handler.dart';
 
 /// Класс для управления воспроизведением радио-потока
-/// На Web используется HTML5 Audio API, на других платформах - just_audio
+/// На Web используется HTML5 Audio API, на других платформах - just_audio через audio_service
 class RadioPlayer {
   final AudioPlayer? player;
   final RadioPlayerInterface? webPlayer;
   final bool isWeb;
+  final RadioAudioHandler? audioHandler;
 
   // Поток для метаданных треков
   final _mediaItemController = StreamController<MediaItem?>.broadcast();
   StreamSubscription? _icyMetadataSubscription;
 
-  RadioPlayer()
+  RadioPlayer({this.audioHandler})
     : isWeb = kIsWeb,
-      player = kIsWeb ? null : AudioPlayer(),
+      player = kIsWeb ? null : (audioHandler?.player ?? AudioPlayer()),
       webPlayer = kIsWeb ? createRadioPlayer() : null;
 
   /// Поток метаданных текущего трека
   Stream<MediaItem?> get mediaItemStream {
-    if (isWeb) {
-      return _mediaItemController.stream;
-    }
-    // Для не-Web платформ, возвращаем наш контроллер
-    // just_audio не имеет mediaItemStream в старых версиях
     return _mediaItemController.stream;
   }
 
   /// Обновление метаданных трека
   void _updateMediaItem(MediaItem? mediaItem) {
     _mediaItemController.add(mediaItem);
+    // Обновляем метаданные в системном уведомлении через audioHandler
+    if (!isWeb && audioHandler != null && mediaItem != null) {
+      audioHandler!.mediaItem.add(mediaItem);
+    }
   }
 
   /// Подписка на ICY-метаданные из потока
@@ -64,6 +65,7 @@ class RadioPlayer {
               title: trackTitle,
               artist: artist,
               album: 'Sakha Radio',
+              artUri: _mediaItemController.stream.value?.artUri,
             ),
           );
         }
@@ -81,43 +83,32 @@ class RadioPlayer {
   }) async {
     try {
       Logger.log("RadioPlayer: Loading stream: $url", tag: 'RadioPlayer');
-      Logger.log(
-        "RadioPlayer: Stream details - Title: $title, Artist: $artist",
-        tag: 'RadioPlayer',
+      
+      final mediaItem = MediaItem(
+        id: url,
+        title: title,
+        artist: artist,
+        album: album ?? 'Sakha Radio',
+        artUri: artUri != null ? Uri.parse(artUri) : null,
       );
 
       if (isWeb) {
         // Web: используем HTML5 Audio
         await webPlayer!.loadStream(url);
         // Для Web эмулируем метаданные
-        _mediaItemController.add(
-          MediaItem(
-            id: url,
-            title: title,
-            artist: artist,
-            album: album ?? 'Sakha Radio',
-            artUri: artUri != null ? Uri.parse(artUri) : null,
-          ),
-        );
+        _updateMediaItem(mediaItem);
       } else {
-        // Mobile/Desktop: используем just_audio
+        // Mobile/Desktop: используем just_audio через audioHandler
         final uri = Uri.parse(url);
-        Logger.log(
-          "RadioPlayer: Parsed URI scheme: ${uri.scheme}, host: ${uri.host}",
-          tag: 'RadioPlayer',
-        );
-
-        final mediaItem = MediaItem(
-          id: url,
-          title: title,
-          artist: artist,
-          album: album ?? 'Sakha Radio',
-          artUri: artUri != null ? Uri.parse(artUri) : null,
-        );
+        
+        // Сначала устанавливаем метаданные в уведомление
+        if (audioHandler != null) {
+          audioHandler!.mediaItem.add(mediaItem);
+        }
 
         await player!.setAudioSource(AudioSource.uri(uri, tag: mediaItem));
 
-        // Обновляем метаданные
+        // Обновляем локальные метаданные
         _updateMediaItem(mediaItem);
 
         // Подписываемся на ICY-метаданные из потока
@@ -125,128 +116,51 @@ class RadioPlayer {
       }
 
       Logger.log("RadioPlayer: Stream loaded successfully", tag: 'RadioPlayer');
-    } on PlayerException catch (e) {
-      Logger.error(
-        "RadioPlayer: PlayerException - Code: ${e.code}, Message: ${e.message}",
-        tag: 'RadioPlayer',
-      );
-      Logger.error(
-        "RadioPlayer: Full error details - ${e.toString()}",
-        tag: 'RadioPlayer',
-      );
-      rethrow;
-    } on FormatException catch (e) {
-      Logger.error(
-        "RadioPlayer: URL FormatException - ${e.message}",
-        tag: 'RadioPlayer',
-      );
-      rethrow;
     } catch (e) {
-      Logger.error("RadioPlayer: Unexpected error: $e", tag: 'RadioPlayer');
-      Logger.error(
-        "RadioPlayer: Error type: ${e.runtimeType}",
-        tag: 'RadioPlayer',
-      );
+      Logger.error("RadioPlayer error: $e", tag: 'RadioPlayer');
       rethrow;
     }
   }
 
   /// Управление воспроизведением
   Future<void> play() async {
-    try {
-      Logger.log(
-        "RadioPlayer: Attempting to play, isWeb: $isWeb",
-        tag: 'RadioPlayer',
-      );
-
-      if (isWeb) {
-        // Для Web используем resume() который может перезагрузить поток
-        await webPlayer!.resume();
-      } else {
-        await player!.play();
-      }
-
-      Logger.log("RadioPlayer: Playing", tag: 'RadioPlayer');
-    } catch (e) {
-      Logger.error("RadioPlayer: Play failed: $e", tag: 'RadioPlayer');
-      Logger.error(
-        "RadioPlayer: Play error details - ${e.toString()}",
-        tag: 'RadioPlayer',
-      );
-      rethrow;
+    if (isWeb) {
+      await webPlayer!.resume();
+    } else {
+      await player!.play();
     }
   }
 
   Future<void> pause() async {
-    try {
-      Logger.log("RadioPlayer: Pausing", tag: 'RadioPlayer');
-      if (isWeb) {
-        await webPlayer!.pause();
-      } else {
-        await player!.pause();
-      }
-      Logger.log("RadioPlayer: Paused", tag: 'RadioPlayer');
-    } catch (e) {
-      Logger.error("RadioPlayer: Pause failed: $e", tag: 'RadioPlayer');
-      rethrow;
+    if (isWeb) {
+      await webPlayer!.pause();
+    } else {
+      await player!.pause();
     }
   }
 
   Future<void> stop() async {
-    try {
-      Logger.log("RadioPlayer: Stopping player", tag: 'RadioPlayer');
-      if (isWeb) {
-        await webPlayer!.stop();
-      } else {
-        await player!.stop();
-      }
-      Logger.log("RadioPlayer: Stopped", tag: 'RadioPlayer');
-    } catch (e) {
-      Logger.error("RadioPlayer: Stop failed: $e", tag: 'RadioPlayer');
-      Logger.error(
-        "RadioPlayer: Stop error details - ${e.toString()}",
-        tag: 'RadioPlayer',
-      );
-      rethrow;
+    if (isWeb) {
+      await webPlayer!.stop();
+    } else {
+      await player!.stop();
     }
   }
 
   /// Установка громкости (0.0 - 1.0)
   Future<void> setVolume(double volume) async {
-    try {
-      final clampedVolume = volume.clamp(0.0, 1.0);
-      if (isWeb) {
-        await webPlayer!.setVolume(clampedVolume);
-      } else {
-        await player!.setVolume(clampedVolume);
-      }
-      Logger.log(
-        "RadioPlayer: Volume set to $clampedVolume",
-        tag: 'RadioPlayer',
-      );
-    } catch (e) {
-      Logger.error("RadioPlayer: Set volume failed: $e", tag: 'RadioPlayer');
-      rethrow;
+    final clampedVolume = volume.clamp(0.0, 1.0);
+    if (isWeb) {
+      await webPlayer!.setVolume(clampedVolume);
+    } else {
+      await player!.setVolume(clampedVolume);
     }
   }
 
   /// Скорость воспроизведения (0.5 - 2.0) - только для не-Web
   Future<void> setSpeed(double speed) async {
-    if (isWeb) {
-      Logger.log(
-        "RadioPlayer: setSpeed not supported on Web",
-        tag: 'RadioPlayer',
-      );
-      return;
-    }
-
-    try {
-      final clampedSpeed = speed.clamp(0.5, 2.0);
-      await player!.setSpeed(clampedSpeed);
-      Logger.log("RadioPlayer: Speed set to $clampedSpeed", tag: 'RadioPlayer');
-    } catch (e) {
-      Logger.error("RadioPlayer: Set speed failed: $e", tag: 'RadioPlayer');
-      rethrow;
+    if (!isWeb) {
+      await player!.setSpeed(speed.clamp(0.5, 2.0));
     }
   }
 
@@ -281,21 +195,23 @@ class RadioPlayer {
 
   /// Очистка ресурсов
   Future<void> dispose() async {
-    try {
-      Logger.log("RadioPlayer: Disposing", tag: 'RadioPlayer');
-      if (isWeb) {
-        await webPlayer!.dispose();
-        await _icyMetadataSubscription?.cancel();
-        await _mediaItemController.close();
-      } else {
-        await player!.stop();
-        await player!.dispose();
-        await _icyMetadataSubscription?.cancel();
-        await _mediaItemController.close();
-      }
-      Logger.log("RadioPlayer: Disposed", tag: 'RadioPlayer');
-    } catch (e) {
-      Logger.error("RadioPlayer: Dispose failed: $e", tag: 'RadioPlayer');
+    await _icyMetadataSubscription?.cancel();
+    if (isWeb) {
+      await webPlayer!.dispose();
+    } else {
+      // Мы не диспозим player здесь, так как он общий для audioHandler
+      // Но можем остановить поток
+      await player!.stop();
     }
+    await _mediaItemController.close();
+  }
+}
+
+// Helper to get value from stream
+extension StreamValueExtension<T> on Stream<T> {
+  T? get value {
+    T? latestValue;
+    listen((v) => latestValue = v).cancel();
+    return latestValue;
   }
 }

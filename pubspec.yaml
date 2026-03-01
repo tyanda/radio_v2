@@ -45,7 +45,7 @@ dependencies:
   
   # --- ФУНКЦИОНАЛ РАДИО ---
   just_audio: ^0.10.5
-  audio_service: ^0.18.17
+  audio_service: ^0.18.18
   just_audio_background: ^0.0.1-beta.17
   
   marquee: ^2.2.3
@@ -75,6 +75,8 @@ dependencies:
   # --- ШРИФТЫ ---
   google_fonts: ^6.2.1
   palette_generator: ^0.3.3+7
+  firebase_messaging: ^16.1.1
+  flutter_local_notifications: ^20.1.0
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,8 @@ import 'package:radio_v2/core/providers/weather_provider.dart';
 import 'package:radio_v2/core/utils/responsive_utils.dart';
 import 'package:radio_v2/core/utils/snackbar_helper.dart';
 import 'package:radio_v2/core/design/app_constants.dart';
+import 'package:radio_v2/core/design/design_tokens.dart';
+import 'package:radio_v2/core/providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/weather_model.dart';
 
@@ -66,26 +68,26 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   Widget build(BuildContext context) {
     super.build(context); // Требуется для AutomaticKeepAliveClientMixin
 
+    final isDark = ref.watch(themeProvider).isDarkTheme;
     final weatherAsync = ref.watch(weatherProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
       body: weatherAsync.when(
         data: (weatherData) => weatherData != null
-            ? _buildWeatherContent(weatherData)
-            : _buildLoadingView(),
-        loading: () => _buildLoadingView(),
-        error: (err, _) => _buildErrorView(err.toString()),
+            ? _buildWeatherContent(weatherData, isDark)
+            : _buildLoadingView(isDark),
+        loading: () => _buildLoadingView(isDark),
+        error: (err, _) => _buildErrorView(err.toString(), isDark),
       ),
     );
   }
 
   // Основной контент погоды с горизонтальным списком
-  Widget _buildWeatherContent(WeatherData weatherData) {
+  Widget _buildWeatherContent(WeatherData weatherData, bool isDark) {
     final current = weatherData.current;
     final forecastList = weatherData.forecast;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final sunrise = current.sys.sunrise > 0
         ? DateTime.fromMillisecondsSinceEpoch(
@@ -556,15 +558,19 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     );
   }
 
-  Widget _buildLoadingView() {
+  Widget _buildLoadingView(bool isDark) {
     return Center(
-      child: CircularProgressIndicator(color: Theme.of(context).primaryColor),
+      child: CircularProgressIndicator(
+        color: Theme.of(context).primaryColor,
+        backgroundColor: isDark 
+            ? AppColors.cardBackground 
+            : AppColors.backgroundLight,
+      ),
     );
   }
 
-  Widget _buildErrorView(String error) {
+  Widget _buildErrorView(String error, bool isDark) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Показываем snackbar с ошибкой
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -585,7 +591,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           Text(
             AppLocalizations.of(context).error_network,
             style: GoogleFonts.inter(
-              color: isDark ? Colors.white : theme.colorScheme.onSurface,
+              color: isDark ? AppColors.textPrimary : AppColors.textPrimaryLight,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -593,7 +599,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           FilledButton(
             onPressed: () =>
                 ref.read(weatherProvider.notifier).refreshWeather(),
-            style: FilledButton.styleFrom(backgroundColor: theme.primaryColor),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.black,
+            ),
             child: Text(
               AppLocalizations.of(context).retry,
               style: GoogleFonts.inter(

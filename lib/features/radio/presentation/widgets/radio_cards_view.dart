@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/design/app_constants.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/providers/radio_providers.dart';
 import '../../../../core/providers.dart';
@@ -239,7 +240,12 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   ) {
     return GridView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 140.0),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        kBottomBarTotalHeight,
+      ),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.lg,
@@ -298,7 +304,12 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 140.0),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        kBottomBarTotalHeight,
+      ),
       child: Column(
         children: stations.asMap().entries.map((entry) {
           final index = entry.key;

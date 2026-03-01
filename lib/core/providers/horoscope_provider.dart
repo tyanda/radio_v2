@@ -54,15 +54,17 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
 
   Future<void> _loadHoroscope(ZodiacSign sign) async {
     try {
+      state = state.copyWith(isLoading: true, errorMessage: null);
       Logger.log(
         'Loading horoscope for: ${sign.name}',
         tag: 'HoroscopeProvider',
       );
       final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
-      Logger.log(
-        'Horoscope loaded: ${horoscopeData.source}',
-        tag: 'HoroscopeProvider',
-      );
+
+      if (horoscopeData.text.isEmpty) {
+        throw Exception('Пустой ответ от сервера');
+      }
+
       state = state.copyWith(
         horoscopeData: horoscopeData,
         isLoading: false,
@@ -70,25 +72,27 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
       );
     } catch (e) {
       Logger.error('Failed to load horoscope: $e', tag: 'HoroscopeProvider');
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Не удалось загрузить прогноз. Попробуйте позже.',
+      );
     }
   }
 
-  void selectSign(ZodiacSign sign) async {
-    // Обновляем выбранный знак
+  Future<void> refresh() async {
+    await HoroscopeService.clearCache();
+    await _loadHoroscope(state.selectedSign);
+  }
+
+  void selectSign(ZodiacSign sign) {
+    if (state.selectedSign.id == sign.id && state.horoscopeData != null) return;
+
     state = state.copyWith(
       selectedSign: sign,
       isLoading: true,
       errorMessage: null,
     );
-
-    // Загружаем гороскоп для нового знака
-    try {
-      final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
-      state = state.copyWith(horoscopeData: horoscopeData, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-    }
+    _loadHoroscope(sign);
   }
 }
 

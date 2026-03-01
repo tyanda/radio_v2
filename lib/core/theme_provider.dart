@@ -56,13 +56,13 @@ class ThemeNotifier extends Notifier<ThemeState> {
     await prefs.setBool(_themeKey, newState);
   }
 
-  ShadThemeData get shadcnTheme {
-    // Кастомная цветовая схема с жёлтым акцентом как на Android
+  ShadThemeData getShadcnTheme(Color primaryColor) {
+    // Кастомная цветовая схема с динамическим акцентом
     return state.isDarkTheme
         ? ShadThemeData(
             brightness: Brightness.dark,
             colorScheme: ShadColorScheme(
-              primary: AppColors.primary,
+              primary: primaryColor,
               primaryForeground: Colors.black,
               background: AppColors.background,
               foreground: AppColors.textPrimary,
@@ -71,56 +71,56 @@ class ThemeNotifier extends Notifier<ThemeState> {
               border: AppColors.divider,
               muted: AppColors.surfaceVariant,
               mutedForeground: AppColors.textSecondary,
-              accent: AppColors.primaryLight,
-              accentForeground: Colors.black,
+              accent: primaryColor.withValues(alpha: 0.2),
+              accentForeground: Colors.white,
               destructive: AppColors.error,
               destructiveForeground: Colors.white,
               input: AppColors.surfaceVariant,
               popover: AppColors.cardBackground,
               popoverForeground: AppColors.textPrimary,
-              ring: AppColors.primary,
+              ring: primaryColor,
               secondary: AppColors.primaryDark,
               secondaryForeground: Colors.black,
-              selection: AppColors.primary.withValues(alpha: 0.3),
+              selection: primaryColor.withValues(alpha: 0.3),
             ),
           )
         : ShadThemeData(
             brightness: Brightness.light,
             colorScheme: ShadColorScheme(
-              primary: AppColors.primary,
+              primary: primaryColor,
               primaryForeground: Colors.black,
-              background: AppColors.backgroundLight, // #F5F5F7
+              background: AppColors.backgroundLight,
               foreground: AppColors.textPrimaryLight,
               card: Colors.white,
               cardForeground: AppColors.textPrimaryLight,
               border: AppColors.dividerLight,
               muted: AppColors.surfaceVariantLight,
               mutedForeground: AppColors.textSecondaryLight,
-              accent: AppColors.primaryLight,
+              accent: primaryColor.withValues(alpha: 0.1),
               accentForeground: Colors.black,
               destructive: AppColors.error,
               destructiveForeground: Colors.white,
               input: AppColors.surfaceVariantLight,
               popover: Colors.white,
               popoverForeground: AppColors.textPrimaryLight,
-              ring: AppColors.primary,
+              ring: primaryColor,
               secondary: AppColors.primaryDark,
               secondaryForeground: Colors.black,
-              selection: AppColors.primary.withValues(alpha: 0.3),
+              selection: primaryColor.withValues(alpha: 0.3),
             ),
           );
   }
 
-  ThemeData get themeData {
+  ThemeData getThemeData(Color primaryColor) {
     if (state.isDarkTheme) {
       return ThemeData.dark().copyWith(
-        primaryColor: AppColors.primary,
+        primaryColor: primaryColor,
         scaffoldBackgroundColor: AppColors.background,
         cardColor: AppColors.cardBackground,
         dividerColor: AppColors.divider,
         textTheme: const TextTheme().apply(fontFamily: 'Inter'),
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
+        colorScheme: ColorScheme.dark(
+          primary: primaryColor,
           secondary: AppColors.primaryDark,
           surface: AppColors.cardBackground,
           onPrimary: Colors.black,
@@ -129,7 +129,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
       );
     } else {
       return ThemeData.light().copyWith(
-        primaryColor: AppColors.primary,
+        primaryColor: primaryColor,
         canvasColor: AppColors.primaryDark,
         scaffoldBackgroundColor: AppColors.backgroundLight,
         cardColor: Colors.white,
@@ -144,8 +144,8 @@ class ThemeNotifier extends Notifier<ThemeState> {
               bodyColor: AppColors.textPrimaryLight,
               displayColor: AppColors.textPrimaryLight,
             ),
-        colorScheme: const ColorScheme.light(
-          primary: AppColors.primary,
+        colorScheme: ColorScheme.light(
+          primary: primaryColor,
           secondary: AppColors.primaryDark,
           surface: Colors.white,
           error: AppColors.error,

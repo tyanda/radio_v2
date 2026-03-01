@@ -74,6 +74,7 @@ dependencies:
 
   # --- ШРИФТЫ ---
   google_fonts: ^6.2.1
+  palette_generator: ^0.3.3+7
 
 dev_dependencies:
   flutter_test:

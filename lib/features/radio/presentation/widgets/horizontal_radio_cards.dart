@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/design/app_constants.dart';
 import '../../../../core/providers/radio_providers.dart';
 import '../../../../core/providers.dart';
 import '../providers/player_provider.dart';
@@ -91,7 +92,7 @@ class _HorizontalRadioCardsState extends ConsumerState<HorizontalRadioCards> {
         AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.lg,
-        140.0,
+        kBottomBarTotalHeight,
       ),
       child: Row(
         children: allStations.map((station) {
@@ -162,7 +163,7 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
         AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.lg,
-        140.0,
+        kBottomBarTotalHeight,
       ),
       child: Column(
         children: allStations.map((station) {

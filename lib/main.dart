@@ -11,6 +11,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'core/config.dart';
 import 'core/providers.dart';
+import 'core/providers/dynamic_theme_provider.dart';
 import 'core/utils/logger.dart';
 import 'features/home/home_screen.dart';
 import 'firebase_options.dart';
@@ -84,52 +85,47 @@ class MyApp extends StatelessWidget {
     return ProviderScope(
       child: Consumer(
         builder: (context, ref, child) {
-          final themeState = ref.watch(themeProvider);
+          // Инициализируем менеджер динамической темы
+          ref.watch(dynamicThemeManagerProvider);
+
           final themeNotifier = ref.read(themeProvider.notifier);
-          final isDark = themeState.isDarkTheme;
+          final targetColor = ref.watch(dynamicColorProvider);
 
-          // Динамическое обновление яркости иконок навигации
-          SystemChrome.setSystemUIOverlayStyle(
-            SystemUiOverlayStyle(
-              systemNavigationBarColor: Colors.transparent,
-              systemNavigationBarDividerColor: Colors.transparent,
-              systemNavigationBarIconBrightness: isDark
-                  ? Brightness.light
-                  : Brightness.dark,
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness: isDark
-                  ? Brightness.light
-                  : Brightness.dark,
-            ),
-          );
+          return TweenAnimationBuilder<Color?>(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOut,
+            tween: ColorTween(end: targetColor),
+            builder: (context, color, child) {
+              final animatedColor = color ?? targetColor;
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              // Определяем текущую ориентацию
-              final orientation = MediaQuery.of(context).orientation;
-              final isLandscape = orientation == Orientation.landscape;
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final orientation = MediaQuery.of(context).orientation;
+                  final isLandscape = orientation == Orientation.landscape;
 
-              return ShadTheme(
-                data: themeNotifier.shadcnTheme,
-                child: MaterialApp(
-                  title: 'Sakha Radio',
-                  debugShowCheckedModeBanner: false,
-                  theme: themeNotifier.themeData,
-                  localizationsDelegates: const [
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                    AppLocalizations.delegate,
-                  ],
-                  supportedLocales: const [Locale('ru'), Locale('en')],
-                  locale: const Locale('ru'),
-                  home: kIsWeb
-                      ? OrientationHandler(
-                          isLandscape: isLandscape,
-                          child: const AppInitializer(),
-                        )
-                      : const HomeScreen(),
-                ),
+                  return ShadTheme(
+                    data: themeNotifier.getShadcnTheme(animatedColor),
+                    child: MaterialApp(
+                      title: 'Sakha Radio',
+                      debugShowCheckedModeBanner: false,
+                      theme: themeNotifier.getThemeData(animatedColor),
+                      localizationsDelegates: const [
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                        AppLocalizations.delegate,
+                      ],
+                      supportedLocales: const [Locale('ru'), Locale('en')],
+                      locale: const Locale('ru'),
+                      home: kIsWeb
+                          ? OrientationHandler(
+                              isLandscape: isLandscape,
+                              child: const AppInitializer(),
+                            )
+                          : const HomeScreen(),
+                    ),
+                  );
+                },
               );
             },
           );

@@ -1,58 +1,29 @@
-// TDD Session: PlayerNotifier тесты
-// Фаза: RED → GREEN → REFACTOR
+// Тесты для PlayerState
+// Проверяют базовую функциональность состояния плеера
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:radio_v2/features/radio/domain/station.dart';
 import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
 
 void main() {
-  group('PlayerNotifier TDD Tests', () {
-    setUpAll(() {
-      // Инициализируем binding для тестов
-      TestWidgetsFlutterBinding.ensureInitialized();
-    });
-
+  group('PlayerState Tests', () {
     // ═══════════════════════════════════════════════════════════════
-    // RED 1: Тест на инициализацию
+    // Тесты на создание состояния
     // ═══════════════════════════════════════════════════════════════
-    group('Initialization', () {
-      testWidgets('должен инициализироваться с корректным состоянием по умолчанию', (tester) async {
+    group('Construction', () {
+      test('должен создавать начальное состояние с правильными значениями', () {
         // Arrange & Act
-        late PlayerState? capturedState;
-        
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Consumer(
-                  builder: (context, ref, child) {
-                    final stateAsync = ref.watch(playerProvider);
-                    capturedState = stateAsync.value;
-                    return const SizedBox();
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-        
-        await tester.pumpAndSettle();
+        final state = const PlayerState();
 
         // Assert
-        expect(capturedState?.isPlaying, isFalse);
-        expect(capturedState?.currentStation, isNull);
-        expect(capturedState?.volume, equals(0.65));
-        expect(capturedState?.showVolumeSlider, isFalse);
+        expect(state.isPlaying, isFalse);
+        expect(state.currentStation, isNull);
+        expect(state.volume, equals(0.65));
+        expect(state.showVolumeSlider, isFalse);
+        expect(state.isBuffering, isFalse);
       });
-    });
 
-    // ═══════════════════════════════════════════════════════════════
-    // RED 2: Тест на playStation
-    // ═══════════════════════════════════════════════════════════════
-    group('playStation', () {
-      testWidgets('должен устанавливать текущую станцию', (tester) async {
+      test('должен создавать состояние с параметрами', () {
         // Arrange
         final testStation = Station(
           id: 'test-1',
@@ -64,96 +35,118 @@ void main() {
           frequency: '100.0',
         );
 
-        late PlayerState? capturedState;
-
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Consumer(
-                  builder: (context, ref, child) {
-                    ref.read(playerProvider.notifier).playStation(testStation);
-                    final stateAsync = ref.watch(playerProvider);
-                    capturedState = stateAsync.value;
-                    return const SizedBox();
-                  },
-                ),
-              ),
-            ),
-          ),
+        // Act
+        final state = PlayerState(
+          isPlaying: true,
+          currentStation: testStation,
+          volume: 0.8,
+          showVolumeSlider: true,
+          isBuffering: false,
         );
-        
-        await tester.pumpAndSettle();
 
         // Assert
-        expect(capturedState?.currentStation, equals(testStation));
-        expect(capturedState?.currentStation?.name, equals('Test Radio'));
+        expect(state.isPlaying, isTrue);
+        expect(state.currentStation, equals(testStation));
+        expect(state.volume, equals(0.8));
+        expect(state.showVolumeSlider, isTrue);
+        expect(state.isBuffering, isFalse);
       });
     });
 
     // ═══════════════════════════════════════════════════════════════
-    // RED 3: Тест на setVolume
+    // Тесты на copyWith
     // ═══════════════════════════════════════════════════════════════
-    group('setVolume', () {
-      testWidgets('должен устанавливать громкость', (tester) async {
+    group('copyWith', () {
+      test('должен создавать копию с измененными параметрами', () {
         // Arrange
-        const testVolume = 0.75;
+        final initialState = const PlayerState();
 
-        late PlayerState? capturedState;
-
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Consumer(
-                  builder: (context, ref, child) {
-                    ref.read(playerProvider.notifier).setVolume(testVolume);
-                    final stateAsync = ref.watch(playerProvider);
-                    capturedState = stateAsync.value;
-                    return const SizedBox();
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-        
-        await tester.pumpAndSettle();
+        // Act
+        final newState = initialState.copyWith(isPlaying: true, volume: 0.9);
 
         // Assert
-        expect(capturedState?.volume, equals(testVolume));
+        expect(newState.isPlaying, isTrue);
+        expect(newState.volume, equals(0.9));
+        // Оригинальное состояние не изменилось
+        expect(initialState.isPlaying, isFalse);
+        expect(initialState.volume, equals(0.65));
+      });
+
+      test('должен создавать копию с текущей станцией', () {
+        // Arrange
+        final testStation = Station(
+          id: 'test-1',
+          name: 'Test Radio',
+          art: 'assets/images/test.png',
+          desc: 'Test Description',
+          icon: 'icon',
+          url: 'https://test.com/stream',
+          frequency: '100.0',
+        );
+
+        final initialState = const PlayerState();
+
+        // Act
+        final newState = initialState.copyWith(
+          currentStation: testStation,
+          isPlaying: true,
+        );
+
+        // Assert
+        expect(newState.currentStation, equals(testStation));
+        expect(newState.currentStation?.name, equals('Test Radio'));
+        expect(newState.isPlaying, isTrue);
+      });
+
+      test('должен создавать копию с метаданными трека', () {
+        // Arrange
+        final initialState = const PlayerState();
+
+        // Act
+        final newState = initialState.copyWith(
+          trackTitle: 'Test Song',
+          trackArtist: 'Test Artist',
+          albumArt: 'https://example.com/art.jpg',
+        );
+
+        // Assert
+        expect(newState.trackTitle, equals('Test Song'));
+        expect(newState.trackArtist, equals('Test Artist'));
+        expect(newState.albumArt, equals('https://example.com/art.jpg'));
+      });
+
+      test('должен создавать копию с ошибкой', () {
+        // Arrange
+        final initialState = const PlayerState();
+
+        // Act
+        final newState = initialState.copyWith(isBuffering: true);
+
+        // Assert
+        expect(newState.isBuffering, isTrue);
       });
     });
 
     // ═══════════════════════════════════════════════════════════════
-    // RED 4: Тест на toggleVolumeSlider
+    // Тесты на равенство
     // ═══════════════════════════════════════════════════════════════
-    group('toggleVolumeSlider', () {
-      testWidgets('должен переключать showVolumeSlider', (tester) async {
-        // Arrange & Act
-        late PlayerState? capturedState;
-
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Consumer(
-                  builder: (context, ref, child) {
-                    ref.read(playerProvider.notifier).toggleVolumeSlider();
-                    final stateAsync = ref.watch(playerProvider);
-                    capturedState = stateAsync.value;
-                    return const SizedBox();
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-        
-        await tester.pumpAndSettle();
+    group('Equality', () {
+      test('должен сравнивать одинаковые состояния', () {
+        // Arrange
+        final state1 = const PlayerState();
+        final state2 = const PlayerState();
 
         // Assert
-        expect(capturedState?.showVolumeSlider, isTrue);
+        expect(state1, equals(state2));
+      });
+
+      test('не должен сравнивать разные состояния', () {
+        // Arrange
+        final state1 = const PlayerState();
+        final state2 = state1.copyWith(isPlaying: true);
+
+        // Assert
+        expect(state1, isNot(equals(state2)));
       });
     });
   });

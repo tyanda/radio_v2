@@ -34,69 +34,99 @@ class WebRadioPlayer implements RadioPlayerInterface {
   void _setupListeners() {
     if (_audio == null) return;
 
-    _audio!.addEventListener('play', (web.Event event) {
-      Logger.log("WebRadioPlayer: onplay", tag: 'WebRadioPlayer');
-      _isPlaying = true;
-      _isBuffering = false;
-      _playerStateController.add(_isPlaying);
-      _bufferingController.add(_isBuffering);
-    }.toJS);
+    _audio!.addEventListener(
+      'play',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: onplay", tag: 'WebRadioPlayer');
+        _isPlaying = true;
+        _isBuffering = false;
+        _playerStateController.add(_isPlaying);
+        _bufferingController.add(_isBuffering);
+      }.toJS,
+    );
 
-    _audio!.addEventListener('pause', (web.Event event) {
-      Logger.log("WebRadioPlayer: onpause", tag: 'WebRadioPlayer');
-      _isPlaying = false;
-      _playerStateController.add(_isPlaying);
-    }.toJS);
+    _audio!.addEventListener(
+      'pause',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: onpause", tag: 'WebRadioPlayer');
+        _isPlaying = false;
+        _playerStateController.add(_isPlaying);
+      }.toJS,
+    );
 
-    _audio!.addEventListener('waiting', (web.Event event) {
-      Logger.log("WebRadioPlayer: onwaiting - buffering", tag: 'WebRadioPlayer');
-      _isBuffering = true;
-      _bufferingController.add(_isBuffering);
-    }.toJS);
+    _audio!.addEventListener(
+      'waiting',
+      (web.Event event) {
+        Logger.log(
+          "WebRadioPlayer: onwaiting - buffering",
+          tag: 'WebRadioPlayer',
+        );
+        _isBuffering = true;
+        _bufferingController.add(_isBuffering);
+      }.toJS,
+    );
 
-    _audio!.addEventListener('playing', (web.Event event) {
-      Logger.log("WebRadioPlayer: onplaying - ready", tag: 'WebRadioPlayer');
-      _isBuffering = false;
-      _bufferingController.add(_isBuffering);
-    }.toJS);
+    _audio!.addEventListener(
+      'playing',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: onplaying - ready", tag: 'WebRadioPlayer');
+        _isBuffering = false;
+        _bufferingController.add(_isBuffering);
+      }.toJS,
+    );
 
-    _audio!.addEventListener('error', (web.Event event) {
-      final error = _audio?.error;
-      final errorMessage = error != null
-          ? "WebRadioPlayer: Error ${error.code}: ${error.message}"
-          : "WebRadioPlayer: Unknown error";
-      Logger.error(errorMessage, tag: 'WebRadioPlayer');
-      _errorController.add(errorMessage);
-      _isBuffering = false;
-      _bufferingController.add(_isBuffering);
-    }.toJS);
+    _audio!.addEventListener(
+      'error',
+      (web.Event event) {
+        final error = _audio?.error;
+        final errorMessage = error != null
+            ? "WebRadioPlayer: Error ${error.code}: ${error.message}"
+            : "WebRadioPlayer: Unknown error";
+        Logger.error(errorMessage, tag: 'WebRadioPlayer');
+        _errorController.add(errorMessage);
+        _isBuffering = false;
+        _bufferingController.add(_isBuffering);
+      }.toJS,
+    );
 
-    _audio!.addEventListener('canplay', (web.Event event) {
-      Logger.log("WebRadioPlayer: oncanplay", tag: 'WebRadioPlayer');
-      _isBuffering = false;
-      _isLoaded = true;
-      _bufferingController.add(_isBuffering);
-      _loadCompleter?.complete();
-      _loadCompleter = null;
-    }.toJS);
+    _audio!.addEventListener(
+      'canplay',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: oncanplay", tag: 'WebRadioPlayer');
+        _isBuffering = false;
+        _isLoaded = true;
+        _bufferingController.add(_isBuffering);
+        _loadCompleter?.complete();
+        _loadCompleter = null;
+      }.toJS,
+    );
 
-    _audio!.addEventListener('canplaythrough', (web.Event event) {
-      Logger.log("WebRadioPlayer: oncanplaythrough", tag: 'WebRadioPlayer');
-      _isBuffering = false;
-      _isLoaded = true;
-      _bufferingController.add(_isBuffering);
-      _loadCompleter?.complete();
-      _loadCompleter = null;
-    }.toJS);
+    _audio!.addEventListener(
+      'canplaythrough',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: oncanplaythrough", tag: 'WebRadioPlayer');
+        _isBuffering = false;
+        _isLoaded = true;
+        _bufferingController.add(_isBuffering);
+        _loadCompleter?.complete();
+        _loadCompleter = null;
+      }.toJS,
+    );
 
-    _audio!.addEventListener('loadeddata', (web.Event event) {
-      Logger.log("WebRadioPlayer: onloadeddata", tag: 'WebRadioPlayer');
-      _isLoaded = true;
-    }.toJS);
+    _audio!.addEventListener(
+      'loadeddata',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: onloadeddata", tag: 'WebRadioPlayer');
+        _isLoaded = true;
+      }.toJS,
+    );
 
-    _audio!.addEventListener('loadedmetadata', (web.Event event) {
-      Logger.log("WebRadioPlayer: onloadedmetadata", tag: 'WebRadioPlayer');
-    }.toJS);
+    _audio!.addEventListener(
+      'loadedmetadata',
+      (web.Event event) {
+        Logger.log("WebRadioPlayer: onloadedmetadata", tag: 'WebRadioPlayer');
+      }.toJS,
+    );
   }
 
   @override
@@ -114,17 +144,35 @@ class WebRadioPlayer implements RadioPlayerInterface {
       _audio!.src = url;
       _audio!.load();
 
-      Logger.log("WebRadioPlayer: Waiting for canplay event...", tag: 'WebRadioPlayer');
+      Logger.log(
+        "WebRadioPlayer: Waiting for canplay event...",
+        tag: 'WebRadioPlayer',
+      );
+
+      // Небольшая задержка перед ожиданием
+      await Future.delayed(const Duration(milliseconds: 100));
+
       await _loadCompleter!.future.timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 15),
         onTimeout: () {
-          Logger.error("WebRadioPlayer: Timeout waiting for canplay", tag: 'WebRadioPlayer');
+          Logger.error(
+            "WebRadioPlayer: Timeout waiting for canplay",
+            tag: 'WebRadioPlayer',
+          );
+          _isBuffering = false;
+          _bufferingController.add(_isBuffering);
           throw TimeoutException("Stream loading timeout");
         },
       );
-      Logger.log("WebRadioPlayer: Stream is ready to play", tag: 'WebRadioPlayer');
+      Logger.log(
+        "WebRadioPlayer: Stream is ready to play",
+        tag: 'WebRadioPlayer',
+      );
     } catch (e) {
-      Logger.error("WebRadioPlayer: loadStream error: $e", tag: 'WebRadioPlayer');
+      Logger.error(
+        "WebRadioPlayer: loadStream error: $e",
+        tag: 'WebRadioPlayer',
+      );
       _isBuffering = false;
       _isLoaded = false;
       _bufferingController.add(_isBuffering);
@@ -137,10 +185,16 @@ class WebRadioPlayer implements RadioPlayerInterface {
     if (_audio == null) throw Exception("Audio element not initialized");
 
     try {
-      Logger.log("WebRadioPlayer: Attempting to play, isLoaded: $_isLoaded", tag: 'WebRadioPlayer');
+      Logger.log(
+        "WebRadioPlayer: Attempting to play, isLoaded: $_isLoaded",
+        tag: 'WebRadioPlayer',
+      );
 
       if (!_isLoaded) {
-        Logger.log("WebRadioPlayer: Not loaded yet, attempting to play anyway", tag: 'WebRadioPlayer');
+        Logger.log(
+          "WebRadioPlayer: Not loaded yet, attempting to play anyway",
+          tag: 'WebRadioPlayer',
+        );
       }
 
       await _audio!.play().toDart;
@@ -179,7 +233,10 @@ class WebRadioPlayer implements RadioPlayerInterface {
         await _audio!.play().toDart;
         _isPlaying = true;
         _playerStateController.add(_isPlaying);
-        Logger.log("WebRadioPlayer: Resumed from loaded state", tag: 'WebRadioPlayer');
+        Logger.log(
+          "WebRadioPlayer: Resumed from loaded state",
+          tag: 'WebRadioPlayer',
+        );
         return;
       }
 
@@ -188,7 +245,10 @@ class WebRadioPlayer implements RadioPlayerInterface {
         await _audio!.play().toDart;
         _isPlaying = true;
         _playerStateController.add(_isPlaying);
-        Logger.log("WebRadioPlayer: Resumed by reloading stream", tag: 'WebRadioPlayer');
+        Logger.log(
+          "WebRadioPlayer: Resumed by reloading stream",
+          tag: 'WebRadioPlayer',
+        );
       }
     } catch (e) {
       Logger.error("WebRadioPlayer: resume error: $e", tag: 'WebRadioPlayer');
@@ -202,16 +262,30 @@ class WebRadioPlayer implements RadioPlayerInterface {
 
     try {
       Logger.log("WebRadioPlayer: Stopping", tag: 'WebRadioPlayer');
+
+      // Сначала pause, потом очистка
       _audio!.pause();
+
+      // Небольшая задержка перед очисткой
+      await Future.delayed(const Duration(milliseconds: 50));
+
       _audio!.src = '';
       _audio!.load();
+
       _isPlaying = false;
       _isBuffering = false;
       _isLoaded = false;
-      _loadCompleter?.complete();
+
+      // Завершаем completer если есть
+      if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+        _loadCompleter!.complete();
+      }
       _loadCompleter = null;
+
       _playerStateController.add(_isPlaying);
       _bufferingController.add(_isBuffering);
+
+      Logger.log("WebRadioPlayer: Stopped", tag: 'WebRadioPlayer');
     } catch (e) {
       Logger.error("WebRadioPlayer: stop error: $e", tag: 'WebRadioPlayer');
       rethrow;
@@ -224,7 +298,10 @@ class WebRadioPlayer implements RadioPlayerInterface {
 
     final clampedVolume = volume.clamp(0.0, 1.0);
     _audio!.volume = clampedVolume;
-    Logger.log("WebRadioPlayer: Volume set to $clampedVolume", tag: 'WebRadioPlayer');
+    Logger.log(
+      "WebRadioPlayer: Volume set to $clampedVolume",
+      tag: 'WebRadioPlayer',
+    );
   }
 
   @override

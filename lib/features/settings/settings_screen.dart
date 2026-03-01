@@ -21,12 +21,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.background
+          : AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
+        backgroundColor: isDark
+            ? AppColors.background
+            : AppColors.backgroundLight,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -90,11 +97,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Center(
             child: Column(
               children: [
-                Image.asset(
-                  'assets/images/load.png',
-                  width: 60,
-                  height: 60,
-                ),
+                Image.asset('assets/images/load.png', width: 60, height: 60),
                 SizedBox(height: AppSpacing.md),
                 Text(
                   'SakhaLive Radio',
@@ -166,11 +169,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             color: AppColors.primary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 22,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 22),
         ),
         title: Text(
           title,
@@ -190,10 +189,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               )
             : null,
-        trailing: trailing ?? Icon(
-          Icons.chevron_right_rounded,
-          color: isDark ? Colors.white54 : Colors.black54,
-        ),
+        trailing:
+            trailing ??
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
         onTap: onTap,
       ),
     );
@@ -208,7 +209,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('SakhaLive Radio', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+            Text(
+              'SakhaLive Radio',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            ),
             SizedBox(height: 8),
             Text('Версия: 1.0.1'),
             SizedBox(height: 8),
@@ -295,11 +299,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           color: AppColors.primary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(AppEffects.radiusMd),
         ),
-        child: Icon(
-          icon,
-          color: AppColors.primary,
-          size: 20,
-        ),
+        child: Icon(icon, color: AppColors.primary, size: 20),
       ),
       title: Text(
         title,
@@ -317,10 +317,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           color: isDark ? Colors.white54 : Colors.black54,
         ),
       ),
-      trailing: Switch(
-        value: enabled,
-        onChanged: onChanged,
-      ),
+      trailing: Switch(value: enabled, onChanged: onChanged),
     );
   }
 }

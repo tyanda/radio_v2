@@ -18,7 +18,8 @@ final stationListProvider = Provider<List<Station>>((ref) {
       desc: 'Главное радио Якутии',
       art: 'assets/images/viktoria.jpg',
       icon: 'V',
-      url: 'https://stream2.sakhafm.ru/stream/viktoria/af62bbdf-2e52-45da-9ef5-a2f60a66ef8a/e625247a-13b8-4c31-aaeb-06415c8b1657',
+      url:
+          'https://stream2.sakhafm.ru/stream/viktoria/af62bbdf-2e52-45da-9ef5-a2f60a66ef8a/e625247a-13b8-4c31-aaeb-06415c8b1657',
       frequency: '101.8 FM',
     ),
     Station(
@@ -59,15 +60,6 @@ final stationListProvider = Provider<List<Station>>((ref) {
     ),
     Station(
       id: '6',
-      name: 'Radio Paradise',
-      desc: 'Eclectic music mix',
-      art: 'assets/images/load.png',
-      icon: 'R',
-      url: 'https://stream.radioparadise.com/mp3-128',
-      frequency: 'Online',
-    ),
-    Station(
-      id: '7',
       name: 'Русское Радио',
       desc: 'Музыка только на русском языке',
       art: 'assets/images/russkoe_radio.png',
@@ -150,16 +142,18 @@ final newsProvider = FutureProvider<List<String>>((ref) async {
 
 final tickerProvider = StreamProvider<String>((ref) {
   final database = FirebaseDatabase.instance.ref('ticker_message');
-  return database.onValue.map((event) {
-    final value = event.snapshot.value;
-    if (value is String) {
-      return value;
-    }
-    return "";
-  }).handleError((error) {
-    // Логируем ошибку, но не прерываем поток
-    return "";
-  });
+  return database.onValue
+      .map((event) {
+        final value = event.snapshot.value;
+        if (value is String) {
+          return value;
+        }
+        return "";
+      })
+      .handleError((error) {
+        // Логируем ошибку, но не прерываем поток
+        return "";
+      });
 });
 
 final marqueeTextProvider = Provider<String>((ref) {

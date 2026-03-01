@@ -20,20 +20,14 @@ void main() {
       testWidgets('должен отображаться', (tester) async {
         // Arrange
         final container = ProviderContainer(
-          overrides: [
-            playerProvider.overrideWith(() => PlayerNotifier()),
-          ],
+          overrides: [playerProvider.overrideWith(() => PlayerNotifier())],
         );
         addTearDown(container.dispose);
 
         // Act
         await tester.pumpWidget(
           ProviderScope(
-            child: const MaterialApp(
-              home: Scaffold(
-                body: MiniPlayer(),
-              ),
-            ),
+            child: const MaterialApp(home: Scaffold(body: MiniPlayer())),
           ),
         );
 
@@ -46,20 +40,14 @@ void main() {
       testWidgets('не должен отображаться когда нет станции', (tester) async {
         // Arrange
         final container = ProviderContainer(
-          overrides: [
-            playerProvider.overrideWith(() => PlayerNotifier()),
-          ],
+          overrides: [playerProvider.overrideWith(() => PlayerNotifier())],
         );
         addTearDown(container.dispose);
 
         // Act
         await tester.pumpWidget(
           ProviderScope(
-            child: const MaterialApp(
-              home: Scaffold(
-                body: MiniPlayer(),
-              ),
-            ),
+            child: const MaterialApp(home: Scaffold(body: MiniPlayer())),
           ),
         );
 
@@ -78,20 +66,14 @@ void main() {
       testWidgets('должен реагировать на нажатие', (tester) async {
         // Arrange
         final container = ProviderContainer(
-          overrides: [
-            playerProvider.overrideWith(() => PlayerNotifier()),
-          ],
+          overrides: [playerProvider.overrideWith(() => PlayerNotifier())],
         );
         addTearDown(container.dispose);
 
         // Act
         await tester.pumpWidget(
           ProviderScope(
-            child: const MaterialApp(
-              home: Scaffold(
-                body: MiniPlayer(),
-              ),
-            ),
+            child: const MaterialApp(home: Scaffold(body: MiniPlayer())),
           ),
         );
 

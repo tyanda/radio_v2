@@ -104,8 +104,8 @@ class _ViewTypeButton extends StatelessWidget {
                 color: isSelected
                     ? Colors.black
                     : isDark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.black.withValues(alpha: 0.5),
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : Colors.black.withValues(alpha: 0.5),
               ),
               if (MediaQuery.of(context).size.width > 360) ...[
                 SizedBox(width: AppSpacing.xs),
@@ -117,8 +117,8 @@ class _ViewTypeButton extends StatelessWidget {
                     color: isSelected
                         ? Colors.black
                         : isDark
-                            ? Colors.white.withValues(alpha: 0.5)
-                            : Colors.black.withValues(alpha: 0.5),
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : Colors.black.withValues(alpha: 0.5),
                   ),
                 ),
               ],

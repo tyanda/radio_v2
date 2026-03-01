@@ -95,11 +95,7 @@ class _StationGridState extends ConsumerState<StationGrid>
 
     return Row(
       children: [
-        Icon(
-          Icons.favorite_rounded,
-          size: 18,
-          color: AppColors.primary,
-        ),
+        Icon(Icons.favorite_rounded, size: 18, color: AppColors.primary),
         SizedBox(width: AppSpacing.xs),
         Text(
           'Избранные',
@@ -161,8 +157,8 @@ class _StationGridState extends ConsumerState<StationGrid>
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        final progress =
-            ((_animationController.value - delay) / (1.0 - delay)).clamp(0.0, 1.0);
+        final progress = ((_animationController.value - delay) / (1.0 - delay))
+            .clamp(0.0, 1.0);
         final value = Curves.easeOutCubic.transform(progress);
 
         return Transform.translate(
@@ -196,42 +192,39 @@ class _StationGridState extends ConsumerState<StationGrid>
           decoration: BoxDecoration(
             gradient: isActive
                 ? LinearGradient(
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primaryDark,
-                    ],
+                    colors: [AppColors.primary, AppColors.primaryDark],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : _hoveredIndex == station.hashCode
-                    ? LinearGradient(
-                        colors: isDark
-                            ? [
-                                AppColors.cardBackground.withValues(alpha: 0.98),
-                                AppColors.surface.withValues(alpha: 0.95),
-                              ]
-                            : [
-                                Colors.white.withValues(alpha: 1.0),
-                                Colors.white.withValues(alpha: 0.95),
-                              ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
+                ? LinearGradient(
+                    colors: isDark
+                        ? [
+                            AppColors.cardBackground.withValues(alpha: 0.98),
+                            AppColors.surface.withValues(alpha: 0.95),
+                          ]
+                        : [
+                            Colors.white.withValues(alpha: 1.0),
+                            Colors.white.withValues(alpha: 0.95),
+                          ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
             color: isActive
                 ? null
                 : isDark
-                    ? AppColors.cardBackground
-                    : Colors.white,
+                ? AppColors.cardBackground
+                : Colors.white,
             borderRadius: BorderRadius.circular(AppEffects.radiusLg),
             border: Border.all(
               color: isActive
                   ? AppColors.primary
                   : _hoveredIndex == station.hashCode
-                      ? AppColors.primary.withValues(alpha: 0.5)
-                      : isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.05),
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: isActive ? 2 : 1,
             ),
             boxShadow: isActive
@@ -243,8 +236,8 @@ class _StationGridState extends ConsumerState<StationGrid>
                     ),
                   ]
                 : _hoveredIndex == station.hashCode
-                    ? AppEffects.shadowMd
-                    : AppEffects.shadowSm,
+                ? AppEffects.shadowMd
+                : AppEffects.shadowSm,
           ),
           child: Stack(
             children: [
@@ -257,8 +250,9 @@ class _StationGridState extends ConsumerState<StationGrid>
                       child: Stack(
                         children: [
                           ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(AppEffects.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppEffects.radiusMd,
+                            ),
                             child: Container(
                               width: double.infinity,
                               color: isDark
@@ -270,25 +264,31 @@ class _StationGridState extends ConsumerState<StationGrid>
                                       fit: BoxFit.cover,
                                       errorBuilder:
                                           (context, error, stackTrace) {
-                                        return Center(
-                                          child: Icon(
-                                            Icons.radio,
-                                            color: isDark
-                                                ? Colors.white.withValues(
-                                                    alpha: 0.3)
-                                                : Colors.black.withValues(
-                                                    alpha: 0.3),
-                                            size: 24,
-                                          ),
-                                        );
-                                      },
+                                            return Center(
+                                              child: Icon(
+                                                Icons.radio,
+                                                color: isDark
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.3,
+                                                      )
+                                                    : Colors.black.withValues(
+                                                        alpha: 0.3,
+                                                      ),
+                                                size: 24,
+                                              ),
+                                            );
+                                          },
                                     )
                                   : Center(
                                       child: Icon(
                                         Icons.radio,
                                         color: isDark
-                                            ? Colors.white.withValues(alpha: 0.3)
-                                            : Colors.black.withValues(alpha: 0.3),
+                                            ? Colors.white.withValues(
+                                                alpha: 0.3,
+                                              )
+                                            : Colors.black.withValues(
+                                                alpha: 0.3,
+                                              ),
                                         size: 24,
                                       ),
                                     ),
@@ -330,8 +330,8 @@ class _StationGridState extends ConsumerState<StationGrid>
                           color: isActive
                               ? Colors.black
                               : isDark
-                                  ? Colors.white
-                                  : Colors.black,
+                              ? Colors.white
+                              : Colors.black,
                         ),
                       ),
                     ),

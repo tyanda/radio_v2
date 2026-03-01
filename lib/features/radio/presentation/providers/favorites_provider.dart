@@ -68,13 +68,13 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
   Future<void> toggleFavorite(String stationName) async {
     try {
       final newFavorites = Set<String>.from(state.favoriteStationNames);
-      
+
       if (newFavorites.contains(stationName)) {
         newFavorites.remove(stationName);
       } else {
         newFavorites.add(stationName);
       }
-      
+
       await _repository.saveFavorites(newFavorites);
       state = state.copyWith(favoriteStationNames: newFavorites);
     } catch (e) {

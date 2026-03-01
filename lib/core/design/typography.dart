@@ -4,20 +4,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'design_tokens.dart';
 
 /// Типография
-/// 
+///
 /// Шрифтовая пара: **Inter** (заголовки + текст)
-/// 
+///
 /// Альтернативные пары для разных настроений:
 /// - **Elegant:** Cormorant Garamond / Montserrat
 /// - **Modern:** Inter / Inter
 /// - **Professional:** Roboto / Roboto
 /// - **Creative:** Playfair Display / Lato
-/// 
+///
 /// ## Использование
 /// ```dart
 /// // В теме
 /// textTheme: AppTypography.textTheme,
-/// 
+///
 /// // Отдельный стиль
 /// style: AppTypography.h1,
 /// ```
@@ -27,7 +27,7 @@ class AppTypography {
   // ═══════════════════════════════════════════════════════════════
   // TEXT THEME (для ThemeData)
   // ═══════════════════════════════════════════════════════════════
-  
+
   /// Базовая текстовая тема на основе Google Fonts Inter
   static TextTheme get textTheme {
     return GoogleFonts.interTextTheme().apply(
@@ -47,7 +47,7 @@ class AppTypography {
   // ═══════════════════════════════════════════════════════════════
   // ЗАГОЛОВКИ (Display & Headlines)
   // ═══════════════════════════════════════════════════════════════
-  
+
   /// Display Large - Самый большой (главные заголовки)
   static const displayLarge = TextStyle(
     fontSize: 57,
@@ -99,7 +99,7 @@ class AppTypography {
   // ═══════════════════════════════════════════════════════════════
   // ЗАГОЛОВКИ РАЗДЕЛОВ (Title)
   // ═══════════════════════════════════════════════════════════════
-  
+
   /// Title Large (H4)
   static const titleLarge = TextStyle(
     fontSize: 22,
@@ -127,7 +127,7 @@ class AppTypography {
   // ═══════════════════════════════════════════════════════════════
   // ТЕКСТ (Body)
   // ═══════════════════════════════════════════════════════════════
-  
+
   /// Body Large - Основной текст (контент)
   static const bodyLarge = TextStyle(
     fontSize: 16,
@@ -155,7 +155,7 @@ class AppTypography {
   // ═══════════════════════════════════════════════════════════════
   // КНОПКИ И LABELS
   // ═══════════════════════════════════════════════════════════════
-  
+
   /// Label Large - Текст кнопок
   static const labelLarge = TextStyle(
     fontSize: 14,
@@ -183,7 +183,7 @@ class AppTypography {
   // ═══════════════════════════════════════════════════════════════
   // СПЕЦИАЛЬНЫЕ СТИЛИ
   // ═══════════════════════════════════════════════════════════════
-  
+
   /// Button - Стиль для кнопок
   static const button = TextStyle(
     fontSize: 14,

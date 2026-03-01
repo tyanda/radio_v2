@@ -147,8 +147,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
         // Если artUri нет, но есть artist и title - ищем обложку через iTunes API
         if (albumArt == null) {
-          final searchKey =
-              '${mediaItem.artist}-${mediaItem.title}';
+          final searchKey = '${mediaItem.artist}-${mediaItem.title}';
 
           // Не делаем запрос, если уже искали эту комбинацию
           if (_lastSearchKey != searchKey) {

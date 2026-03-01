@@ -88,9 +88,9 @@ class FullPlayer extends ConsumerWidget {
                               return _buildLoadingContainer(
                                 loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded
-                                            .toDouble() /
-                                        loadingProgress.expectedTotalBytes!
-                                            .toDouble()
+                                              .toDouble() /
+                                          loadingProgress.expectedTotalBytes!
+                                              .toDouble()
                                     : null,
                               );
                             },
@@ -234,11 +234,7 @@ class FullPlayer extends ConsumerWidget {
     }
     return Container(
       color: AppColors.cardBackground,
-      child: const Icon(
-        Icons.music_note,
-        color: Colors.white54,
-        size: 24,
-      ),
+      child: const Icon(Icons.music_note, color: Colors.white54, size: 24),
     );
   }
 }

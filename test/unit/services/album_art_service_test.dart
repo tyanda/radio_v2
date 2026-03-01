@@ -31,7 +31,9 @@ void main() {
         expect(artUrl, isNull);
       });
 
-      testWidgets('должен возвращать null при пустых параметрах', (tester) async {
+      testWidgets('должен возвращать null при пустых параметрах', (
+        tester,
+      ) async {
         // Arrange & Act
         final artUrl = await service.searchAlbumArt();
 
@@ -60,9 +62,7 @@ void main() {
 
       test('должен извлекать imageUrl из метаданных', () {
         // Arrange
-        final metadata = {
-          'imageUrl': 'https://example.com/image.jpg',
-        };
+        final metadata = {'imageUrl': 'https://example.com/image.jpg'};
 
         // Act
         final result = service.extractArtUrlFromIcy(metadata);
@@ -73,10 +73,7 @@ void main() {
 
       test('должен возвращать null при отсутствии полей', () {
         // Arrange
-        final metadata = {
-          'title': 'Test Song',
-          'artist': 'Test Artist',
-        };
+        final metadata = {'title': 'Test Song', 'artist': 'Test Artist'};
 
         // Act
         final result = service.extractArtUrlFromIcy(metadata);

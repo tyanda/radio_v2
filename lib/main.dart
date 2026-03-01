@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -60,6 +61,18 @@ Future<void> main() async {
     androidStopForegroundOnPause: true,
   );
 
+  // Настройка системной навигации (Edge-to-Edge) - ПОСЛЕ всех инициализаций
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+
   runApp(const MyApp());
 }
 
@@ -71,8 +84,24 @@ class MyApp extends StatelessWidget {
     return ProviderScope(
       child: Consumer(
         builder: (context, ref, child) {
-          ref.watch(themeProvider);
+          final themeState = ref.watch(themeProvider);
           final themeNotifier = ref.read(themeProvider.notifier);
+          final isDark = themeState.isDarkTheme;
+
+          // Динамическое обновление яркости иконок навигации
+          SystemChrome.setSystemUIOverlayStyle(
+            SystemUiOverlayStyle(
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarDividerColor: Colors.transparent,
+              systemNavigationBarIconBrightness: isDark
+                  ? Brightness.light
+                  : Brightness.dark,
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: isDark
+                  ? Brightness.light
+                  : Brightness.dark,
+            ),
+          );
 
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -92,10 +121,7 @@ class MyApp extends StatelessWidget {
                     GlobalCupertinoLocalizations.delegate,
                     AppLocalizations.delegate,
                   ],
-                  supportedLocales: const [
-                    Locale('ru'),
-                    Locale('en'),
-                  ],
+                  supportedLocales: const [Locale('ru'), Locale('en')],
                   locale: const Locale('ru'),
                   home: kIsWeb
                       ? OrientationHandler(

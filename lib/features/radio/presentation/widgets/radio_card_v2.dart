@@ -42,7 +42,8 @@ class RadioCardV2 extends StatefulWidget {
   State<RadioCardV2> createState() => _RadioCardV2State();
 }
 
-class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin {
+class _RadioCardV2State extends State<RadioCardV2>
+    with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late AnimationController _hoverController;
@@ -156,38 +157,35 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
       decoration: BoxDecoration(
         gradient: widget.isActive
             ? LinearGradient(
-                colors: [
-                  accentColor,
-                  accentColor.withValues(alpha: 0.9),
-                ],
+                colors: [accentColor, accentColor.withValues(alpha: 0.9)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : _isHovered
-                ? LinearGradient(
-                    colors: isDark
-                        ? [
-                            AppColors.cardBackground.withValues(alpha: 0.98),
-                            AppColors.surface.withValues(alpha: 0.95),
-                          ]
-                        : [
-                            Colors.white.withValues(alpha: 1.0),
-                            Colors.white.withValues(alpha: 0.95),
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            ? LinearGradient(
+                colors: isDark
+                    ? [
+                        AppColors.cardBackground.withValues(alpha: 0.98),
+                        AppColors.surface.withValues(alpha: 0.95),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 1.0),
+                        Colors.white.withValues(alpha: 0.95),
+                      ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
         color: widget.isActive ? null : theme.cardColor,
         borderRadius: BorderRadius.circular(AppEffects.radius2xl),
         border: Border.all(
           color: widget.isActive
               ? accentColor
               : _isHovered
-                  ? accentColor.withValues(alpha: 0.5)
-                  : (isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.05)),
+              ? accentColor.withValues(alpha: 0.5)
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05)),
           width: widget.isActive ? 2.5 : (_isHovered ? 1.5 : 1.0),
         ),
         boxShadow: widget.isActive
@@ -200,23 +198,23 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
                 ),
               ]
             : _isHovered
-                ? [
-                    ...AppEffects.shadowLg,
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                : (!isDark
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF000000).withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null),
+            ? [
+                ...AppEffects.shadowLg,
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  spreadRadius: 1,
+                ),
+              ]
+            : (!isDark
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF000000).withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -252,9 +250,7 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Изображение с LIVE бейджем
-                Expanded(
-                  child: _buildImageSection(isDark, accentColor),
-                ),
+                Expanded(child: _buildImageSection(isDark, accentColor)),
 
                 // Вертикальный отступ
                 const SizedBox(height: 12.0),
@@ -270,8 +266,8 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
   }
 
   Widget _buildImageSection(bool isDark, Color accentColor) {
-    final hasLogoUrl = widget.station.logoUrl != null && 
-                       widget.station.logoUrl!.isNotEmpty;
+    final hasLogoUrl =
+        widget.station.logoUrl != null && widget.station.logoUrl!.isNotEmpty;
 
     return Stack(
       children: [
@@ -295,17 +291,17 @@ class _RadioCardV2State extends State<RadioCardV2> with TickerProviderStateMixin
                   ),
                 )
               : widget.station.art.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(AppEffects.radiusXl),
-                      child: Image.asset(
-                        widget.station.art,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholder();
-                        },
-                      ),
-                    )
-                  : _buildPlaceholder(),
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+                  child: Image.asset(
+                    widget.station.art,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildPlaceholder();
+                    },
+                  ),
+                )
+              : _buildPlaceholder(),
         ),
 
         // LIVE бейдж для активной станции

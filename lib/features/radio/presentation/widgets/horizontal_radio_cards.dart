@@ -73,7 +73,8 @@ class _HorizontalRadioCardsState extends ConsumerState<HorizontalRadioCards> {
     final favoriteNames = favoritesState.favoriteStationNames;
 
     // Авто-скролл к активной станции
-    final isActiveChanged = currentStation != null &&
+    final isActiveChanged =
+        currentStation != null &&
         _lastActiveIndex !=
             allStations.indexWhere((s) => s.id == currentStation.id);
     if (isActiveChanged) {
@@ -111,7 +112,9 @@ class _HorizontalRadioCardsState extends ConsumerState<HorizontalRadioCards> {
                   ref.read(playerProvider.notifier).playStation(station);
                 },
                 onFavoriteTap: () {
-                  ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                  ref
+                      .read(favoritesProvider.notifier)
+                      .toggleFavorite(station.name);
                 },
                 onLongPress: () {
                   StationContextMenu.show(
@@ -119,7 +122,9 @@ class _HorizontalRadioCardsState extends ConsumerState<HorizontalRadioCards> {
                     station: station,
                     isFavorite: isFavorite,
                     onToggleFavorite: () {
-                      ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                      ref
+                          .read(favoritesProvider.notifier)
+                          .toggleFavorite(station.name);
                     },
                   );
                 },
@@ -211,10 +216,7 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
           decoration: BoxDecoration(
             gradient: isActive
                 ? LinearGradient(
-                    colors: [
-                      accentColor,
-                      accentColor.withValues(alpha: 0.9),
-                    ],
+                    colors: [accentColor, accentColor.withValues(alpha: 0.9)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   )
@@ -222,15 +224,15 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
             color: isActive
                 ? null
                 : isDark
-                    ? AppColors.cardBackground
-                    : Colors.white,
+                ? AppColors.cardBackground
+                : Colors.white,
             borderRadius: BorderRadius.circular(AppEffects.radiusLg),
             border: Border.all(
               color: isActive
                   ? accentColor
                   : isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.05),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: isActive ? 2 : 1,
             ),
             boxShadow: isActive
@@ -242,14 +244,14 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
                     ),
                   ]
                 : isDark
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Row(
             children: [
@@ -263,7 +265,9 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
                 ),
                 child: station.art.isNotEmpty
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppEffects.radiusMd,
+                        ),
                         child: Image.asset(
                           station.art,
                           fit: BoxFit.cover,
@@ -312,8 +316,8 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
                               color: isActive
                                   ? Colors.black
                                   : isDark
-                                      ? Colors.white
-                                      : Colors.black,
+                                  ? Colors.white
+                                  : Colors.black,
                               letterSpacing: -0.3,
                             ),
                             maxLines: 1,
@@ -330,8 +334,9 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
                               color: isActive
                                   ? Colors.black.withValues(alpha: 0.2)
                                   : Colors.red,
-                              borderRadius:
-                                  BorderRadius.circular(AppEffects.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppEffects.radiusSm,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -415,7 +420,9 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                  ref
+                      .read(favoritesProvider.notifier)
+                      .toggleFavorite(station.name);
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),
@@ -432,8 +439,8 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
                     color: isFavorite
                         ? Colors.red
                         : isActive
-                            ? Colors.black.withValues(alpha: 0.5)
-                            : AppColors.iconGrey,
+                        ? Colors.black.withValues(alpha: 0.5)
+                        : AppColors.iconGrey,
                     size: 22,
                   ),
                 ),

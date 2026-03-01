@@ -156,7 +156,7 @@ class WeatherService {
       final prefs = await SharedPreferences.getInstance();
       final lat = prefs.getDouble(_coordsCacheKeyLat);
       final lon = prefs.getDouble(_coordsCacheKeyLon);
-      
+
       if (lat != null && lon != null) {
         return {'lat': lat, 'lon': lon};
       }
@@ -182,7 +182,10 @@ class WeatherService {
     // Сначала пробуем получить из кэша
     final cachedCoords = await getCachedCoords();
     if (cachedCoords != null) {
-      Logger.log('Используем кэшированные координаты: ${cachedCoords['lat']}, ${cachedCoords['lon']}', tag: 'Weather');
+      Logger.log(
+        'Используем кэшированные координаты: ${cachedCoords['lat']}, ${cachedCoords['lon']}',
+        tag: 'Weather',
+      );
       return Position(
         latitude: cachedCoords['lat']!,
         longitude: cachedCoords['lon']!,
@@ -231,14 +234,20 @@ class WeatherService {
 
       // Сохраняем в кэш
       await cacheCoords(position.latitude, position.longitude);
-      Logger.log('Координаты сохранены в кэш: ${position.latitude}, ${position.longitude}', tag: 'Weather');
+      Logger.log(
+        'Координаты сохранены в кэш: ${position.latitude}, ${position.longitude}',
+        tag: 'Weather',
+      );
 
       return position;
     } catch (e) {
       // При любой ошибке сохраняем Якутск
       if (e is! WeatherFailure) {
         await cacheCoords(62.03, 129.73);
-        Logger.error('Ошибка геолокации, используем Якутск: $e', tag: 'Weather');
+        Logger.error(
+          'Ошибка геолокации, используем Якутск: $e',
+          tag: 'Weather',
+        );
       }
       rethrow;
     }

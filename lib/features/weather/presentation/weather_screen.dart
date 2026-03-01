@@ -129,7 +129,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.05),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.5 : 0.05,
+                      ),
                       blurRadius: isDark ? 20 : 10,
                       offset: const Offset(0, 10),
                     ),
@@ -203,7 +205,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                                   fit: BoxFit.scaleDown,
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    current.weather[0].description.toUpperCase(),
+                                    current.weather[0].description
+                                        .toUpperCase(),
                                     style: GoogleFonts.inter(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
@@ -238,7 +241,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(
-                            color: isDark 
+                            color: isDark
                                 ? Colors.white.withValues(alpha: 0.1)
                                 : Colors.black.withValues(alpha: 0.05),
                           ),
@@ -272,9 +275,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
           // Тонкий разделитель
           Divider(
-            color: isDark 
+            color: isDark
                 ? Colors.white.withValues(alpha: 0.12)
-                : theme.dividerColor, 
+                : theme.dividerColor,
             height: 1,
           ),
 
@@ -577,11 +580,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.wifi_off_outlined,
-            color: theme.primaryColor,
-            size: 48,
-          ),
+          Icon(Icons.wifi_off_outlined, color: theme.primaryColor, size: 48),
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).error_network,

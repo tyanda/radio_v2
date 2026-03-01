@@ -27,32 +27,44 @@ class StubRadioPlayer implements RadioPlayerInterface {
 
   @override
   Future<void> loadStream(String url) async {
-    throw UnimplementedError('WebRadioPlayer не поддерживается на мобильных платформах');
+    throw UnimplementedError(
+      'WebRadioPlayer не поддерживается на мобильных платформах',
+    );
   }
 
   @override
   Future<void> play() async {
-    throw UnimplementedError('WebRadioPlayer не поддерживается на мобильных платформах');
+    throw UnimplementedError(
+      'WebRadioPlayer не поддерживается на мобильных платформах',
+    );
   }
 
   @override
   Future<void> pause() async {
-    throw UnimplementedError('WebRadioPlayer не поддерживается на мобильных платформах');
+    throw UnimplementedError(
+      'WebRadioPlayer не поддерживается на мобильных платформах',
+    );
   }
 
   @override
   Future<void> resume() async {
-    throw UnimplementedError('WebRadioPlayer не поддерживается на мобильных платформах');
+    throw UnimplementedError(
+      'WebRadioPlayer не поддерживается на мобильных платформах',
+    );
   }
 
   @override
   Future<void> stop() async {
-    throw UnimplementedError('WebRadioPlayer не поддерживается на мобильных платформах');
+    throw UnimplementedError(
+      'WebRadioPlayer не поддерживается на мобильных платформах',
+    );
   }
 
   @override
   Future<void> setVolume(double volume) async {
-    throw UnimplementedError('WebRadioPlayer не поддерживается на мобильных платформах');
+    throw UnimplementedError(
+      'WebRadioPlayer не поддерживается на мобильных платформах',
+    );
   }
 
   @override

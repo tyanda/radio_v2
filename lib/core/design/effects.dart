@@ -30,80 +30,80 @@ class AppEffects {
 
   /// Маленькая тень (карточки, кнопки)
   static List<BoxShadow> get shadowSm => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.2),
-          blurRadius: 4,
-          offset: const Offset(0, 1),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.2),
+      blurRadius: 4,
+      offset: const Offset(0, 1),
+    ),
+  ];
 
   /// Средняя тень (карточки при наведении)
   static List<BoxShadow> get shadowMd => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.3),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.3),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   /// Большая тень (модальные окна, dropdown)
   static List<BoxShadow> get shadowLg => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.4),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.4),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
   /// XL тень (floating элементы)
   static List<BoxShadow> get shadowXl => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.5),
-          blurRadius: 40,
-          offset: const Offset(0, 12),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.5),
+      blurRadius: 40,
+      offset: const Offset(0, 12),
+    ),
+  ];
 
   /// Цветная тень (для primary кнопок - жёлтое свечение)
   static List<BoxShadow> get shadowPrimary => [
-        BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.3),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: AppColors.primary.withValues(alpha: 0.3),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   /// Glow эффект для активных элементов
   static List<BoxShadow> get glowPrimary => [
-        BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.5),
-          blurRadius: 20,
-          spreadRadius: 2,
-        ),
-      ];
+    BoxShadow(
+      color: AppColors.primary.withValues(alpha: 0.5),
+      blurRadius: 20,
+      spreadRadius: 2,
+    ),
+  ];
 
   /// Inner shadow эффект (вдавленные элементы)
   static List<BoxShadow> get shadowInner => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.3),
-          blurRadius: 8,
-          offset: const Offset(2, 2),
-        ),
-        BoxShadow(
-          color: Colors.white.withValues(alpha: 0.1),
-          blurRadius: 8,
-          offset: const Offset(-2, -2),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.3),
+      blurRadius: 8,
+      offset: const Offset(2, 2),
+    ),
+    BoxShadow(
+      color: Colors.white.withValues(alpha: 0.1),
+      blurRadius: 8,
+      offset: const Offset(-2, -2),
+    ),
+  ];
 
   /// Мягкое свечение для фона
   static List<BoxShadow> get glowSoft => [
-        BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.2),
-          blurRadius: 30,
-          spreadRadius: 5,
-        ),
-      ];
+    BoxShadow(
+      color: AppColors.primary.withValues(alpha: 0.2),
+      blurRadius: 30,
+      spreadRadius: 5,
+    ),
+  ];
 
   // ═══════════════════════════════════════════════════════════════
   // СКРУГЛЕНИЯ (Border Radius)
@@ -169,20 +169,14 @@ class AppEffects {
   static const LinearGradient gradientPrimary = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      AppColors.primary,
-      AppColors.primaryDark,
-    ],
+    colors: [AppColors.primary, AppColors.primaryDark],
   );
 
   /// Градиент для secondary кнопок
   static const LinearGradient gradientSecondary = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      AppColors.secondary,
-      AppColors.secondaryDark,
-    ],
+    colors: [AppColors.secondary, AppColors.secondaryDark],
   );
 
   /// Градиент для фона (Aurora UI)
@@ -193,10 +187,7 @@ class AppEffects {
     return LinearGradient(
       begin: begin,
       end: end,
-      colors: [
-        AppColors.primaryFaint,
-        AppColors.secondaryFaint,
-      ],
+      colors: [AppColors.primaryFaint, AppColors.secondaryFaint],
     );
   }
 
@@ -204,41 +195,28 @@ class AppEffects {
   static const LinearGradient gradientCardDark = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1A1A1A),
-      Color(0xFF0F0F0F),
-    ],
+    colors: [Color(0xFF1A1A1A), Color(0xFF0F0F0F)],
   );
 
   /// Градиент для карточек (светлая тема)
   static const LinearGradient gradientCardLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Colors.white,
-      Color(0xFFF8FAFC),
-    ],
+    colors: [Colors.white, Color(0xFFF8FAFC)],
   );
 
   /// Золотой градиент (премиум элементы)
   static const LinearGradient gradientGold = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFFFE9A7),
-      Color(0xFFF2C94C),
-      Color(0xFFC9A53A),
-    ],
+    colors: [Color(0xFFFFE9A7), Color(0xFFF2C94C), Color(0xFFC9A53A)],
   );
 
   /// Ночной градиент
   static const LinearGradient gradientNight = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFF1A1A2E),
-      Color(0xFF0F0F0F),
-    ],
+    colors: [Color(0xFF1A1A2E), Color(0xFF0F0F0F)],
   );
 
   // ═══════════════════════════════════════════════════════════════
@@ -262,21 +240,13 @@ class AppEffects {
   // ═══════════════════════════════════════════════════════════════
 
   /// Glassmorphism декорация для тёмной темы
-  static BoxDecoration glassDark({
-    double blur = blurMd,
-    double opacity = 0.1,
-  }) {
+  static BoxDecoration glassDark({double blur = blurMd, double opacity = 0.1}) {
     return BoxDecoration(
       color: Colors.white.withValues(alpha: opacity),
       borderRadius: BorderRadius.circular(radiusXl),
-      border: Border.all(
-        color: Colors.white.withValues(alpha: 0.1),
-      ),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.2),
-          blurRadius: blur,
-        ),
+        BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: blur),
       ],
     );
   }
@@ -289,14 +259,9 @@ class AppEffects {
     return BoxDecoration(
       color: Colors.white.withValues(alpha: opacity),
       borderRadius: BorderRadius.circular(radiusXl),
-      border: Border.all(
-        color: Colors.black.withValues(alpha: 0.05),
-      ),
+      border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.1),
-          blurRadius: blur,
-        ),
+        BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: blur),
       ],
     );
   }

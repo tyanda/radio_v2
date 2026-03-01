@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // DEPRECATED: Этот файл устарел!
 // ═══════════════════════════════════════════════════════════════
-// 
+//
 // Используйте новый файл: lib/core/design/spacing.dart
-// 
+//
 // Пример миграции:
 //   БЫЛО: AppPadding.horizontal (16.0)
 //   СТАЛО: AppSpacing.lg (16.0)
@@ -34,7 +34,9 @@ class AppPadding {
   @Deprecated('Используйте AppSpacing.xxl')
   static const double large = 24.0;
 
-  @Deprecated('Используйте EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg)')
+  @Deprecated(
+    'Используйте EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg)',
+  )
   static const EdgeInsets symmetric = EdgeInsets.symmetric(
     horizontal: 16.0,
     vertical: 16.0,
@@ -50,7 +52,9 @@ class AppPadding {
     vertical: 16.0,
   );
 
-  @Deprecated('Используйте EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm)')
+  @Deprecated(
+    'Используйте EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm)',
+  )
   static const EdgeInsets screenPadding = EdgeInsets.fromLTRB(
     16.0,
     16.0,

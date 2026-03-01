@@ -22,7 +22,8 @@ class StationDataSource {
         icon: 'T',
         url: 'https://icecast-saha.cdnvideo.ru/saha',
         frequency: '103.4 FM',
-        logoUrl: 'https://nvsakh.ru/upload/iblock/c5d/c5d8f8e8e8f8e8f8e8f8e8f8e8f8e8f8.png',
+        logoUrl:
+            'https://nvsakh.ru/upload/iblock/c5d/c5d8f8e8e8f8e8f8e8f8e8f8e8f8e8f8.png',
       ),
       Station(
         id: '3',

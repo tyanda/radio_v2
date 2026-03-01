@@ -2,19 +2,19 @@
 import 'package:flutter/material.dart';
 
 /// Дизайн-токены для Radio V4
-/// 
+///
 /// Адаптация UI/UX Pro Max для Flutter + shadcn_ui
-/// 
+///
 /// ## Цветовая палитра
 /// - Primary: Yellow/Gold (бренд Sakha Radio)
 /// - Secondary: Amber (акценты)
 /// - Semantic: Success, Warning, Error, Info
-/// 
+///
 /// ## Использование
 /// ```dart
 /// // В виджете
 /// color: AppColors.primary
-/// 
+///
 /// // В теме
 /// primary: AppColors.primary,
 /// ```
@@ -24,18 +24,18 @@ class AppColors {
   // ═══════════════════════════════════════════════════════════════
   // PRIMARY (Brand Colors) - Yellow/Gold (Sakha Radio)
   // ═══════════════════════════════════════════════════════════════
-  static const primary = Color(0xFFF2C94C);       // Yellow 500 (Accent из Figma)
-  static const primaryDark = Color(0xFFC9A53A);   // Gold 600 (Brand из Figma)
-  static const primaryLight = Color(0xFFFFE9A7);  // Yellow 300 (Shadow Yellow)
-  static const primaryFaint = Color(0xFFFFF9DB);  // Yellow 50
+  static const primary = Color(0xFFF2C94C); // Yellow 500 (Accent из Figma)
+  static const primaryDark = Color(0xFFC9A53A); // Gold 600 (Brand из Figma)
+  static const primaryLight = Color(0xFFFFE9A7); // Yellow 300 (Shadow Yellow)
+  static const primaryFaint = Color(0xFFFFF9DB); // Yellow 50
 
   // ═══════════════════════════════════════════════════════════════
   // SECONDARY - Amber
   // ═══════════════════════════════════════════════════════════════
-  static const secondary = Color(0xFFF59E0B);     // Amber 500
+  static const secondary = Color(0xFFF59E0B); // Amber 500
   static const secondaryDark = Color(0xFFD97706); // Amber 600
-  static const secondaryLight = Color(0xFFFBBF24);// Amber 400
-  static const secondaryFaint = Color(0xFFFFF7ED);// Amber 50
+  static const secondaryLight = Color(0xFFFBBF24); // Amber 400
+  static const secondaryFaint = Color(0xFFFFF7ED); // Amber 50
 
   // ═══════════════════════════════════════════════════════════════
   // BACKGROUND & SURFACE (Dark Theme First)
@@ -47,7 +47,7 @@ class AppColors {
   // Фон карточек (из Figma)
   static const cardBackground = Color(0xFF1A1A1A);
   static const cardBackgroundLight = Color(0xFFFFFFFF);
-  
+
   // Поверхности
   static const surface = Color(0xFF1A1A1A);
   static const surfaceLight = Color(0xFFF5F5F7);
@@ -72,7 +72,7 @@ class AppColors {
   // Третичный текст
   static const textTertiary = Color(0xFF86868B);
   static const textTertiaryLight = Color(0xFFAEAEB2);
-  
+
   // Для тёмного текста на светлом фоне
   static const textName = Color(0xFF2A2A2A);
   static const textLight = Colors.white;
@@ -104,16 +104,16 @@ class AppColors {
   // ═══════════════════════════════════════════════════════════════
   @Deprecated('Используйте primary')
   static const accent = primary;
-  
+
   @Deprecated('Используйте primaryDark')
   static const brand = primaryDark;
-  
+
   @Deprecated('Используйте textSecondary')
   static const subText = textSecondary;
-  
+
   @Deprecated('Используйте textPrimary')
   static const primaryText = textPrimary;
-  
+
   @Deprecated('Используйте textSecondary')
   static const secondaryText = textSecondary;
 }

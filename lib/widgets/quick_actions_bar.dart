@@ -16,10 +16,7 @@ import '../../../core/providers.dart';
 class QuickActionsBar extends ConsumerStatefulWidget {
   final Function(String action)? onAction;
 
-  const QuickActionsBar({
-    super.key,
-    this.onAction,
-  });
+  const QuickActionsBar({super.key, this.onAction});
 
   @override
   ConsumerState<QuickActionsBar> createState() => _QuickActionsBarState();
@@ -113,8 +110,8 @@ class _QuickActionsBarState extends ConsumerState<QuickActionsBar> {
                   color: _hoveredIndex == icon.hashCode
                       ? color
                       : (isDark
-                          ? AppColors.cardBackground
-                          : Colors.grey.shade200),
+                            ? AppColors.cardBackground
+                            : Colors.grey.shade200),
                   shape: BoxShape.circle,
                   boxShadow: _hoveredIndex == icon.hashCode
                       ? [

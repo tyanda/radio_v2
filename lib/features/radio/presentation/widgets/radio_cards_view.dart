@@ -108,7 +108,10 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     }
   }
 
-  List<Station> _filterStations(List<Station> stations, Set<String> favoriteNames) {
+  List<Station> _filterStations(
+    List<Station> stations,
+    Set<String> favoriteNames,
+  ) {
     var filtered = stations;
 
     // Фильтр избранных
@@ -236,12 +239,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   ) {
     return GridView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        140.0,
-      ),
+      padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 140.0),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.lg,
@@ -280,7 +278,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 station: station,
                 isFavorite: isFavorite,
                 onToggleFavorite: () {
-                  ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                  ref
+                      .read(favoritesProvider.notifier)
+                      .toggleFavorite(station.name);
                 },
               );
             },
@@ -298,12 +298,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        140.0,
-      ),
+      padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 140.0),
       child: Column(
         children: stations.asMap().entries.map((entry) {
           final index = entry.key;
@@ -357,22 +352,23 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
           decoration: BoxDecoration(
             gradient: isActive
                 ? LinearGradient(
-                    colors: [
-                      accentColor,
-                      accentColor.withValues(alpha: 0.9),
-                    ],
+                    colors: [accentColor, accentColor.withValues(alpha: 0.9)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   )
                 : null,
-            color: isActive ? null : isDark ? AppColors.cardBackground : Colors.white,
+            color: isActive
+                ? null
+                : isDark
+                ? AppColors.cardBackground
+                : Colors.white,
             borderRadius: BorderRadius.circular(AppEffects.radiusLg),
             border: Border.all(
               color: isActive
                   ? accentColor
                   : isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.05),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: isActive ? 2 : 1,
             ),
             boxShadow: isActive
@@ -384,14 +380,14 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                     ),
                   ]
                 : isDark
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Row(
             children: [
@@ -405,7 +401,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 ),
                 child: station.art.isNotEmpty
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppEffects.radiusMd,
+                        ),
                         child: Image.asset(
                           station.art,
                           fit: BoxFit.cover,
@@ -450,7 +448,11 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              color: isActive ? Colors.black : isDark ? Colors.white : Colors.black,
+                              color: isActive
+                                  ? Colors.black
+                                  : isDark
+                                  ? Colors.white
+                                  : Colors.black,
                               letterSpacing: -0.3,
                             ),
                             maxLines: 1,
@@ -467,7 +469,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                               color: isActive
                                   ? Colors.black.withValues(alpha: 0.2)
                                   : Colors.red,
-                              borderRadius: BorderRadius.circular(AppEffects.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppEffects.radiusSm,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -486,7 +490,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                                   style: GoogleFonts.inter(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 8,
-                                    color: isActive ? Colors.black.withValues(alpha: 0.7) : Colors.white,
+                                    color: isActive
+                                        ? Colors.black.withValues(alpha: 0.7)
+                                        : Colors.white,
                                   ),
                                 ),
                               ],
@@ -519,21 +525,27 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                  ref
+                      .read(favoritesProvider.notifier)
+                      .toggleFavorite(station.name);
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isFavorite ? Colors.red.withValues(alpha: 0.1) : Colors.transparent,
+                    color: isFavorite
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.transparent,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                    isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_outline_rounded,
                     color: isFavorite
                         ? Colors.red
                         : isActive
-                            ? Colors.black.withValues(alpha: 0.5)
-                            : AppColors.iconGrey,
+                        ? Colors.black.withValues(alpha: 0.5)
+                        : AppColors.iconGrey,
                     size: 22,
                   ),
                 ),
@@ -570,8 +582,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
             color: isSelected
                 ? accentColor
                 : isDark
-                    ? Colors.white.withValues(alpha: 0.2)
-                    : Colors.black.withValues(alpha: 0.1),
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -583,8 +595,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
               color: isSelected
                   ? Colors.black
                   : isDark
-                      ? Colors.white.withValues(alpha: 0.6)
-                      : Colors.black.withValues(alpha: 0.6),
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : Colors.black.withValues(alpha: 0.6),
             ),
             SizedBox(width: AppSpacing.xs),
             Text(
@@ -595,8 +607,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 color: isSelected
                     ? Colors.black
                     : isDark
-                        ? Colors.white.withValues(alpha: 0.6)
-                        : Colors.black.withValues(alpha: 0.6),
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : Colors.black.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -615,7 +627,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _showFavoritesOnly ? Icons.favorite_outline_rounded : Icons.radio_rounded,
+              _showFavoritesOnly
+                  ? Icons.favorite_outline_rounded
+                  : Icons.radio_rounded,
               size: 64,
               color: isDark
                   ? Colors.white.withValues(alpha: 0.2)

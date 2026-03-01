@@ -38,8 +38,11 @@ class ThemeNotifier extends Notifier<ThemeState> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-        systemNavigationBarColor: isDark ? AppColors.background : AppColors.backgroundLight,
-        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
     );
   }
@@ -131,15 +134,16 @@ class ThemeNotifier extends Notifier<ThemeState> {
         scaffoldBackgroundColor: AppColors.backgroundLight,
         cardColor: Colors.white,
         dividerColor: AppColors.dividerLight,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.textPrimaryLight),
-          bodyMedium: TextStyle(color: AppColors.textPrimaryLight),
-          titleLarge: TextStyle(color: AppColors.textPrimaryLight),
-        ).apply(
-          fontFamily: 'Inter',
-          bodyColor: AppColors.textPrimaryLight,
-          displayColor: AppColors.textPrimaryLight,
-        ),
+        textTheme:
+            const TextTheme(
+              bodyLarge: TextStyle(color: AppColors.textPrimaryLight),
+              bodyMedium: TextStyle(color: AppColors.textPrimaryLight),
+              titleLarge: TextStyle(color: AppColors.textPrimaryLight),
+            ).apply(
+              fontFamily: 'Inter',
+              bodyColor: AppColors.textPrimaryLight,
+              displayColor: AppColors.textPrimaryLight,
+            ),
         colorScheme: const ColorScheme.light(
           primary: AppColors.primary,
           secondary: AppColors.primaryDark,

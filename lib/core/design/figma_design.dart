@@ -3,52 +3,52 @@ import 'design.dart';
 
 /// Константы дизайна из Figma
 /// Экран: iPhone 14 & 15 Pro (393x852)
-/// 
+///
 /// @deprecated Используйте новые дизайн-токены из [AppSpacing], [AppEffects]
 class FigmaDesign {
   // Размеры экрана
   @Deprecated('Используйте MediaQuery.of(context).size.width')
   static const double screenWidth = 393.0;
-  
+
   @Deprecated('Используйте MediaQuery.of(context).size.height')
   static const double screenHeight = 852.0;
 
   // Отступы → AppSpacing
   @Deprecated('Используйте AppSpacing.lg')
   static const double horizontalPadding = 16.0;
-  
+
   @Deprecated('Используйте AppSpacing.lg')
   static const double verticalPadding = 16.0;
-  
+
   @Deprecated('Используйте AppSpacing.lg')
   static const double gridSpacing = 16.0;
 
   // Закругления → AppEffects
   @Deprecated('Используйте AppEffects.radiusXl')
   static const double cardRadius = 24.0;
-  
+
   @Deprecated('Используйте AppEffects.radiusFull')
   static const double buttonRadius = 40.0;
-  
+
   @Deprecated('Используйте AppEffects.radiusLg')
   static const double miniPlayerRadius = 20.0;
-  
+
   @Deprecated('Используйте AppEffects.radiusFull')
   static const double navBarRadius = 32.0;
 
   // Размеры карточек радиостанций
   @Deprecated('Используйте LayoutBuilder для адаптивности')
   static const double cardWidth = 156.0;
-  
+
   @Deprecated('Используйте LayoutBuilder для адаптивности')
   static const double cardHeight = 179.0;
 
   // Мини-плеер
   @Deprecated('Хардкод высота, используйте constraints')
   static const double miniPlayerHeight = 80.0;
-  
+
   static const double miniPlayerArtSize = 52.0;
-  
+
   static const double miniPlayerButtonSize = 52.0;
 
   // Полный плеер
@@ -74,22 +74,22 @@ class FigmaDesign {
   // Шрифты → AppTypography
   @Deprecated('Используйте AppTypography.displaySmall')
   static const double fontSizeLogo = 26.0;
-  
+
   @Deprecated('Используйте AppTypography.labelSmall')
   static const double fontSizeGreeting = 10.0;
-  
+
   @Deprecated('Используйте AppTypography.titleLarge')
   static const double fontSizeStationFrequency = 20.0;
-  
+
   @Deprecated('Используйте AppTypography.bodyMedium')
   static const double fontSizeStationName = 14.0;
-  
+
   @Deprecated('Используйте AppTypography.titleMedium')
   static const double fontSizeMiniPlayerTitle = 14.0;
-  
+
   @Deprecated('Используйте AppTypography.labelSmall')
   static const double fontSizeMiniPlayerStatus = 9.0;
-  
+
   @Deprecated('Используйте AppTypography.titleLarge')
   static const double fontSizeFullPlayerTitle = 18.0;
 

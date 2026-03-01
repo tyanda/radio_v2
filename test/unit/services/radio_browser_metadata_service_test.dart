@@ -74,7 +74,7 @@ void main() {
 
         // Act
         service.startFetchingMetadata(testUuid);
-        final firstCall = () => service.startFetchingMetadata(testUuid);
+        void firstCall() => service.startFetchingMetadata(testUuid);
 
         // Assert - повторный вызов не должен делать ничего
         expect(firstCall, returnsNormally);

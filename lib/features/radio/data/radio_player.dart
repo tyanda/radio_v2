@@ -12,15 +12,15 @@ class RadioPlayer {
   final AudioPlayer? player;
   final RadioPlayerInterface? webPlayer;
   final bool isWeb;
-  
+
   // Поток для метаданных треков
   final _mediaItemController = StreamController<MediaItem?>.broadcast();
   StreamSubscription? _icyMetadataSubscription;
 
   RadioPlayer()
-      : isWeb = kIsWeb,
-        player = kIsWeb ? null : AudioPlayer(),
-        webPlayer = kIsWeb ? createRadioPlayer() : null;
+    : isWeb = kIsWeb,
+      player = kIsWeb ? null : AudioPlayer(),
+      webPlayer = kIsWeb ? createRadioPlayer() : null;
 
   /// Поток метаданных текущего трека
   Stream<MediaItem?> get mediaItemStream {
@@ -31,12 +31,12 @@ class RadioPlayer {
     // just_audio не имеет mediaItemStream в старых версиях
     return _mediaItemController.stream;
   }
-  
+
   /// Обновление метаданных трека
   void _updateMediaItem(MediaItem? mediaItem) {
     _mediaItemController.add(mediaItem);
   }
-  
+
   /// Подписка на ICY-метаданные из потока
   void _subscribeToIcyMetadata() {
     if (isWeb || player == null) return;
@@ -45,28 +45,27 @@ class RadioPlayer {
     _icyMetadataSubscription = player!.icyMetadataStream.listen((icyMetadata) {
       if (icyMetadata != null && icyMetadata.info != null) {
         final title = icyMetadata.info!.title;
-        Logger.log(
-          "🎵 ICY Metadata: title=$title",
-          tag: 'RadioPlayer',
-        );
+        Logger.log("🎵 ICY Metadata: title=$title", tag: 'RadioPlayer');
 
         if (title != null && title.isNotEmpty) {
           // Парсим "Artist - Title" формат
           String? artist;
           String trackTitle = title;
-          
+
           final separatorIndex = title.indexOf(' - ');
           if (separatorIndex != -1) {
             artist = title.substring(0, separatorIndex).trim();
             trackTitle = title.substring(separatorIndex + 3).trim();
           }
-          
-          _updateMediaItem(MediaItem(
-            id: 'icy_metadata',
-            title: trackTitle,
-            artist: artist,
-            album: 'Sakha Radio',
-          ));
+
+          _updateMediaItem(
+            MediaItem(
+              id: 'icy_metadata',
+              title: trackTitle,
+              artist: artist,
+              album: 'Sakha Radio',
+            ),
+          );
         }
       }
     });
@@ -91,13 +90,15 @@ class RadioPlayer {
         // Web: используем HTML5 Audio
         await webPlayer!.loadStream(url);
         // Для Web эмулируем метаданные
-        _mediaItemController.add(MediaItem(
-          id: url,
-          title: title,
-          artist: artist,
-          album: album ?? 'Sakha Radio',
-          artUri: artUri != null ? Uri.parse(artUri) : null,
-        ));
+        _mediaItemController.add(
+          MediaItem(
+            id: url,
+            title: title,
+            artist: artist,
+            album: album ?? 'Sakha Radio',
+            artUri: artUri != null ? Uri.parse(artUri) : null,
+          ),
+        );
       } else {
         // Mobile/Desktop: используем just_audio
         final uri = Uri.parse(url);
@@ -114,13 +115,11 @@ class RadioPlayer {
           artUri: artUri != null ? Uri.parse(artUri) : null,
         );
 
-        await player!.setAudioSource(
-          AudioSource.uri(uri, tag: mediaItem),
-        );
+        await player!.setAudioSource(AudioSource.uri(uri, tag: mediaItem));
 
         // Обновляем метаданные
         _updateMediaItem(mediaItem);
-        
+
         // Подписываемся на ICY-метаданные из потока
         _subscribeToIcyMetadata();
       }
@@ -159,14 +158,14 @@ class RadioPlayer {
         "RadioPlayer: Attempting to play, isWeb: $isWeb",
         tag: 'RadioPlayer',
       );
-      
+
       if (isWeb) {
         // Для Web используем resume() который может перезагрузить поток
         await webPlayer!.resume();
       } else {
         await player!.play();
       }
-      
+
       Logger.log("RadioPlayer: Playing", tag: 'RadioPlayer');
     } catch (e) {
       Logger.error("RadioPlayer: Play failed: $e", tag: 'RadioPlayer');
@@ -234,10 +233,13 @@ class RadioPlayer {
   /// Скорость воспроизведения (0.5 - 2.0) - только для не-Web
   Future<void> setSpeed(double speed) async {
     if (isWeb) {
-      Logger.log("RadioPlayer: setSpeed not supported on Web", tag: 'RadioPlayer');
+      Logger.log(
+        "RadioPlayer: setSpeed not supported on Web",
+        tag: 'RadioPlayer',
+      );
       return;
     }
-    
+
     try {
       final clampedSpeed = speed.clamp(0.5, 2.0);
       await player!.setSpeed(clampedSpeed);
@@ -249,17 +251,19 @@ class RadioPlayer {
   }
 
   /// Получить текущее состояние плеера
-  bool get isPlaying => isWeb ? webPlayer!.isPlaying : player!.playerState.playing;
+  bool get isPlaying =>
+      isWeb ? webPlayer!.isPlaying : player!.playerState.playing;
 
   /// Получить текущее состояние обработки
-  ProcessingState get processingState => 
+  ProcessingState get processingState =>
       isWeb ? ProcessingState.ready : player!.processingState;
 
   /// Поток изменений состояния плеера
   Stream<PlayerState> get playerStateStream {
     if (isWeb) {
-      return webPlayer!.playerStateStream.map((playing) => 
-          PlayerState(playing, ProcessingState.ready));
+      return webPlayer!.playerStateStream.map(
+        (playing) => PlayerState(playing, ProcessingState.ready),
+      );
     }
     return player!.playerStateStream;
   }
@@ -267,8 +271,10 @@ class RadioPlayer {
   /// Поток изменений состояния обработки (буферизация)
   Stream<ProcessingState> get processingStateStream {
     if (isWeb) {
-      return webPlayer!.bufferingStateStream.map((isBuffering) =>
-          isBuffering ? ProcessingState.buffering : ProcessingState.ready);
+      return webPlayer!.bufferingStateStream.map(
+        (isBuffering) =>
+            isBuffering ? ProcessingState.buffering : ProcessingState.ready,
+      );
     }
     return player!.processingStateStream;
   }

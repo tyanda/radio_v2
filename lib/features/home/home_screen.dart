@@ -39,16 +39,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
-    
+
     _fadeController = AnimationController(
       vsync: this,
       duration: AppEffects.durationNormal,
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
-    
+
     _fadeController.forward();
   }
 
@@ -83,7 +83,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isDark = themeState.isDarkTheme;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      backgroundColor: isDark
+          ? AppColors.background
+          : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Основной контент
@@ -116,7 +120,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             left: 0,
             right: 0,
             bottom: 0,
-            child: SafeArea(top: false, bottom: true, child: _buildBottomBar()),
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: _buildBottomBar(),
+            ),
           ),
         ],
       ),
@@ -127,8 +135,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final themeState = ref.watch(themeProvider);
     final isDarkMode = themeState.isDarkTheme;
 
+    // Добавляем padding для системной навигации
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Container(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg + bottomPadding,
+      ),
       decoration: const BoxDecoration(color: Colors.transparent),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -150,9 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ? Colors.white.withValues(alpha: 0.05)
                     : Colors.black.withValues(alpha: 0.05),
               ),
-              boxShadow: isDarkMode
-                  ? null
-                  : AppEffects.shadowMd,
+              boxShadow: isDarkMode ? null : AppEffects.shadowMd,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -174,9 +188,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// Возвращает цвет иконки в зависимости от состояния и темы
   Color _getIconColor(bool isActive, bool isDark) {
     if (isActive) return Colors.black;
-    return isDark
-        ? Colors.white.withValues(alpha: 0.5)
-        : AppColors.iconGrey;
+    return isDark ? Colors.white.withValues(alpha: 0.5) : AppColors.iconGrey;
   }
 
   Widget _buildNavItem(IconData icon, int index, String label) {
@@ -205,11 +217,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    icon,
-                    size: 26,
-                    color: _getIconColor(active, isDark),
-                  ),
+                  Icon(icon, size: 26, color: _getIconColor(active, isDark)),
                   if (active) ...[
                     SizedBox(width: AppSpacing.xs),
                     Text(
@@ -237,9 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         onTap: () {
           HapticFeedback.mediumImpact();
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SettingsScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const SettingsScreen()),
           );
         },
         behavior: HitTestBehavior.opaque,
@@ -296,7 +302,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
       begin: 4.0,
       end: 16.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    
+
     _rotateAnimation = Tween<double>(
       begin: 0.0,
       end: 2 * 3.14159,
@@ -403,7 +409,9 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                   Text(
                     greeting,
                     style: GoogleFonts.inter(
-                      color: isDark ? AppColors.textTertiary : AppColors.textName,
+                      color: isDark
+                          ? AppColors.textTertiary
+                          : AppColors.textName,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                       letterSpacing: 4.0,
@@ -441,13 +449,17 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withValues(alpha: 0.3),
                           blurRadius: _blurAnimation.value,
                           spreadRadius: _controller.value * 2,
                         ),
                       ],
                       border: Border.all(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.5),
                         width: 1.5,
                       ),
                     ),

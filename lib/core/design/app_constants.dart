@@ -20,4 +20,3 @@ class Breakpoints {
   static const double desktop = 1024.0;
   static const double largeDesktop = 1440.0;
 }
-

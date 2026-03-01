@@ -33,9 +33,7 @@ class RadioFilterNotifier extends StateNotifier<RadioFilterState> {
   }
 
   void toggleFavoritesFilter() {
-    state = state.copyWith(
-      showFavoritesOnly: !state.showFavoritesOnly,
-    );
+    state = state.copyWith(showFavoritesOnly: !state.showFavoritesOnly);
   }
 
   void setFavoritesFilter(bool value) {
@@ -47,10 +45,7 @@ class RadioFilterNotifier extends StateNotifier<RadioFilterState> {
   }
 
   void clearSearch() {
-    state = state.copyWith(
-      searchQuery: '',
-      isSearchFocused: false,
-    );
+    state = state.copyWith(searchQuery: '', isSearchFocused: false);
   }
 
   void clearFocus() {
@@ -58,6 +53,7 @@ class RadioFilterNotifier extends StateNotifier<RadioFilterState> {
   }
 }
 
-final radioFilterProvider = StateNotifierProvider<RadioFilterNotifier, RadioFilterState>(
-  (ref) => RadioFilterNotifier(),
-);
+final radioFilterProvider =
+    StateNotifierProvider<RadioFilterNotifier, RadioFilterState>(
+      (ref) => RadioFilterNotifier(),
+    );

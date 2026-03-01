@@ -57,9 +57,6 @@ class ResponsivePadding {
       );
     }
     // Если контекст не передан, используем фиксированные значения
-    return EdgeInsets.symmetric(
-      horizontal: horizontal,
-      vertical: vertical,
-    );
+    return EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical);
   }
 }

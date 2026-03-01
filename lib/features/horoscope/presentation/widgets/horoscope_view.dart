@@ -67,58 +67,58 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
         AppSpacing.lg,
         kBottomBarTotalHeight,
       ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(left: 4.0),
-              child: Text(
-                AppLocalizations.of(context).select_zodiac_sign,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.onSurfaceVariant,
-                  letterSpacing: 2.0,
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 4.0),
+            child: Text(
+              AppLocalizations.of(context).select_zodiac_sign,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: theme.colorScheme.onSurfaceVariant,
+                letterSpacing: 2.0,
               ),
             ),
-            SizedBox(height: AppSpacing.md),
-            // Сетка знаков зодиака
-            GridView.builder(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 8.0,
-                crossAxisSpacing: 8.0,
-                childAspectRatio: 1.0,
-              ),
-              itemCount: zodiacSigns.length,
-              itemBuilder: (context, index) {
-                final zodiac = zodiacSigns[index];
-                final isSelected = _selectedIndex == index;
+          ),
+          SizedBox(height: AppSpacing.md),
+          // Сетка знаков зодиака
+          GridView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 8.0,
+              crossAxisSpacing: 8.0,
+              childAspectRatio: 1.0,
+            ),
+            itemCount: zodiacSigns.length,
+            itemBuilder: (context, index) {
+              final zodiac = zodiacSigns[index];
+              final isSelected = _selectedIndex == index;
 
-                return ScrollScaleCard(
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                    ref.read(horoscopeProvider.notifier).selectSign(zodiac);
-                  },
-                  child: _AnimatedCard(
-                    index: index,
-                    controller: _animationController,
-                    child: _buildZodiacMiniCard(zodiac, isSelected),
-                  ),
-                );
-              },
-            ),
-            SizedBox(height: 24),
-            // Карточка с текстом гороскопа
-            _buildPredictionCard(horoscopeState),
-          ],
-        ),
+              return ScrollScaleCard(
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                  ref.read(horoscopeProvider.notifier).selectSign(zodiac);
+                },
+                child: _AnimatedCard(
+                  index: index,
+                  controller: _animationController,
+                  child: _buildZodiacMiniCard(zodiac, isSelected),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 24),
+          // Карточка с текстом гороскопа
+          _buildPredictionCard(horoscopeState),
+        ],
+      ),
     );
   }
 
@@ -131,10 +131,20 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
-        color: isSelected ? theme.primaryColor : (isDark ? AppColors.cardBackground : AppColors.cardBackgroundLight),
-        borderRadius: BorderRadius.circular(20), // Slightly rounded for mini cards
+        color: isSelected
+            ? theme.primaryColor
+            : (isDark
+                  ? AppColors.cardBackground
+                  : AppColors.cardBackgroundLight),
+        borderRadius: BorderRadius.circular(
+          20,
+        ), // Slightly rounded for mini cards
         border: Border.all(
-          color: isSelected ? theme.primaryColor : (isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05)),
+          color: isSelected
+              ? theme.primaryColor
+              : (isDark
+                    ? Colors.transparent
+                    : Colors.black.withValues(alpha: 0.05)),
           width: 2,
         ),
         boxShadow: isSelected
@@ -145,13 +155,15 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   spreadRadius: 0,
                 ),
               ]
-            : (!isDark ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ] : null),
+            : (!isDark
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null),
       ),
       child: Center(
         child: Padding(
@@ -161,7 +173,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             child: Text(
               zodiac.name,
               style: GoogleFonts.inter(
-                color: isSelected ? Colors.black : (isDark ? AppColors.textPrimary : AppColors.textName),
+                color: isSelected
+                    ? Colors.black
+                    : (isDark ? AppColors.textPrimary : AppColors.textName),
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.2,
@@ -186,11 +200,11 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.cardBackground : AppColors.cardBackgroundLight,
+        color: isDark
+            ? AppColors.cardBackground
+            : AppColors.cardBackgroundLight,
         borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
-        border: Border(
-          left: BorderSide(color: theme.primaryColor, width: 10),
-        ),
+        border: Border(left: BorderSide(color: theme.primaryColor, width: 10)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
@@ -221,7 +235,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.primaryColor,
+                    ),
                   ),
                 ),
             ],
@@ -244,9 +260,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             Padding(
               padding: EdgeInsets.all(AppSpacing.md),
               child: Text(
-                AppLocalizations.of(context).error_loading_horoscope(
-                  horoscopeState.errorMessage ?? '',
-                ),
+                AppLocalizations.of(
+                  context,
+                ).error_loading_horoscope(horoscopeState.errorMessage ?? ''),
                 style: GoogleFonts.inter(
                   color: theme.colorScheme.error,
                   fontSize: 16,
@@ -260,7 +276,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                     child: Text(
                       AppLocalizations.of(context).horoscope_not_found,
                       style: GoogleFonts.inter(
-                        color: isDark ? AppColors.textTertiary : AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.textTertiary
+                            : AppColors.textSecondary,
                         fontSize: 16,
                       ),
                     ),
@@ -268,7 +286,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 : Text(
                     horoscopeState.horoscopeData!.text,
                     style: GoogleFonts.inter(
-                      color: isDark ? AppColors.textPrimary : AppColors.textName,
+                      color: isDark
+                          ? AppColors.textPrimary
+                          : AppColors.textName,
                       fontSize: 16,
                       height: 1.6,
                       fontWeight: FontWeight.w500,
@@ -306,7 +326,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.07)
+            : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
@@ -341,12 +363,15 @@ class _AnimatedCard extends StatelessWidget {
       animation: controller,
       builder: (context, child) {
         final animationValue = controller.value;
-        
+
         // Вычисляем прогресс с защитой от division by zero
         final progress = beginTime >= 1.0
             ? 1.0
-            : ((animationValue - beginTime) / (1.0 - beginTime)).clamp(0.0, 1.0);
-        
+            : ((animationValue - beginTime) / (1.0 - beginTime)).clamp(
+                0.0,
+                1.0,
+              );
+
         // Применяем кривую анимации
         final curvedValue = Curves.easeOutCubic.transform(progress);
 

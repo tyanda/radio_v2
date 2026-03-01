@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -135,11 +136,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
       if (currentIndex >= 0) {
         if (_dragOffsetX > 0 && currentIndex > 0) {
           // Свайп вправо - предыдущая станция
-          HapticFeedback.mediumImpact();
+          if (!kIsWeb) HapticFeedback.mediumImpact();
           playerNotifier.playStation(stations[currentIndex - 1]);
         } else if (_dragOffsetX < 0 && currentIndex < stations.length - 1) {
           // Свайп влево - следующая станция
-          HapticFeedback.mediumImpact();
+          if (!kIsWeb) HapticFeedback.mediumImpact();
           playerNotifier.playStation(stations[currentIndex + 1]);
         }
       }
@@ -167,7 +168,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
         GestureDetector(
           onTap: () {
             _triggerBounce();
-            HapticFeedback.lightImpact();
+            if (!kIsWeb) HapticFeedback.lightImpact();
             // Открыть полный плеер
             Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const FullPlayerScreen()),
@@ -175,7 +176,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
           },
           onDoubleTap: () {
             _triggerBounce();
-            HapticFeedback.mediumImpact();
+            if (!kIsWeb) HapticFeedback.mediumImpact();
             if (playerState.isPlaying) {
               ref.read(playerProvider.notifier).stop();
             } else {
@@ -383,7 +384,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                           child: GestureDetector(
                             onTap: () async {
                               _triggerBounce();
-                              HapticFeedback.lightImpact();
+                              if (!kIsWeb) HapticFeedback.lightImpact();
                               if (playerState.isPlaying) {
                                 ref.read(playerProvider.notifier).stop();
                               } else {

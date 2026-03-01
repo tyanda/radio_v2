@@ -258,10 +258,7 @@ class StationContextMenu {
       final shareText =
           '🎵 Слушаю ${station.name} (${station.frequency}) в приложении SakhaLive!';
 
-      await Share.share(
-        shareText,
-        subject: '${station.name} - SakhaLive',
-      );
+      await Share.share(shareText, subject: '${station.name} - SakhaLive');
 
       Logger.log('Станция partag: ${station.name}', tag: 'Share');
     } catch (e) {

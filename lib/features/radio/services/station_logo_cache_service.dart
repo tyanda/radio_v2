@@ -7,7 +7,7 @@ import 'package:crypto/crypto.dart';
 import '../../../../core/utils/logger.dart';
 
 /// Сервис для кэширования изображений радиостанций
-/// 
+///
 /// Использование:
 /// ```dart
 /// final service = StationLogoCacheService();
@@ -49,7 +49,10 @@ class StationLogoCacheService {
       final cacheFile = await _getCacheFile(url);
       return await cacheFile.exists();
     } catch (e) {
-      Logger.log('StationLogoCache: Error checking cache: $e', tag: 'StationLogo');
+      Logger.log(
+        'StationLogoCache: Error checking cache: $e',
+        tag: 'StationLogo',
+      );
       return false;
     }
   }
@@ -68,14 +71,22 @@ class StationLogoCacheService {
       }
 
       // Загружаем из сети
-      Logger.log('StationLogoCache: Miss for $url, downloading...', tag: 'StationLogo');
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          Logger.log('StationLogoCache: Download timeout', tag: 'StationLogo');
-          return http.Response('Timeout', 408);
-        },
+      Logger.log(
+        'StationLogoCache: Miss for $url, downloading...',
+        tag: 'StationLogo',
       );
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              Logger.log(
+                'StationLogoCache: Download timeout',
+                tag: 'StationLogo',
+              );
+              return http.Response('Timeout', 408);
+            },
+          );
 
       if (response.statusCode == 200) {
         await cacheFile.writeAsBytes(response.bodyBytes);
@@ -102,9 +113,9 @@ class StationLogoCacheService {
       if (await isCached(url)) return;
 
       final cacheFile = await _getCacheFile(url);
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 10),
-      );
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         await cacheFile.writeAsBytes(response.bodyBytes);
@@ -124,7 +135,10 @@ class StationLogoCacheService {
         Logger.log('StationLogoCache: Cache cleared', tag: 'StationLogo');
       }
     } catch (e) {
-      Logger.log('StationLogoCache: Error clearing cache: $e', tag: 'StationLogo');
+      Logger.log(
+        'StationLogoCache: Error clearing cache: $e',
+        tag: 'StationLogo',
+      );
     }
   }
 
@@ -142,7 +156,10 @@ class StationLogoCacheService {
 
       return totalSize;
     } catch (e) {
-      Logger.log('StationLogoCache: Error getting cache size: $e', tag: 'StationLogo');
+      Logger.log(
+        'StationLogoCache: Error getting cache size: $e',
+        tag: 'StationLogo',
+      );
       return 0;
     }
   }

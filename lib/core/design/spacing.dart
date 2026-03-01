@@ -1,9 +1,9 @@
 // lib/core/design/spacing.dart
 
 /// Отступы (Spacing Scale)
-/// 
+///
 /// Основано на 4px базовой сетке
-/// 
+///
 /// ## Использование
 /// ```dart
 /// padding: EdgeInsets.all(AppSpacing.lg),

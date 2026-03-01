@@ -22,15 +22,15 @@ class AppConfig {
     try {
       // Загружаем .env файл из assets через rootBundle
       final envContent = await rootBundle.loadString('.env');
-      
+
       // Парсим содержимое вручную
       final lines = envContent.split('\n');
       final envMap = <String, String>{};
-      
+
       for (final line in lines) {
         final trimmed = line.trim();
         if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
-        
+
         final parts = trimmed.split('=');
         if (parts.length >= 2) {
           final key = parts.first.trim();
@@ -40,7 +40,7 @@ class AppConfig {
           envMap[key] = cleanValue;
         }
       }
-      
+
       openWeatherApiKey = envMap['OPENWEATHER_API_KEY'] ?? '';
       firebaseWebApiKey = envMap['FIREBASE_WEB_API_KEY'] ?? '';
       firebaseAndroidApiKey = envMap['FIREBASE_ANDROID_API_KEY'] ?? '';
@@ -59,10 +59,16 @@ class AppConfig {
       if (apiVerveKey.isEmpty) {
         Logger.warn('API_VERVE_KEY is empty', tag: 'Config');
       }
-      
+
       Logger.log('=== AppConfig initialized ===', tag: 'Config');
-      Logger.log('API_NINJAS_KEY: ${apiNinjasKey.isEmpty ? 'EMPTY' : 'SET (${apiNinjasKey.length} chars)'}', tag: 'Config');
-      Logger.log('API_VERVE_KEY: ${apiVerveKey.isEmpty ? 'EMPTY' : 'SET (${apiVerveKey.length} chars)'}', tag: 'Config');
+      Logger.log(
+        'API_NINJAS_KEY: ${apiNinjasKey.isEmpty ? 'EMPTY' : 'SET (${apiNinjasKey.length} chars)'}',
+        tag: 'Config',
+      );
+      Logger.log(
+        'API_VERVE_KEY: ${apiVerveKey.isEmpty ? 'EMPTY' : 'SET (${apiVerveKey.length} chars)'}',
+        tag: 'Config',
+      );
       Logger.log('RSS_FEED_URL: $rssFeedUrl', tag: 'Config');
     } catch (e) {
       Logger.error('Could not load .env file: $e', tag: 'Config');

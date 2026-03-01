@@ -45,9 +45,10 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 3),
     )..repeat();
 
-    _rotateAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-      _rotateController,
-    );
+    _rotateAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * math.pi,
+    ).animate(_rotateController);
 
     // Прогресс загрузки
     _progressController = AnimationController(
@@ -82,11 +83,7 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F0F0F),
-              Color(0xFF1A1A1A),
-              Color(0xFF0F0F0F),
-            ],
+            colors: [Color(0xFF0F0F0F), Color(0xFF1A1A1A), Color(0xFF0F0F0F)],
           ),
         ),
         child: Stack(
@@ -134,10 +131,12 @@ class _SplashScreenState extends State<SplashScreen>
           final angle = (2 * math.pi / 8) * index;
           final distance = 150.0 + (index % 3) * 50;
           return Positioned(
-            left: MediaQuery.of(context).size.width / 2 +
+            left:
+                MediaQuery.of(context).size.width / 2 +
                 math.cos(angle + _rotateAnimation.value) * distance -
                 4,
-            top: MediaQuery.of(context).size.height / 2 +
+            top:
+                MediaQuery.of(context).size.height / 2 +
                 math.sin(angle + _rotateAnimation.value) * distance -
                 4,
             child: Container(
@@ -231,12 +230,7 @@ class _SplashScreenState extends State<SplashScreen>
                   text: 'Live',
                   style: TextStyle(
                     color: Color(0xFFF2C94C),
-                    shadows: [
-                      Shadow(
-                        color: Color(0xFFF2C94C),
-                        blurRadius: 20,
-                      ),
-                    ],
+                    shadows: [Shadow(color: Color(0xFFF2C94C), blurRadius: 20)],
                   ),
                 ),
               ],
@@ -314,7 +308,9 @@ class _SplashScreenState extends State<SplashScreen>
                         color: const Color(0xFFF2C94C),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFF2C94C).withValues(alpha: 0.5),
+                            color: const Color(
+                              0xFFF2C94C,
+                            ).withValues(alpha: 0.5),
                             blurRadius: 10,
                             spreadRadius: 2,
                           ),

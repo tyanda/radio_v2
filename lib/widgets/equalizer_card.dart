@@ -31,10 +31,10 @@ class EqualizerCard extends StatefulWidget {
 }
 
 enum EqualizerMode {
-  bars,      // Классические бары
-  waves,     // Волны
-  circular,  // Круговой
-  dots,      // Точки
+  bars, // Классические бары
+  waves, // Волны
+  circular, // Круговой
+  dots, // Точки
 }
 
 class _EqualizerCardState extends State<EqualizerCard>
@@ -54,15 +54,11 @@ class _EqualizerCardState extends State<EqualizerCard>
     _barAnimations = List.generate(8, (index) {
       final start = index * 0.1;
       final end = (0.7 + index * 0.1).clamp(0.0, 1.0);
-      
+
       return Tween<double>(begin: 0.1, end: 1.0).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: Interval(
-            start,
-            end,
-            curve: Curves.easeInOut,
-          ),
+          curve: Interval(start, end, curve: Curves.easeInOut),
         ),
       );
     });
@@ -130,8 +126,8 @@ class _EqualizerCardState extends State<EqualizerCard>
           return AnimatedBuilder(
             animation: _barAnimations[index],
             builder: (context, child) {
-              final height = 8.0 +
-                  _barAnimations[index].value * (widget.height - 24);
+              final height =
+                  8.0 + _barAnimations[index].value * (widget.height - 24);
               return Container(
                 width: 6,
                 height: height,
@@ -259,8 +255,8 @@ class WavePainter extends CustomPainter {
 
     for (double x = 0; x <= width; x++) {
       final normalizedX = x / width;
-      final wave = math.sin((normalizedX + progress) * 2 * math.pi) *
-          (height / 3);
+      final wave =
+          math.sin((normalizedX + progress) * 2 * math.pi) * (height / 3);
       path.lineTo(x, height / 2 + wave);
     }
 
@@ -273,8 +269,8 @@ class WavePainter extends CustomPainter {
 
     for (double x = 0; x <= width; x++) {
       final normalizedX = x / width;
-      final wave = math.sin((normalizedX + progress + 0.5) * 2 * math.pi) *
-          (height / 4);
+      final wave =
+          math.sin((normalizedX + progress + 0.5) * 2 * math.pi) * (height / 4);
       path2.lineTo(x, height / 2 + wave);
     }
 

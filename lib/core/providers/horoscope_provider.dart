@@ -43,20 +43,26 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
     final service = HoroscopeService();
     _repository = HoroscopeRepositoryImpl(service);
     final initialSign = ZodiacSign.all.first;
-    
+
     // Загружаем гороскоп асинхронно после инициализации
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHoroscope(initialSign);
     });
-    
+
     return HoroscopeState(selectedSign: initialSign, isLoading: true);
   }
 
   Future<void> _loadHoroscope(ZodiacSign sign) async {
     try {
-      Logger.log('Loading horoscope for: ${sign.name}', tag: 'HoroscopeProvider');
+      Logger.log(
+        'Loading horoscope for: ${sign.name}',
+        tag: 'HoroscopeProvider',
+      );
       final horoscopeData = await _repository.getHoroscope(sign.id, 'today');
-      Logger.log('Horoscope loaded: ${horoscopeData.source}', tag: 'HoroscopeProvider');
+      Logger.log(
+        'Horoscope loaded: ${horoscopeData.source}',
+        tag: 'HoroscopeProvider',
+      );
       state = state.copyWith(
         horoscopeData: horoscopeData,
         isLoading: false,

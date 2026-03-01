@@ -55,8 +55,14 @@ class HoroscopeService {
   /// Основной метод: возвращает гороскоп на сегодня (переведённый на русский)
   Future<_HoroscopeResult> _fetchHoroscopeWithSource(String zodiacId) async {
     Logger.log('=== Fetching horoscope for: $zodiacId ===', tag: 'Horoscope');
-    Logger.log('API_NINJAS_KEY configured: ${AppConfig.apiNinjasKey.isNotEmpty}', tag: 'Horoscope');
-    Logger.log('API_VERVE_KEY configured: ${AppConfig.apiVerveKey.isNotEmpty}', tag: 'Horoscope');
+    Logger.log(
+      'API_NINJAS_KEY configured: ${AppConfig.apiNinjasKey.isNotEmpty}',
+      tag: 'Horoscope',
+    );
+    Logger.log(
+      'API_VERVE_KEY configured: ${AppConfig.apiVerveKey.isNotEmpty}',
+      tag: 'Horoscope',
+    );
 
     // Шаг 1: кэш (самый быстрый путь)
     final cached = await _getCached(zodiacId);
@@ -125,27 +131,30 @@ class HoroscopeService {
       final prefs = await SharedPreferences.getInstance();
       final key = 'horoscope_$zodiacId';
       final timestampKey = 'horoscope_${zodiacId}_timestamp';
-      
+
       final cachedText = prefs.getString(key);
       final timestamp = prefs.getInt(timestampKey);
-      
+
       if (cachedText == null || timestamp == null) {
         return null;
       }
-      
+
       // Проверяем срок действия кэша (24 часа = 86400 секунд)
       final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final age = now - timestamp;
       final maxAge = 24 * 60 * 60; // 24 часа
-      
-      Logger.log('Cache age: ${age ~/ 3600}h ${((age % 3600) / 60).toInt()}m (max: ${maxAge ~/ 3600}h)', tag: 'Horoscope');
-      
+
+      Logger.log(
+        'Cache age: ${age ~/ 3600}h ${((age % 3600) / 60).toInt()}m (max: ${maxAge ~/ 3600}h)',
+        tag: 'Horoscope',
+      );
+
       if (age > maxAge) {
         Logger.log('Cache expired, will fetch fresh', tag: 'Horoscope');
         // Не удаляем старый кэш — используем как fallback
         return null;
       }
-      
+
       Logger.log('Cache is fresh', tag: 'Horoscope');
       return cachedText;
     } catch (e) {
@@ -159,11 +168,11 @@ class HoroscopeService {
       final prefs = await SharedPreferences.getInstance();
       final key = 'horoscope_$zodiacId';
       final timestampKey = 'horoscope_${zodiacId}_timestamp';
-      
+
       await prefs.setString(key, text);
       final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       await prefs.setInt(timestampKey, now);
-      
+
       Logger.log('Cached: $key with timestamp', tag: 'Horoscope');
     } catch (e) {
       Logger.error('Error saving cache: $e', tag: 'Horoscope');

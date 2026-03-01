@@ -57,30 +57,36 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 
   ShadThemeData getShadcnTheme(Color primaryColor) {
-    // Кастомная цветовая схема с динамическим акцентом
+    // Вычисляем очень темный вариант для фона на основе обложки
+    final hsl = HSLColor.fromColor(primaryColor);
+    final backgroundColor =
+        hsl.withLightness(0.04).withSaturation(0.2).toColor();
+    final cardColor = hsl.withLightness(0.08).withSaturation(0.15).toColor();
+    final mutedColor = hsl.withLightness(0.12).withSaturation(0.1).toColor();
+
     return state.isDarkTheme
         ? ShadThemeData(
             brightness: Brightness.dark,
             colorScheme: ShadColorScheme(
               primary: primaryColor,
               primaryForeground: Colors.black,
-              background: AppColors.background,
-              foreground: AppColors.textPrimary,
-              card: AppColors.cardBackground,
-              cardForeground: AppColors.textPrimary,
-              border: AppColors.divider,
-              muted: AppColors.surfaceVariant,
-              mutedForeground: AppColors.textSecondary,
-              accent: primaryColor.withValues(alpha: 0.2),
+              background: backgroundColor,
+              foreground: Colors.white,
+              card: cardColor,
+              cardForeground: Colors.white,
+              border: Colors.white.withValues(alpha: 0.1),
+              muted: mutedColor,
+              mutedForeground: Colors.white70,
+              accent: primaryColor.withValues(alpha: 0.15),
               accentForeground: Colors.white,
               destructive: AppColors.error,
               destructiveForeground: Colors.white,
-              input: AppColors.surfaceVariant,
-              popover: AppColors.cardBackground,
-              popoverForeground: AppColors.textPrimary,
+              input: cardColor,
+              popover: cardColor,
+              popoverForeground: Colors.white,
               ring: primaryColor,
-              secondary: AppColors.primaryDark,
-              secondaryForeground: Colors.black,
+              secondary: primaryColor.withValues(alpha: 0.3),
+              secondaryForeground: Colors.white,
               selection: primaryColor.withValues(alpha: 0.3),
             ),
           )
@@ -104,7 +110,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
               popover: Colors.white,
               popoverForeground: AppColors.textPrimaryLight,
               ring: primaryColor,
-              secondary: AppColors.primaryDark,
+              secondary: primaryColor.withValues(alpha: 0.2),
               secondaryForeground: Colors.black,
               selection: primaryColor.withValues(alpha: 0.3),
             ),
@@ -112,19 +118,24 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 
   ThemeData getThemeData(Color primaryColor) {
+    final hsl = HSLColor.fromColor(primaryColor);
+    final backgroundColor =
+        hsl.withLightness(0.04).withSaturation(0.2).toColor();
+    final cardColor = hsl.withLightness(0.08).withSaturation(0.15).toColor();
+
     if (state.isDarkTheme) {
       return ThemeData.dark().copyWith(
         primaryColor: primaryColor,
-        scaffoldBackgroundColor: AppColors.background,
-        cardColor: AppColors.cardBackground,
-        dividerColor: AppColors.divider,
+        scaffoldBackgroundColor: backgroundColor,
+        cardColor: cardColor,
+        dividerColor: Colors.white.withValues(alpha: 0.1),
         textTheme: const TextTheme().apply(fontFamily: 'Inter'),
         colorScheme: ColorScheme.dark(
           primary: primaryColor,
-          secondary: AppColors.primaryDark,
-          surface: AppColors.cardBackground,
+          secondary: primaryColor.withValues(alpha: 0.3),
+          surface: backgroundColor,
           onPrimary: Colors.black,
-          onSurface: AppColors.textPrimary,
+          onSurface: Colors.white,
         ),
       );
     } else {

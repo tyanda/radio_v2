@@ -44,15 +44,23 @@ Future<void> _updateColorFromImage(Ref ref, String imagePath) async {
       maximumColorCount: 20,
     ).timeout(const Duration(seconds: 5));
 
-    final color =
-        palette.vibrantColor?.color ??
-        palette.dominantColor?.color ??
-        AppColors.primary;
-
-    // Делаем цвет более подходящим для акцента (яркость)
+    final color = palette.lightVibrantColor?.color ?? 
+                  palette.vibrantColor?.color ?? 
+                  palette.dominantColor?.color ?? 
+                  AppColors.primary;
+    
+    // Преобразуем в HSL для тонкой настройки палитры
     final hsl = HSLColor.fromColor(color);
+    
+    // 1. Снижаем насыщенность для пастельного эффекта (0.3 - 0.5 — золотая середина)
+    final softenedSaturation = (hsl.saturation).clamp(0.3, 0.5);
+    
+    // 2. Настраиваем яркость для акцентного цвета (делаем его светлым и чистым)
+    final adjustedLightness = (hsl.lightness).clamp(0.6, 0.75);
+
     final accentColor = hsl
-        .withLightness((hsl.lightness).clamp(0.4, 0.7))
+        .withSaturation(softenedSaturation)
+        .withLightness(adjustedLightness)
         .toColor();
 
     // Безопасно обновляем состояние

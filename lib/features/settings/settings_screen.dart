@@ -23,7 +23,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: isDark ? AppColors.cardBackground : Colors.white,
+        backgroundColor: isDark ? AppColors.background : AppColors.backgroundLight,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white : Colors.black),

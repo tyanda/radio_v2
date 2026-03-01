@@ -59,53 +59,64 @@ class RadioBrowserMetadataService {
   Future<void> _fetchMetadata() async {
     if (_currentUuid == null) return;
     
+    // Проверяем, не закрыт ли контроллер
+    if (_metadataController.isClosed) return;
+
     try {
       final url = Uri.parse('$_baseUrl/$_currentUuid');
       Logger.log(
         "📻 RadioBrowser: Fetching from $url",
         tag: 'RadioBrowser',
       );
-      
+
       final response = await http.get(
         url,
         headers: {
           'Accept': 'application/json',
         },
       ).timeout(const Duration(seconds: 10));
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
-        
+
         if (jsonList.isNotEmpty) {
           final firstStation = jsonList[0] as Map<String, dynamic>;
           final songTitle = firstStation['songtitle'] as String?;
-          
+
           Logger.log(
             "📻 RadioBrowser: songtitle = '${songTitle ?? 'null'}'",
             tag: 'RadioBrowser',
           );
-          
-          _metadataController.add(songTitle);
+
+          if (!_metadataController.isClosed) {
+            _metadataController.add(songTitle);
+          }
         } else {
           Logger.log(
             "📻 RadioBrowser: Empty response",
             tag: 'RadioBrowser',
           );
-          _metadataController.add(null);
+          if (!_metadataController.isClosed) {
+            _metadataController.add(null);
+          }
         }
       } else {
         Logger.error(
           "📻 RadioBrowser: HTTP ${response.statusCode}",
           tag: 'RadioBrowser',
         );
-        _metadataController.add(null);
+        if (!_metadataController.isClosed) {
+          _metadataController.add(null);
+        }
       }
     } catch (e) {
       Logger.error(
         "📻 RadioBrowser: Error fetching metadata: $e",
         tag: 'RadioBrowser',
       );
-      _metadataController.add(null);
+      if (!_metadataController.isClosed) {
+        _metadataController.add(null);
+      }
     }
   }
   

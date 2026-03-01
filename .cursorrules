@@ -1,0 +1,220 @@
+# Radio V4 - Cursor Rules (Автоматическая активация)
+
+## Этот файл активирует все правила автоматически при каждой сессии
+
+### Проект: Radio V4 (SakhaLive)
+Flutter-приложение с радио станциями, погодой и гороскопами
+
+### Стек
+- **Framework**: Flutter 3.x, Dart 3.10+
+- **State Management**: Riverpod
+- **Backend**: Firebase (Realtime Database, Hosting)
+- **UI Library**: shadcn_ui
+- **Localization**: l10n (RU/EN)
+
+### Архитектура
+```
+lib/
+├── core/           # Утилиты, providers, theme, design tokens
+├── features/       # Фичи: home, radio, weather, horoscope, player, settings
+├── widgets/        # Переиспользуемые виджеты
+├── services/       # Сервисы (audio, location, api)
+└── l10n/           # Локализация (ARB файлы)
+```
+
+---
+
+## ПРАВИЛА РАЗРАБОТКИ (ОБЯЗАТЕЛЬНЫ)
+
+### 1. TDD — Сначала тесты (RED-GREEN-REFACTOR)
+
+**ВСЕГДА начинай с написания теста:**
+
+```dart
+// 1. RED - Пиши падающий тест
+test('должен_загружать_станции_при_инициализации', () async {
+  final container = ProviderContainer();
+  addTearDown(container.dispose);
+  
+  final state = container.read(radioProvider);
+  expect(state.isLoading, isTrue);
+});
+
+// 2. GREEN - Реализуй минимум кода для прохождения теста
+// 3. REFACTOR - Улучшай код
+```
+
+**Названия тестов по-русски:** `должен_делать_что_то_в_каких_то_условиях`
+
+### 2. Feature-First Структура
+
+Новую функцию создавай в `lib/features/<feature_name>/`:
+
+```
+features/radio/
+├── data/
+│   ├── models/radio_station.dart
+│   └── repositories/radio_repository.dart
+├── providers/radio_provider.dart
+└── widgets/
+    ├── radio_player.dart
+    └── station_list.dart
+```
+
+### 3. Riverpod для состояния
+
+```dart
+// Provider
+final radioProvider = StreamNotifierProvider<RadioNotifier, RadioState>((ref) {
+  return RadioNotifier();
+});
+
+// В виджете
+final state = ref.watch(radioProvider);        // Подписка
+final repository = ref.read(radioRepositoryProvider);  // Чтение
+```
+
+### 4. i18n — Все строки в ARB файлах
+
+**ЗАПРЕЩЕНЫ хардкод строки:**
+
+```dart
+// ❌ ПЛОХО
+Text("Привет")
+
+// ✅ ХОРОШО
+Text(AppLocalizations.of(context)!.welcome)
+```
+
+Новые строки добавляй в:
+- `lib/l10n/app_ru.arb` (русский)
+- `lib/l10n/app_en.arb` (английский)
+
+### 5. Firebase через Repository
+
+**НЕ вызывай Firebase напрямую в виджетах:**
+
+```dart
+// ❌ ПЛОХО
+final snapshot = await FirebaseDatabase.instance.ref().get();
+
+// ✅ ХОРОШО
+final stations = await repository.getStations();
+```
+
+### 6. Дизайн-токены (UI/UX Pro Max)
+
+**Используй токены вместо хардкод значений:**
+
+```dart
+// ❌ ПЛОХО
+padding: EdgeInsets.all(16)
+color: Color(0xFF10B981)
+borderRadius: BorderRadius.circular(8)
+
+// ✅ ХОРОШО
+padding: EdgeInsets.all(AppSpacing.lg)
+color: AppColors.primary
+borderRadius: BorderRadius.circular(AppEffects.radiusMd)
+```
+
+**Дизайн-система Radio V4:**
+- Фон: `#0D0D0D`
+- Карточки: `#1A1A1A`
+- Акцент: `#F2C94C` (жёлтый)
+- Бренд: `#C9A53A` (золотой)
+- Шрифты: Inter, Poppins
+- Закругления: 20-24px
+
+---
+
+## ПРЕ-КОМИТ ЧЕКЛИСТ
+
+Перед завершением задачи ВСЕГДА проверяй:
+
+```bash
+# 1. Все тесты проходят
+flutter test
+
+# 2. Нет ошибок анализа
+flutter analyze
+
+# 3. Код отформатирован
+dart format --set-exit-if-changed lib/ test/
+
+# 4. Генерация работает
+flutter gen-l10n
+
+# 5. Проверка диффа
+git diff HEAD
+```
+
+---
+
+## НАВЫКИ (SKILLS)
+
+Этот проект использует навыки из [obra/superpowers](https://github.com/obra/superpowers):
+
+### Core
+- **test-driven-development** — TDD цикл RED-GREEN-REFACTOR
+- **systematic-debugging** — 4-фазный поиск багов
+- **verification-before-completion** — Проверка перед коммитом
+
+### Flutter
+- **widget-testing** — Тестирование виджетов
+- **riverpod-providers** — Создание providers
+- **feature-first-structure** — Архитектура по фичам
+
+### Firebase
+- **realtime-database** — Работа с Firebase DB
+- **security-rules** — Правила безопасности
+- **firebase-testing** — Тесты с эмулятором
+
+### i18n
+- **arb-workflow** — Добавление строк через ARB
+- **translation-review** — Проверка переводов
+
+### UI/UX
+- **ui-ux-pro-max** — Дизайн-токены и доступность
+
+---
+
+## КОМАНДЫ РАЗРАБОТКИ
+
+```bash
+# Запуск
+flutter run
+
+# Тесты
+flutter test
+flutter test --coverage
+
+# Анализ
+flutter analyze
+dart format lib/ test/
+
+# Генерация
+flutter gen-l10n
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# Сборка
+flutter build web
+flutter build apk
+flutter build ios
+```
+
+---
+
+## ВАЖНО
+
+**При каждом запуске сессии:**
+1. Применяй все правила из этого файла
+2. Следуй TDD — сначала тесты
+3. Используй дизайн-токены
+4. Все строки локализируй
+5. Firebase вызовы инкапсулируй в Repository
+6. Перед завершением задачи проверяй чеклист
+
+**Язык общения:** Русский (для объяснений и комментариев)
+**Язык кода:** Английский (идентификаторы, функции, классы)
+**Названия тестов:** Русский (функции тестов)

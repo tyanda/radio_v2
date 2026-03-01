@@ -33,6 +33,10 @@ class FullPlayer extends ConsumerWidget {
     PlayerState playerState,
     Station currentStation,
   ) {
+    // Используем обложку из метаданных или картинку станции
+    final albumArtUrl = playerState.albumArt;
+    final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
+
     return Container(
       margin: EdgeInsets.fromLTRB(
         ResponsivePadding.medium(context),
@@ -75,19 +79,27 @@ class FullPlayer extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: Image.asset(
-                      currentStation.art,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey.shade800,
-                          child: const Icon(
-                            Icons.music_note,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    ),
+                    child: hasAlbumArt
+                        ? Image.network(
+                            albumArtUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return _buildLoadingContainer(
+                                loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded
+                                            .toDouble() /
+                                        loadingProgress.expectedTotalBytes!
+                                            .toDouble()
+                                    : null,
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              // Fallback на картинку станции
+                              return _buildStationImage(currentStation);
+                            },
+                          )
+                        : _buildStationImage(currentStation),
                   ),
                 ),
                 SizedBox(width: AppSpacing.md),
@@ -182,6 +194,50 @@ class FullPlayer extends ConsumerWidget {
             size: isPrimary ? 28 : 20,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingContainer(double? progress) {
+    return Container(
+      color: AppColors.cardBackground,
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            value: progress,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStationImage(Station station) {
+    if (station.art.isNotEmpty) {
+      return Image.asset(
+        station.art,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: AppColors.cardBackground,
+            child: const Icon(
+              Icons.music_note,
+              color: Colors.white54,
+              size: 24,
+            ),
+          );
+        },
+      );
+    }
+    return Container(
+      color: AppColors.cardBackground,
+      child: const Icon(
+        Icons.music_note,
+        color: Colors.white54,
+        size: 24,
       ),
     );
   }

@@ -64,7 +64,7 @@ class RadioPlayer {
               id: 'icy_metadata',
               title: trackTitle,
               artist: artist,
-              album: 'Sakha Radio',
+              album: 'SakhaLive',
               artUri: _mediaItemController.stream.value?.artUri,
             ),
           );
@@ -88,7 +88,7 @@ class RadioPlayer {
         id: url,
         title: title,
         artist: artist,
-        album: album ?? 'Sakha Radio',
+        album: album ?? 'SakhaLive',
         artUri: artUri != null ? Uri.parse(artUri) : null,
       );
 

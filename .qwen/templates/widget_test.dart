@@ -8,7 +8,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
 // Импортируйте тестируемый виджет
-// import 'package:radio_v2/<path>/<widget_name>.dart';
+// import 'package:sakha_live/<path>/<widget_name>.dart';
 
 // Генерация моков
 @GenerateMocks([/* Зависимости */])

@@ -7,7 +7,7 @@ import 'package:mockito/annotations.dart';
 import 'package:http/http.dart' as http;
 
 // Импортируйте тестируемый сервис
-// import 'package:radio_v2/<path>/<service_name>.dart';
+// import 'package:sakha_live/<path>/<service_name>.dart';
 
 // Генерация моков
 @GenerateMocks([http.Client])

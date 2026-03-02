@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// Название приложения
   ///
   /// In ru, this message translates to:
-  /// **'Sakha Radio'**
+  /// **'SakhaLive'**
   String get app_title;
 
   /// Статус прямого эфира в плеере

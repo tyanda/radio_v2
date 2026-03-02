@@ -3,7 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'package:radio_v2/core/config.dart';
+import 'package:sakha_live/core/config.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///

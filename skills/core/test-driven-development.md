@@ -12,7 +12,7 @@
 // test/unit/providers/radio_provider_test.dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/features/radio/providers/radio_provider.dart';
+import 'package:sakha_live/features/radio/providers/radio_provider.dart';
 
 void main() {
   group('RadioProvider', () {

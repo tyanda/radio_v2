@@ -6,16 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:audio_service/audio_service.dart';
 
-import 'package:radio_v2/core/config.dart';
-import 'package:radio_v2/core/providers.dart';
-import 'package:radio_v2/core/providers/dynamic_theme_provider.dart';
-import 'package:radio_v2/core/utils/logger.dart';
-import 'package:radio_v2/features/home/home_screen.dart';
-import 'package:radio_v2/firebase_options.dart';
-import 'package:radio_v2/services/push_notification_service.dart';
-import 'package:radio_v2/services/audio_handler.dart';
-import 'package:radio_v2/widgets/splash_screen.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
+import 'package:sakha_live/core/config.dart';
+import 'package:sakha_live/core/providers.dart';
+import 'package:sakha_live/core/providers/dynamic_theme_provider.dart';
+import 'package:sakha_live/core/utils/logger.dart';
+import 'package:sakha_live/features/home/home_screen.dart';
+import 'package:sakha_live/firebase_options.dart';
+import 'package:sakha_live/services/push_notification_service.dart';
+import 'package:sakha_live/services/audio_handler.dart';
+import 'package:sakha_live/widgets/splash_screen.dart';
+import 'package:sakha_live/l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +24,8 @@ Future<void> main() async {
   final audioHandler = await AudioService.init(
     builder: () => RadioAudioHandler(),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.radio_v2.player',
-      androidNotificationChannelName: 'Sakha Radio Playback',
+      androidNotificationChannelId: 'com.sakhalive.player',
+      androidNotificationChannelName: 'SakhaLive Playback',
       androidStopForegroundOnPause: true,
       androidNotificationIcon: 'mipmap/ic_launcher',
       androidShowNotificationBadge: true,
@@ -102,7 +102,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         return ShadTheme(
           data: themeNotifier.getShadcnTheme(animatedColor),
           child: MaterialApp(
-            title: 'Sakha Radio',
+            title: 'SakhaLive',
             debugShowCheckedModeBanner: false,
             theme: themeNotifier.getThemeData(animatedColor),
             localizationsDelegates: const [

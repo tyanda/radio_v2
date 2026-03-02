@@ -4,7 +4,7 @@ import 'design_tokens.dart';
 
 /// Эффекты: Тени, скругления, анимации
 ///
-/// Адаптация UI/UX Pro Max "Soft UI Evolution" для Sakha Radio
+/// Адаптация UI/UX Pro Max "Soft UI Evolution" для SakhaLive
 ///
 /// ## Использование
 /// ```dart

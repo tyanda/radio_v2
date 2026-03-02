@@ -14,8 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:radio_v2/features/radio/data/repositories/radio_repository.dart';
-import 'package:radio_v2/features/radio/data/models/radio_station.dart';
+import 'package:sakha_live/features/radio/data/repositories/radio_repository.dart';
+import 'package:sakha_live/features/radio/data/models/radio_station.dart';
 
 @GenerateMocks([DatabaseReference, DataSnapshot, FirebaseDatabase])
 import 'radio_repository_test.mocks.dart';
@@ -95,8 +95,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:radio_v2/firebase_options.dart';
-import 'package:radio_v2/features/radio/data/repositories/radio_repository.dart';
+import 'package:sakha_live/firebase_options.dart';
+import 'package:sakha_live/features/radio/data/repositories/radio_repository.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

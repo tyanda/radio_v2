@@ -2,8 +2,8 @@
 // Проверяют базовую функциональность состояния плеера
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_v2/features/radio/domain/station.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
+import 'package:sakha_live/features/radio/domain/station.dart';
+import 'package:sakha_live/features/radio/presentation/providers/player_provider.dart';
 
 void main() {
   group('PlayerState Tests', () {

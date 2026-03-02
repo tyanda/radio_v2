@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:radio_v2/features/radio/presentation/widgets/radio_cards_view.dart';
+import 'package:sakha_live/features/radio/presentation/widgets/radio_cards_view.dart';
 
 class RadioView extends StatelessWidget {
   const RadioView({super.key});

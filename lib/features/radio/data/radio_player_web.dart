@@ -86,6 +86,12 @@ class WebRadioPlayer implements RadioPlayerInterface {
         _errorController.add(errorMessage);
         _isBuffering = false;
         _bufferingController.add(_isBuffering);
+        
+        // If we were waiting for load, fail it
+        if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+          _loadCompleter!.completeError(errorMessage);
+          _loadCompleter = null;
+        }
       }.toJS,
     );
 
@@ -96,8 +102,10 @@ class WebRadioPlayer implements RadioPlayerInterface {
         _isBuffering = false;
         _isLoaded = true;
         _bufferingController.add(_isBuffering);
-        _loadCompleter?.complete();
-        _loadCompleter = null;
+        if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+          _loadCompleter!.complete();
+          _loadCompleter = null;
+        }
       }.toJS,
     );
 
@@ -108,8 +116,10 @@ class WebRadioPlayer implements RadioPlayerInterface {
         _isBuffering = false;
         _isLoaded = true;
         _bufferingController.add(_isBuffering);
-        _loadCompleter?.complete();
-        _loadCompleter = null;
+        if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+          _loadCompleter!.complete();
+          _loadCompleter = null;
+        }
       }.toJS,
     );
 
@@ -135,6 +145,14 @@ class WebRadioPlayer implements RadioPlayerInterface {
 
     try {
       Logger.log("WebRadioPlayer: Loading stream: $url", tag: 'WebRadioPlayer');
+      
+      // Cancel previous load attempt if any
+      if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
+        Logger.log("WebRadioPlayer: Cancelling previous load", tag: 'WebRadioPlayer');
+        _loadCompleter!.complete(); // Just complete it to unblock
+        _loadCompleter = null;
+      }
+
       _currentUrl = url;
       _isBuffering = true;
       _isLoaded = false;
@@ -149,25 +167,31 @@ class WebRadioPlayer implements RadioPlayerInterface {
         tag: 'WebRadioPlayer',
       );
 
-      // Небольшая задержка перед ожиданием
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      await _loadCompleter!.future.timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          Logger.error(
-            "WebRadioPlayer: Timeout waiting for canplay",
-            tag: 'WebRadioPlayer',
-          );
-          _isBuffering = false;
-          _bufferingController.add(_isBuffering);
-          throw TimeoutException("Stream loading timeout");
-        },
-      );
-      Logger.log(
-        "WebRadioPlayer: Stream is ready to play",
-        tag: 'WebRadioPlayer',
-      );
+      // We wait for canplay but with a shorter timeout. 
+      // If it times out, we still proceed to play, as some browsers 
+      // won't start loading until play() is called.
+      try {
+        await _loadCompleter!.future.timeout(
+          const Duration(seconds: 5),
+        );
+        Logger.log(
+          "WebRadioPlayer: Stream is ready to play",
+          tag: 'WebRadioPlayer',
+        );
+      } on TimeoutException {
+        Logger.warn(
+          "WebRadioPlayer: Timeout waiting for canplay, proceeding anyway",
+          tag: 'WebRadioPlayer',
+        );
+        // Don't throw, just continue. The play() call will handle the actual loading.
+      } catch (e) {
+        Logger.error("WebRadioPlayer: Error while waiting for load: $e", tag: 'WebRadioPlayer');
+        // Re-throw if it's an actual error (like CORS)
+        rethrow;
+      } finally {
+        _isBuffering = false;
+        _bufferingController.add(_isBuffering);
+      }
     } catch (e) {
       Logger.error(
         "WebRadioPlayer: loadStream error: $e",
@@ -190,14 +214,9 @@ class WebRadioPlayer implements RadioPlayerInterface {
         tag: 'WebRadioPlayer',
       );
 
-      if (!_isLoaded) {
-        Logger.log(
-          "WebRadioPlayer: Not loaded yet, attempting to play anyway",
-          tag: 'WebRadioPlayer',
-        );
-      }
-
+      // On web, it's often better to just call play() and let the browser handle it.
       await _audio!.play().toDart;
+
       _isPlaying = true;
       _playerStateController.add(_isPlaying);
       Logger.log("WebRadioPlayer: Playing", tag: 'WebRadioPlayer');

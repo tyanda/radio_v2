@@ -2,7 +2,7 @@
 // Проверяют поиск обложек через iTunes API
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_v2/features/radio/services/album_art_service.dart';
+import 'package:sakha_live/features/radio/services/album_art_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

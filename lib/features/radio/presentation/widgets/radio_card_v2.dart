@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:radio_v2/features/radio/domain/station.dart';
+import 'package:sakha_live/features/radio/domain/station.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/design/design.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_v2/core/providers/radio_providers.dart';
-import 'package:radio_v2/main.dart';
+import 'package:sakha_live/core/providers/radio_providers.dart';
+import 'package:sakha_live/main.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

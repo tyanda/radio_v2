@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:radio_v2/core/design/figma_design.dart';
-import 'package:radio_v2/core/design/design.dart';
-import 'package:radio_v2/core/design/app_constants.dart';
-import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
-import 'package:radio_v2/core/providers/horoscope_provider.dart';
-import 'package:radio_v2/core/providers.dart';
-import 'package:radio_v2/widgets/scroll_scale_card.dart';
+import 'package:sakha_live/core/design/figma_design.dart';
+import 'package:sakha_live/core/design/design.dart';
+import 'package:sakha_live/core/design/app_constants.dart';
+import 'package:sakha_live/features/horoscope/domain/zodiac_sign.dart';
+import 'package:sakha_live/core/providers/horoscope_provider.dart';
+import 'package:sakha_live/core/providers.dart';
+import 'package:sakha_live/widgets/scroll_scale_card.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class HoroscopeView extends ConsumerStatefulWidget {

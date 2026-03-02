@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// Адаптация UI/UX Pro Max для Flutter + shadcn_ui
 ///
 /// ## Цветовая палитра
-/// - Primary: Yellow/Gold (бренд Sakha Radio)
+/// - Primary: Yellow/Gold (бренд SakhaLive)
 /// - Secondary: Amber (акценты)
 /// - Semantic: Success, Warning, Error, Info
 ///
@@ -22,7 +22,7 @@ class AppColors {
   const AppColors._();
 
   // ═══════════════════════════════════════════════════════════════
-  // PRIMARY (Brand Colors) - Yellow/Gold (Sakha Radio)
+  // PRIMARY (Brand Colors) - Yellow/Gold (SakhaLive)
   // ═══════════════════════════════════════════════════════════════
   static const primary = Color(0xFFF2C94C); // Yellow 500 (Accent из Figma)
   static const primaryDark = Color(0xFFC9A53A); // Gold 600 (Brand из Figma)

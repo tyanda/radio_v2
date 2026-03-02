@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/features/radio/presentation/providers/player_provider.dart';
-import 'package:radio_v2/core/design/design_tokens.dart';
+import 'package:sakha_live/features/radio/presentation/providers/player_provider.dart';
+import 'package:sakha_live/core/design/design_tokens.dart';
 
 /// Провайдер текущего динамического акцентного цвета
 final dynamicColorProvider = StateProvider<Color>((ref) => AppColors.primary);

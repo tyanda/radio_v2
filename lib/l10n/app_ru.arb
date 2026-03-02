@@ -1,7 +1,7 @@
 {
   "@@locale": "ru",
   
-  "app_title": "Sakha Radio",
+  "app_title": "SakhaLive",
   "@app_title": {
     "description": "Название приложения"
   },

@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.radio_v2"
+    namespace = "com.sakhalive.radio"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.yourname.sakha_radio"
+        applicationId = "com.sakhalive.radio"
         minSdk = flutter.minSdkVersion // Required for some features and better desugaring support
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:radio_v2/features/weather/data/weather_repository.dart';
-import 'package:radio_v2/features/weather/data/weather_service.dart';
+import 'package:sakha_live/features/weather/data/weather_repository.dart';
+import 'package:sakha_live/features/weather/data/weather_service.dart';
 
 final dioProvider = Provider((ref) {
   final dio = Dio(

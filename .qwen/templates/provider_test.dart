@@ -6,7 +6,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
 // Импортируйте тестируемый компонент
-// import 'package:radio_v2/<path>/<component>.dart';
+// import 'package:sakha_live/<path>/<component>.dart';
 
 // Генерация моков
 @GenerateMocks([/* Зависимости */])

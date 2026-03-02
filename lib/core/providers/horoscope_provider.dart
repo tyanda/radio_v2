@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:radio_v2/core/utils/logger.dart';
-import 'package:radio_v2/features/horoscope/data/implementations/horoscope_repository_impl.dart';
-import 'package:radio_v2/features/horoscope/data/models/horoscope_data.dart';
-import 'package:radio_v2/features/horoscope/data/services/horoscope_service.dart';
-import 'package:radio_v2/features/horoscope/domain/zodiac_sign.dart';
+import 'package:sakha_live/core/utils/logger.dart';
+import 'package:sakha_live/features/horoscope/data/implementations/horoscope_repository_impl.dart';
+import 'package:sakha_live/features/horoscope/data/models/horoscope_data.dart';
+import 'package:sakha_live/features/horoscope/data/services/horoscope_service.dart';
+import 'package:sakha_live/features/horoscope/domain/zodiac_sign.dart';
 
 @immutable
 class HoroscopeState {

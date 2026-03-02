@@ -1,6 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:radio_v2/core/utils/logger.dart';
+import 'package:sakha_live/core/utils/logger.dart';
 import 'dart:async';
 
 class RadioAudioHandler extends BaseAudioHandler with SeekHandler {

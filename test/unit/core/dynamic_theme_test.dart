@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_v2/core/providers.dart';
+import 'package:sakha_live/core/providers.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 

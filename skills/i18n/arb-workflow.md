@@ -76,7 +76,7 @@ flutter pub get
 ```dart
 // lib/features/radio/widgets/radio_player.dart
 import 'package:flutter/material.dart';
-import 'package:radio_v2/l10n/app_localizations.dart';
+import 'package:sakha_live/l10n/app_localizations.dart';
 
 class RadioPlayer extends StatelessWidget {
   @override

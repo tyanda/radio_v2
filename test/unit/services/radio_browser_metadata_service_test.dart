@@ -2,7 +2,7 @@
 // Проверяют получение метаданных треков из Radio-Browser API
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:radio_v2/features/radio/services/radio_browser_metadata_service.dart';
+import 'package:sakha_live/features/radio/services/radio_browser_metadata_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

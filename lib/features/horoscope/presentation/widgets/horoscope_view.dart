@@ -124,9 +124,10 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
   /// Виджет карточки знака зодиака в сетке
   Widget _buildZodiacMiniCard(ZodiacSign zodiac, bool isSelected) {
-    final themeState = ref.watch(themeProvider);
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final theme = Theme.of(context);
-    final isDark = themeState.isDarkTheme;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
@@ -192,9 +193,10 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
   /// Основная карточка с предсказанием
   Widget _buildPredictionCard(HoroscopeState horoscopeState) {
-    final themeState = ref.watch(themeProvider);
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final theme = Theme.of(context);
-    final isDark = themeState.isDarkTheme;
 
     return Container(
       width: double.infinity,
@@ -320,8 +322,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
   }
 
   Widget _buildSmallBadge(String label) {
-    final themeState = ref.watch(themeProvider);
-    final isDark = themeState.isDarkTheme;
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

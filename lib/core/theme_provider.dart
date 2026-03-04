@@ -8,28 +8,27 @@ import 'design/design_tokens.dart';
 
 class ThemeState {
   final bool isDarkTheme;
+  final bool isLoaded;
 
-  ThemeState({required this.isDarkTheme});
+  const ThemeState({required this.isDarkTheme, this.isLoaded = false});
 
-  ThemeState copyWith({bool? isDarkTheme}) {
-    return ThemeState(isDarkTheme: isDarkTheme ?? this.isDarkTheme);
+  ThemeState copyWith({bool? isDarkTheme, bool? isLoaded}) {
+    return ThemeState(
+      isDarkTheme: isDarkTheme ?? this.isDarkTheme,
+      isLoaded: isLoaded ?? this.isLoaded,
+    );
   }
 }
 
-class ThemeNotifier extends Notifier<ThemeState> {
+class ThemeNotifier extends AsyncNotifier<ThemeState> {
   static const String _themeKey = 'is_dark_theme';
 
   @override
-  ThemeState build() {
-    _loadThemePreference();
-    return ThemeState(isDarkTheme: true);
-  }
-
-  Future<void> _loadThemePreference() async {
+  Future<ThemeState> build() async {
     final prefs = await SharedPreferences.getInstance();
     final isDark = prefs.getBool(_themeKey) ?? true;
-    state = state.copyWith(isDarkTheme: isDark);
     _updateSystemUI(isDark);
+    return ThemeState(isDarkTheme: isDark, isLoaded: true);
   }
 
   void _updateSystemUI(bool isDark) {
@@ -48,23 +47,33 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 
   Future<void> toggleTheme() async {
-    final newState = !state.isDarkTheme;
-    state = state.copyWith(isDarkTheme: newState);
+    final currentState = await future;
+    final newState = !currentState.isDarkTheme;
+    state = const AsyncValue.loading();
     _updateSystemUI(newState);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_themeKey, newState);
+
+    state = AsyncValue.data(ThemeState(isDarkTheme: newState, isLoaded: true));
+  }
+
+  bool get isDarkTheme {
+    final currentState = state.value;
+    return currentState?.isDarkTheme ?? true;
   }
 
   ShadThemeData getShadcnTheme(Color primaryColor) {
     // Вычисляем очень темный вариант для фона на основе обложки
     final hsl = HSLColor.fromColor(primaryColor);
-    final backgroundColor =
-        hsl.withLightness(0.04).withSaturation(0.2).toColor();
+    final backgroundColor = hsl
+        .withLightness(0.04)
+        .withSaturation(0.2)
+        .toColor();
     final cardColor = hsl.withLightness(0.08).withSaturation(0.15).toColor();
     final mutedColor = hsl.withLightness(0.12).withSaturation(0.1).toColor();
 
-    return state.isDarkTheme
+    return isDarkTheme
         ? ShadThemeData(
             brightness: Brightness.dark,
             colorScheme: ShadColorScheme(
@@ -119,11 +128,13 @@ class ThemeNotifier extends Notifier<ThemeState> {
 
   ThemeData getThemeData(Color primaryColor) {
     final hsl = HSLColor.fromColor(primaryColor);
-    final backgroundColor =
-        hsl.withLightness(0.04).withSaturation(0.2).toColor();
+    final backgroundColor = hsl
+        .withLightness(0.04)
+        .withSaturation(0.2)
+        .toColor();
     final cardColor = hsl.withLightness(0.08).withSaturation(0.15).toColor();
 
-    if (state.isDarkTheme) {
+    if (isDarkTheme) {
       return ThemeData.dark().copyWith(
         primaryColor: primaryColor,
         scaffoldBackgroundColor: backgroundColor,

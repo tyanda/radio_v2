@@ -79,8 +79,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final themeState = ref.watch(themeProvider);
-    final isDark = themeState.isDarkTheme;
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Scaffold(
       extendBody: true,
@@ -132,8 +133,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildBottomBar() {
-    final themeState = ref.watch(themeProvider);
-    final isDarkMode = themeState.isDarkTheme;
+    final isDarkMode = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     // Добавляем padding для системной навигации
     final bottomPadding = MediaQuery.of(context).padding.bottom;
@@ -199,7 +201,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       cursor: SystemMouseCursors.click,
       child: Consumer(
         builder: (context, ref, _) {
-          final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+          final isDark = ref.watch(
+            themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+          );
           return GestureDetector(
             onTap: () => _onTabChanged(index),
             behavior: HitTestBehavior.opaque,
@@ -261,7 +265,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: Icon(
             icon,
             size: 26,
-            color: ref.watch(themeProvider.select((s) => s.isDarkTheme))
+            color:
+                ref.watch(
+                  themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+                )
                 ? Colors.white.withValues(alpha: 0.5)
                 : AppColors.iconGrey,
           ),
@@ -353,7 +360,9 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
   @override
   Widget build(BuildContext context) {
     final greetingAsync = ref.watch(greetingProvider);
-    final isDark = ref.watch(themeProvider).isDarkTheme;
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final topPadding = MediaQuery.of(context).padding.top + AppSpacing.sm;
 
     final greeting = greetingAsync.when(

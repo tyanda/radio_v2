@@ -83,7 +83,7 @@ class RadioPlayer {
   }) async {
     try {
       Logger.log("RadioPlayer: Loading stream: $url", tag: 'RadioPlayer');
-      
+
       final mediaItem = MediaItem(
         id: url,
         title: title,
@@ -100,7 +100,7 @@ class RadioPlayer {
       } else {
         // Mobile/Desktop: используем just_audio через audioHandler
         final uri = Uri.parse(url);
-        
+
         // Сначала устанавливаем метаданные в уведомление
         if (audioHandler != null) {
           audioHandler!.mediaItem.add(mediaItem);

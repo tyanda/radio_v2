@@ -46,7 +46,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen>
   @override
   Widget build(BuildContext context) {
     final playerAsync = ref.watch(playerProvider);
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Scaffold(
       body: Container(

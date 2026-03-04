@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:home_widget/home_widget.dart';
 
 import 'package:sakha_live/core/config.dart';
 import 'package:sakha_live/core/providers.dart';
@@ -45,14 +46,15 @@ Future<void> main() async {
     Logger.error("Firebase init error: $e", tag: 'Main');
   }
 
+  // Инициализация Home Widget
+  await HomeWidget.setAppGroupId('group.com.sakhalive.shared');
+
   // Загрузка конфигурации
   await AppConfig.initialize();
 
   runApp(
     ProviderScope(
-      overrides: [
-        audioHandlerProvider.overrideWithValue(audioHandler),
-      ],
+      overrides: [audioHandlerProvider.overrideWithValue(audioHandler)],
       child: const MyApp(),
     ),
   );
@@ -88,7 +90,9 @@ class _MyAppState extends ConsumerState<MyApp> {
   Widget build(BuildContext context) {
     // Инициализируем менеджер динамической темы (слушает плеер)
     ref.watch(dynamicThemeManagerProvider);
-    
+
+    // Подписываемся на изменения темы для пересборки ShadTheme/MaterialApp
+    ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
     final targetColor = ref.watch(dynamicColorProvider);
 

@@ -94,35 +94,38 @@ class _ViewTypeButton extends StatelessWidget {
             color: isSelected ? accentColor : Colors.transparent,
             borderRadius: BorderRadius.circular(AppEffects.radiusFull),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isSelected
-                    ? Colors.black
-                    : isDark
-                    ? Colors.white.withValues(alpha: 0.5)
-                    : Colors.black.withValues(alpha: 0.5),
-              ),
-              if (MediaQuery.of(context).size.width > 360) ...[
-                SizedBox(width: AppSpacing.xs),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: isSelected
-                        ? Colors.black
-                        : isDark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.black.withValues(alpha: 0.5),
-                  ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected
+                      ? Colors.black
+                      : isDark
+                      ? Colors.white.withValues(alpha: 0.5)
+                      : Colors.black.withValues(alpha: 0.5),
                 ),
+                if (MediaQuery.of(context).size.width > 360) ...[
+                  SizedBox(width: AppSpacing.xs),
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: isSelected
+                          ? Colors.black
+                          : isDark
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.black.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -154,7 +154,9 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
     final currentStation = playerAsync.value?.currentStation;
     final favoritesState = ref.watch(favoritesProvider);
     final favoriteNames = favoritesState.favoriteStationNames;
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final accentColor = Theme.of(context).primaryColor;
 
     return SingleChildScrollView(

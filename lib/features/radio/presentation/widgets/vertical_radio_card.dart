@@ -197,8 +197,8 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                           bottom: -5,
                           child: Opacity(
                             opacity: 0.45,
-                            child: Lottie.network(
-                              'https://lottie.host/8e89f648-7d43-4177-8742-99079f53526c/rRzYqXlXjU.json',
+                            child: Lottie.asset(
+                              'assets/animations/radio_pulse.json',
                               width: 70,
                               height: 70,
                               fit: BoxFit.contain,

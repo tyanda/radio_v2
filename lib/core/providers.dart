@@ -8,6 +8,6 @@ final audioHandlerProvider = Provider<RadioAudioHandler>((ref) {
 });
 
 // Провайдер для ThemeProvider
-final themeProvider = NotifierProvider<ThemeNotifier, ThemeState>(
+final themeProvider = AsyncNotifierProvider<ThemeNotifier, ThemeState>(
   ThemeNotifier.new,
 );

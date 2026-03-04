@@ -86,7 +86,7 @@ class WebRadioPlayer implements RadioPlayerInterface {
         _errorController.add(errorMessage);
         _isBuffering = false;
         _bufferingController.add(_isBuffering);
-        
+
         // If we were waiting for load, fail it
         if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
           _loadCompleter!.completeError(errorMessage);
@@ -145,10 +145,13 @@ class WebRadioPlayer implements RadioPlayerInterface {
 
     try {
       Logger.log("WebRadioPlayer: Loading stream: $url", tag: 'WebRadioPlayer');
-      
+
       // Cancel previous load attempt if any
       if (_loadCompleter != null && !_loadCompleter!.isCompleted) {
-        Logger.log("WebRadioPlayer: Cancelling previous load", tag: 'WebRadioPlayer');
+        Logger.log(
+          "WebRadioPlayer: Cancelling previous load",
+          tag: 'WebRadioPlayer',
+        );
         _loadCompleter!.complete(); // Just complete it to unblock
         _loadCompleter = null;
       }
@@ -167,13 +170,11 @@ class WebRadioPlayer implements RadioPlayerInterface {
         tag: 'WebRadioPlayer',
       );
 
-      // We wait for canplay but with a shorter timeout. 
-      // If it times out, we still proceed to play, as some browsers 
+      // We wait for canplay but with a shorter timeout.
+      // If it times out, we still proceed to play, as some browsers
       // won't start loading until play() is called.
       try {
-        await _loadCompleter!.future.timeout(
-          const Duration(seconds: 5),
-        );
+        await _loadCompleter!.future.timeout(const Duration(seconds: 5));
         Logger.log(
           "WebRadioPlayer: Stream is ready to play",
           tag: 'WebRadioPlayer',
@@ -185,7 +186,10 @@ class WebRadioPlayer implements RadioPlayerInterface {
         );
         // Don't throw, just continue. The play() call will handle the actual loading.
       } catch (e) {
-        Logger.error("WebRadioPlayer: Error while waiting for load: $e", tag: 'WebRadioPlayer');
+        Logger.error(
+          "WebRadioPlayer: Error while waiting for load: $e",
+          tag: 'WebRadioPlayer',
+        );
         // Re-throw if it's an actual error (like CORS)
         rethrow;
       } finally {

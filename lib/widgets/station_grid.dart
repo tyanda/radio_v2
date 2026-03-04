@@ -91,7 +91,9 @@ class _StationGridState extends ConsumerState<StationGrid>
   }
 
   Widget _buildHeader(int count) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Row(
       children: [
@@ -151,7 +153,9 @@ class _StationGridState extends ConsumerState<StationGrid>
   }
 
   Widget _buildStationCard(Station station, int index, bool isActive) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final delay = index * 0.05;
 
     return AnimatedBuilder(
@@ -367,7 +371,9 @@ class _StationGridState extends ConsumerState<StationGrid>
   }
 
   Widget _buildEmptyState() {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Container(
       padding: EdgeInsets.all(AppSpacing.xl),

@@ -4,12 +4,16 @@ import 'package:sakha_live/core/utils/logger.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  Logger.log('Handling a background message: ${message.messageId}', tag: 'PushNotifications');
+  Logger.log(
+    'Handling a background message: ${message.messageId}',
+    tag: 'PushNotifications',
+  );
 }
 
 class PushNotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'news_channel',
@@ -32,11 +36,12 @@ class PushNotificationService {
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: DarwinInitializationSettings(),
-    );
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: DarwinInitializationSettings(),
+        );
 
     await _localNotifications.initialize(
       settings: initializationSettings,
@@ -46,16 +51,21 @@ class PushNotificationService {
     );
 
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_channel);
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      Logger.log('Got a message whilst in the foreground!', tag: 'PushNotifications');
+      Logger.log(
+        'Got a message whilst in the foreground!',
+        tag: 'PushNotifications',
+      );
       showNotification(message);
     });
-    
+
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       Logger.log('A new onMessageOpenedApp event was published!');
     });

@@ -5,7 +5,7 @@ import 'dart:async';
 
 class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
-  
+
   // StreamControllers to notify the PlayerNotifier when skip actions are triggered from the notification
   final _nextSubject = StreamController<void>.broadcast();
   final _prevSubject = StreamController<void>.broadcast();
@@ -16,11 +16,14 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   RadioAudioHandler() {
     // Forward playback events to the state stream
     _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
-    
+
     // Listen to media item changes and update notification metadata
     mediaItem.listen((item) {
       if (item != null) {
-        Logger.log("🎵 AudioHandler: MediaItem updated: ${item.title}", tag: 'AudioHandler');
+        Logger.log(
+          "🎵 AudioHandler: MediaItem updated: ${item.title}",
+          tag: 'AudioHandler',
+        );
       }
     });
   }
@@ -34,10 +37,12 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> stop() async {
     await _player.stop();
-    playbackState.add(playbackState.value.copyWith(
-      playing: false,
-      processingState: AudioProcessingState.idle,
-    ));
+    playbackState.add(
+      playbackState.value.copyWith(
+        playing: false,
+        processingState: AudioProcessingState.idle,
+      ),
+    );
   }
 
   @override
@@ -96,7 +101,7 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  // Getter for the player to allow direct control if needed, 
+  // Getter for the player to allow direct control if needed,
   // but better to use AudioHandler methods.
   AudioPlayer get player => _player;
 }

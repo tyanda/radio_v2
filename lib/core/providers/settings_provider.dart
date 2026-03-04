@@ -26,7 +26,8 @@ class SettingsState {
       backgroundPlayback: backgroundPlayback ?? this.backgroundPlayback,
       defaultVolume: defaultVolume ?? this.defaultVolume,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      newsNotificationsEnabled: newsNotificationsEnabled ?? this.newsNotificationsEnabled,
+      newsNotificationsEnabled:
+          newsNotificationsEnabled ?? this.newsNotificationsEnabled,
     );
   }
 }
@@ -42,7 +43,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final newsEnabled = prefs.getBool('news_notifications_enabled') ?? true;
-    
+
     state = SettingsState(
       backgroundPlayback: prefs.getBool('background_playback') ?? true,
       defaultVolume: prefs.getDouble('default_volume') ?? 0.65,

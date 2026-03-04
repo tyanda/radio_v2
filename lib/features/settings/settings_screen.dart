@@ -18,7 +18,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Scaffold(
       backgroundColor: isDark
@@ -86,7 +88,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _buildSettingsTile(
             icon: Icons.info_outline_rounded,
             title: 'Версия',
-            subtitle: '1.0.1',
+            subtitle: '1.0.6',
             isDark: isDark,
             onTap: () => _showAboutDialog(context),
           ),
@@ -214,7 +216,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               style: GoogleFonts.inter(fontWeight: FontWeight.w700),
             ),
             SizedBox(height: 8),
-            Text('Версия: 1.0.1'),
+            Text('Версия: 1.0.6'),
             SizedBox(height: 8),
             Text('Ваше любимое радио всегда с вами!'),
           ],
@@ -268,7 +270,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               enabled: settings.newsNotificationsEnabled,
               isDark: isDark,
               onChanged: (value) {
-                ref.read(settingsProvider.notifier).toggleNewsNotifications(value);
+                ref
+                    .read(settingsProvider.notifier)
+                    .toggleNewsNotifications(value);
               },
             ),
           ],

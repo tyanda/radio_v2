@@ -11,7 +11,8 @@ class AppConfig {
   // Firebase ключи по умолчанию для веба (из google-services.json)
   // Проект: sakhalive-ticker
   static String firebaseWebApiKey = 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
-  static String firebaseAndroidApiKey = 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
+  static String firebaseAndroidApiKey =
+      'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
   static String firebaseIOSApiKey = '';
   static String rssFeedUrl = '';
   static String apiNinjasKey = '';
@@ -23,17 +24,22 @@ class AppConfig {
 
     // Затем переопределяем из localStorage (для отладки)
     openWeatherApiKey =
-        web.window.localStorage.getItem('OPENWEATHER_API_KEY') ?? openWeatherApiKey;
+        web.window.localStorage.getItem('OPENWEATHER_API_KEY') ??
+        openWeatherApiKey;
     firebaseWebApiKey =
-        web.window.localStorage.getItem('FIREBASE_WEB_API_KEY') ?? firebaseWebApiKey;
+        web.window.localStorage.getItem('FIREBASE_WEB_API_KEY') ??
+        firebaseWebApiKey;
     firebaseAndroidApiKey =
-        web.window.localStorage.getItem('FIREBASE_ANDROID_API_KEY') ?? firebaseAndroidApiKey;
+        web.window.localStorage.getItem('FIREBASE_ANDROID_API_KEY') ??
+        firebaseAndroidApiKey;
     firebaseIOSApiKey =
-        web.window.localStorage.getItem('FIREBASE_IOS_API_KEY') ?? firebaseIOSApiKey;
-    rssFeedUrl =
-        web.window.localStorage.getItem('RSS_FEED_URL') ?? rssFeedUrl;
-    apiNinjasKey = web.window.localStorage.getItem('API_NINJAS_KEY') ?? apiNinjasKey;
-    apiVerveKey = web.window.localStorage.getItem('API_VERVE_KEY') ?? apiVerveKey;
+        web.window.localStorage.getItem('FIREBASE_IOS_API_KEY') ??
+        firebaseIOSApiKey;
+    rssFeedUrl = web.window.localStorage.getItem('RSS_FEED_URL') ?? rssFeedUrl;
+    apiNinjasKey =
+        web.window.localStorage.getItem('API_NINJAS_KEY') ?? apiNinjasKey;
+    apiVerveKey =
+        web.window.localStorage.getItem('API_VERVE_KEY') ?? apiVerveKey;
 
     // Если ключи всё ещё пустые, используем значения по умолчанию
     // В production рекомендуется использовать прокси-сервер для API запросов
@@ -48,7 +54,10 @@ class AppConfig {
     }
 
     Logger.log('=== AppConfig initialized (Web) ===', tag: 'Config');
-    Logger.log('FIREBASE_WEB_API_KEY: ${firebaseWebApiKey.isEmpty ? 'EMPTY' : 'SET'}', tag: 'Config');
+    Logger.log(
+      'FIREBASE_WEB_API_KEY: ${firebaseWebApiKey.isEmpty ? 'EMPTY' : 'SET'}',
+      tag: 'Config',
+    );
     Logger.log('RSS_FEED_URL: $rssFeedUrl', tag: 'Config');
   }
 

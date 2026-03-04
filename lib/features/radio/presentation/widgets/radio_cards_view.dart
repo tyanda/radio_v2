@@ -335,8 +335,11 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   }
 
   Widget _buildListCard(Station station, bool isActive, bool isFavorite) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
-    final accentColor = Theme.of(context).primaryColor;
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
+    final theme = Theme.of(context);
+    final accentColor = theme.primaryColor;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -372,7 +375,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 ? null
                 : isDark
                 ? AppColors.cardBackground
-                : Colors.white,
+                : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(AppEffects.radiusLg),
             border: Border.all(
               color: isActive
@@ -574,7 +577,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final accentColor = Theme.of(context).primaryColor;
 
     return GestureDetector(
@@ -629,7 +634,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   }
 
   Widget _buildEmptyState() {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Center(
       child: Padding(

@@ -14,6 +14,7 @@ import 'package:sakha_live/features/radio/data/radio_player.dart';
 import 'package:sakha_live/features/radio/services/radio_browser_metadata_service.dart';
 import 'package:sakha_live/features/radio/services/album_art_service.dart';
 import 'package:sakha_live/core/providers.dart';
+import 'package:sakha_live/features/widgets/widgets.dart';
 import '../../../../../core/utils/logger.dart';
 
 @immutable
@@ -104,7 +105,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
     // Listen to skip actions from the notification
     _nextSubscription = audioHandler.onNext.listen((_) => playNextStation());
-    _prevSubscription = audioHandler.onPrev.listen((_) => playPreviousStation());
+    _prevSubscription = audioHandler.onPrev.listen(
+      (_) => playPreviousStation(),
+    );
 
     // Listen to player state changes
     _playerStateSubscription = _radioPlayer.playerStateStream.listen((
@@ -192,7 +195,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
         if (stations.contains(station)) {
           initialStation = station;
-          
+
           if (!kIsWeb) {
             final artUri = station.art.isNotEmpty
                 ? await _getAssetUri(station.art)
@@ -216,7 +219,10 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           } else {
             // На Web только устанавливаем текущую станцию без загрузки потока
             // Загрузка начнется когда пользователь нажмет Play
-            Logger.log("Web: Auto-play skipped in build(), station set to ${station.name}", tag: 'Player');
+            Logger.log(
+              "Web: Auto-play skipped in build(), station set to ${station.name}",
+              tag: 'Player',
+            );
           }
         }
       } catch (e) {
@@ -272,21 +278,39 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       if (radioBrowserUuid != null) {
         _metadataService.startFetchingMetadata(radioBrowserUuid);
         _metadataSubscription?.cancel();
-        _metadataSubscription = _metadataService.metadataStream.listen((songTitle) {
+        _metadataSubscription = _metadataService.metadataStream.listen((
+          songTitle,
+        ) {
           final s = state.asData?.value;
           if (s != null) {
-            state = AsyncData(s.copyWith(
-              trackTitle: songTitle?.isNotEmpty == true ? songTitle : station.name,
-              trackArtist: null,
-            ));
+            state = AsyncData(
+              s.copyWith(
+                trackTitle: songTitle?.isNotEmpty == true
+                    ? songTitle
+                    : station.name,
+                trackArtist: null,
+              ),
+            );
           }
         });
       }
 
       await _radioPlayer.play();
+
+      // Обновляем виджет
+      ref
+          .read(homeWidgetStateProvider.notifier)
+          .updateFromPlayerState(
+            stationName: station.name,
+            currentTrack: station.desc,
+            albumArt: artUri?.toString(),
+            isPlaying: true,
+          );
     } catch (e) {
       Logger.error("playStation error: $e", tag: 'Player');
-      state = AsyncData(currentState.copyWith(isPlaying: false, isBuffering: false));
+      state = AsyncData(
+        currentState.copyWith(isPlaying: false, isBuffering: false),
+      );
     }
   }
 
@@ -295,6 +319,14 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     if (currentState == null) return;
     await _radioPlayer.stop();
     state = AsyncData(currentState.copyWith(isPlaying: false));
+
+    // Обновляем виджет
+    ref
+        .read(homeWidgetStateProvider.notifier)
+        .updateFromPlayerState(
+          stationName: currentState.currentStation?.name ?? 'SakhaLive',
+          isPlaying: false,
+        );
   }
 
   Future<void> setVolume(double volume) async {
@@ -320,7 +352,9 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     if (currentState?.currentStation == null) return;
 
     final stations = ref.read(stationListProvider);
-    final currentIndex = stations.indexWhere((s) => s.name == currentState!.currentStation!.name);
+    final currentIndex = stations.indexWhere(
+      (s) => s.name == currentState!.currentStation!.name,
+    );
     if (currentIndex < 0) return;
 
     final nextIndex = (currentIndex + 1) % stations.length;
@@ -332,18 +366,27 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     if (currentState?.currentStation == null) return;
 
     final stations = ref.read(stationListProvider);
-    final currentIndex = stations.indexWhere((s) => s.name == currentState!.currentStation!.name);
+    final currentIndex = stations.indexWhere(
+      (s) => s.name == currentState!.currentStation!.name,
+    );
     if (currentIndex < 0) return;
 
-    final prevIndex = currentIndex - 1 < 0 ? stations.length - 1 : currentIndex - 1;
+    final prevIndex = currentIndex - 1 < 0
+        ? stations.length - 1
+        : currentIndex - 1;
     await playStation(stations[prevIndex]);
   }
 
   Future<void> _fetchAlbumArt(String? artist, String? title) async {
     try {
-      final artUrl = await _albumArtService.searchAlbumArt(artist: artist, title: title);
+      final artUrl = await _albumArtService.searchAlbumArt(
+        artist: artist,
+        title: title,
+      );
       final currentState = state.asData?.value;
-      if (artUrl != null && currentState != null && currentState.trackTitle == title) {
+      if (artUrl != null &&
+          currentState != null &&
+          currentState.trackTitle == title) {
         state = AsyncData(currentState.copyWith(albumArt: artUrl));
       }
     } catch (e) {
@@ -352,4 +395,6 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   }
 }
 
-final playerProvider = AsyncNotifierProvider<PlayerNotifier, PlayerState>(PlayerNotifier.new);
+final playerProvider = AsyncNotifierProvider<PlayerNotifier, PlayerState>(
+  PlayerNotifier.new,
+);

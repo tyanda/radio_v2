@@ -27,7 +27,9 @@ class _QuickActionsBarState extends ConsumerState<QuickActionsBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -75,7 +77,9 @@ class _QuickActionsBarState extends ConsumerState<QuickActionsBar> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final isDark = ref.watch(themeProvider.select((s) => s.isDarkTheme));
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,

@@ -68,7 +68,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   Widget build(BuildContext context) {
     super.build(context); // Требуется для AutomaticKeepAliveClientMixin
 
-    final isDark = ref.watch(themeProvider).isDarkTheme;
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
     final weatherAsync = ref.watch(weatherProvider);
 
     return Scaffold(

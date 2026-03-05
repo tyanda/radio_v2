@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -46,8 +48,15 @@ Future<void> main() async {
     Logger.error("Firebase init error: $e", tag: 'Main');
   }
 
-  // Инициализация Home Widget
-  await HomeWidget.setAppGroupId('group.com.sakhalive.shared');
+  // Инициализация Home Widget (только для Android/iOS, не работает на Web)
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    try {
+      await HomeWidget.setAppGroupId('group.com.sakhalive.shared');
+      Logger.log("HomeWidget initialized", tag: 'Main');
+    } catch (e) {
+      Logger.error("HomeWidget init error: $e", tag: 'Main');
+    }
+  }
 
   // Загрузка конфигурации
   await AppConfig.initialize();

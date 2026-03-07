@@ -205,6 +205,114 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ошибка воспроизведения: {error}'**
   String error_playback(String error);
+
+  /// Реклама концерта
+  ///
+  /// In ru, this message translates to:
+  /// **'Большой концерт в Якутске!'**
+  String get ad_concert_title;
+
+  /// Текст кнопки для концерта
+  ///
+  /// In ru, this message translates to:
+  /// **'Купить билеты'**
+  String get ad_concert_action;
+
+  /// Длительность рекламы концерта
+  ///
+  /// In ru, this message translates to:
+  /// **'25с'**
+  String get ad_concert_duration;
+
+  /// Реклама нового альбома
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый альбом уже доступен!'**
+  String get ad_album_title;
+
+  /// Текст кнопки для альбома
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушать'**
+  String get ad_album_action;
+
+  /// Длительность рекламы альбома
+  ///
+  /// In ru, this message translates to:
+  /// **'30с'**
+  String get ad_album_duration;
+
+  /// Реклама музыкального фестиваля
+  ///
+  /// In ru, this message translates to:
+  /// **'Фестиваль музыки 2026'**
+  String get ad_festival_title;
+
+  /// Текст кнопки для фестиваля
+  ///
+  /// In ru, this message translates to:
+  /// **'Узнать больше'**
+  String get ad_festival_action;
+
+  /// Длительность рекламы фестиваля
+  ///
+  /// In ru, this message translates to:
+  /// **'20с'**
+  String get ad_festival_duration;
+
+  /// Реклама студии звукозаписи
+  ///
+  /// In ru, this message translates to:
+  /// **'Студия звукозаписи - Скидка 20%'**
+  String get ad_studio_title;
+
+  /// Текст кнопки для студии
+  ///
+  /// In ru, this message translates to:
+  /// **'Забронировать'**
+  String get ad_studio_action;
+
+  /// Длительность рекламы студии
+  ///
+  /// In ru, this message translates to:
+  /// **'35с'**
+  String get ad_studio_duration;
+
+  /// Реклама магазина инструментов
+  ///
+  /// In ru, this message translates to:
+  /// **'Музыкальные инструменты - Новый магазин'**
+  String get ad_instruments_title;
+
+  /// Текст кнопки для магазина
+  ///
+  /// In ru, this message translates to:
+  /// **'Посетить'**
+  String get ad_instruments_action;
+
+  /// Длительность рекламы магазина
+  ///
+  /// In ru, this message translates to:
+  /// **'28с'**
+  String get ad_instruments_duration;
+
+  /// Заголовок экрана топа
+  ///
+  /// In ru, this message translates to:
+  /// **'Топ Чарт'**
+  String get charts_title;
+
+  /// Подзаголовок экрана топа
+  ///
+  /// In ru, this message translates to:
+  /// **'Самое популярное в Якутии сегодня'**
+  String get charts_subtitle;
+
+  /// Метка рекламы
+  ///
+  /// In ru, this message translates to:
+  /// **'РЕКЛАМА'**
+  String get ad_label;
 }
 
 class _AppLocalizationsDelegate

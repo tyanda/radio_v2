@@ -101,13 +101,24 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   @override
   Future<PlayerState> build() async {
     final audioHandler = ref.read(audioHandlerProvider);
-    _radioPlayer = RadioPlayer(audioHandler: audioHandler);
 
-    // Listen to skip actions from the notification
-    _nextSubscription = audioHandler.onNext.listen((_) => playNextStation());
-    _prevSubscription = audioHandler.onPrev.listen(
-      (_) => playPreviousStation(),
-    );
+    // На вебе создаём RadioPlayer без AudioHandler
+    if (kIsWeb) {
+      _radioPlayer = RadioPlayer(audioHandler: null);
+    } else {
+      if (audioHandler == null) {
+        throw Exception('AudioHandler не доступен на этой платформе');
+      }
+      _radioPlayer = RadioPlayer(audioHandler: audioHandler);
+    }
+
+    // Listen to skip actions from the notification (только для нативных платформ)
+    if (!kIsWeb && audioHandler != null) {
+      _nextSubscription = audioHandler.onNext.listen((_) => playNextStation());
+      _prevSubscription = audioHandler.onPrev.listen(
+        (_) => playPreviousStation(),
+      );
+    }
 
     // Listen to player state changes
     _playerStateSubscription = _radioPlayer.playerStateStream.listen((
@@ -236,6 +247,49 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       currentStation: initialStation,
       isPlaying: initialPlaying,
     );
+  }
+
+  Future<void> playTrack(dynamic track) async {
+    final currentState = state.asData?.value;
+    if (currentState == null || track.previewUrl == null) return;
+
+    // Если этот же трек уже играет, ставим на паузу
+    if (currentState.trackTitle == track.title && currentState.isPlaying) {
+      await _radioPlayer.pause();
+      return;
+    }
+
+    try {
+      state = AsyncData(
+        currentState.copyWith(
+          currentStation: null, // Сбрасываем станцию при игре трека
+          trackTitle: track.title,
+          trackArtist: track.artist,
+          albumArt: track.coverUrl,
+          isPlaying: false,
+          isBuffering: true,
+        ),
+      );
+
+      await _radioPlayer.stop();
+      await _radioPlayer.playStream(
+        url: track.previewUrl!,
+        title: track.title,
+        artist: track.artist ?? 'SakhaLive',
+        album: 'Top Chart',
+        artUri: track.coverUrl,
+      );
+
+      await _radioPlayer.play();
+      state = AsyncData(
+        state.asData!.value.copyWith(isPlaying: true, isBuffering: false),
+      );
+    } catch (e) {
+      Logger.error("playTrack error: $e", tag: 'Player');
+      state = AsyncData(
+        currentState.copyWith(isPlaying: false, isBuffering: false),
+      );
+    }
   }
 
   Future<void> playStation(Station station) async {

@@ -39,8 +39,8 @@ class AppTypography {
   /// Текстовая тема для тёмной темы
   static TextTheme get darkTextTheme {
     return GoogleFonts.interTextTheme().apply(
-      bodyColor: AppColors.textPrimaryDark,
-      displayColor: AppColors.textPrimaryDark,
+      bodyColor: AppColors.textPrimaryLight,
+      displayColor: AppColors.textPrimaryLight,
     );
   }
 

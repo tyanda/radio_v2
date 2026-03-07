@@ -68,4 +68,58 @@ class AppLocalizationsRu extends AppLocalizations {
   String error_playback(String error) {
     return 'Ошибка воспроизведения: $error';
   }
+
+  @override
+  String get ad_concert_title => 'Большой концерт в Якутске!';
+
+  @override
+  String get ad_concert_action => 'Купить билеты';
+
+  @override
+  String get ad_concert_duration => '25с';
+
+  @override
+  String get ad_album_title => 'Новый альбом уже доступен!';
+
+  @override
+  String get ad_album_action => 'Слушать';
+
+  @override
+  String get ad_album_duration => '30с';
+
+  @override
+  String get ad_festival_title => 'Фестиваль музыки 2026';
+
+  @override
+  String get ad_festival_action => 'Узнать больше';
+
+  @override
+  String get ad_festival_duration => '20с';
+
+  @override
+  String get ad_studio_title => 'Студия звукозаписи - Скидка 20%';
+
+  @override
+  String get ad_studio_action => 'Забронировать';
+
+  @override
+  String get ad_studio_duration => '35с';
+
+  @override
+  String get ad_instruments_title => 'Музыкальные инструменты - Новый магазин';
+
+  @override
+  String get ad_instruments_action => 'Посетить';
+
+  @override
+  String get ad_instruments_duration => '28с';
+
+  @override
+  String get charts_title => 'Топ Чарт';
+
+  @override
+  String get charts_subtitle => 'Самое популярное в Якутии сегодня';
+
+  @override
+  String get ad_label => 'РЕКЛАМА';
 }

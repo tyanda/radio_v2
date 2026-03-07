@@ -104,5 +104,83 @@
         "type": "String"
       }
     }
+  },
+
+  "ad_concert_title": "Big Concert in Yakutsk!",
+  "@ad_concert_title": {
+    "description": "Concert advertisement"
+  },
+  "ad_concert_action": "Buy Tickets",
+  "@ad_concert_action": {
+    "description": "Concert ad button text"
+  },
+  "ad_concert_duration": "25s",
+  "@ad_concert_duration": {
+    "description": "Concert ad duration"
+  },
+
+  "ad_album_title": "New Album Available Now!",
+  "@ad_album_title": {
+    "description": "Album advertisement"
+  },
+  "ad_album_action": "Listen",
+  "@ad_album_action": {
+    "description": "Album ad button text"
+  },
+  "ad_album_duration": "30s",
+  "@ad_album_duration": {
+    "description": "Album ad duration"
+  },
+
+  "ad_festival_title": "Music Festival 2026",
+  "@ad_festival_title": {
+    "description": "Music festival advertisement"
+  },
+  "ad_festival_action": "Learn More",
+  "@ad_festival_action": {
+    "description": "Festival ad button text"
+  },
+  "ad_festival_duration": "20s",
+  "@ad_festival_duration": {
+    "description": "Festival ad duration"
+  },
+
+  "ad_studio_title": "Recording Studio - 20% Off",
+  "@ad_studio_title": {
+    "description": "Recording studio advertisement"
+  },
+  "ad_studio_action": "Book Now",
+  "@ad_studio_action": {
+    "description": "Studio ad button text"
+  },
+  "ad_studio_duration": "35s",
+  "@ad_studio_duration": {
+    "description": "Studio ad duration"
+  },
+
+  "ad_instruments_title": "Musical Instruments - New Store",
+  "@ad_instruments_title": {
+    "description": "Instrument store advertisement"
+  },
+  "ad_instruments_action": "Visit",
+  "@ad_instruments_action": {
+    "description": "Store ad button text"
+  },
+  "ad_instruments_duration": "28s",
+  "@ad_instruments_duration": {
+    "description": "Store ad duration"
+  },
+
+  "charts_title": "Top Chart",
+  "@charts_title": {
+    "description": "Charts screen title"
+  },
+  "charts_subtitle": "Most popular in Yakutia today",
+  "@charts_subtitle": {
+    "description": "Charts screen subtitle"
+  },
+  "ad_label": "ADVERTISEMENT",
+  "@ad_label": {
+    "description": "Advertisement label"
   }
 }

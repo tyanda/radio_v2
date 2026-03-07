@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sakha_live/core/design/figma_design.dart';
 import 'package:sakha_live/core/design/design.dart';
 import 'package:sakha_live/core/design/app_constants.dart';
 import 'package:sakha_live/features/horoscope/domain/zodiac_sign.dart';
@@ -205,7 +204,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
         color: isDark
             ? AppColors.cardBackground
             : AppColors.cardBackgroundLight,
-        borderRadius: BorderRadius.circular(FigmaDesign.cardRadius),
+        borderRadius: BorderRadius.circular(AppEffects.radius2xl),
         border: Border(left: BorderSide(color: theme.primaryColor, width: 10)),
         boxShadow: [
           BoxShadow(

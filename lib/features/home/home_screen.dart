@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
 import '../../core/providers/radio_providers.dart';
+import '../charts/presentation/charts_screen.dart';
 import '../horoscope/presentation/widgets/horoscope_view.dart';
 import '../radio/presentation/widgets/mini_player.dart';
 import '../radio/presentation/widgets/radio_view.dart';
@@ -15,12 +16,6 @@ import '../weather/presentation/weather_screen.dart';
 import '../settings/settings_screen.dart';
 
 /// Улучшенный HomeScreen с расширенной навигацией
-///
-/// Особенности:
-/// - Плавные анимации переходов между вкладками
-/// - Улучшенный bottom bar с hover-эффектами
-/// - Анимированный хедер с пульсирующим логотипом
-/// - Интеграция StationGrid для быстрого доступа
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -91,7 +86,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           : AppColors.backgroundLight,
       body: Stack(
         children: [
-          // Основной контент
           Column(
             children: [
               const _AppHeader(),
@@ -109,6 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     children: const [
                       RadioView(),
                       WeatherScreen(),
+                      ChartsScreen(),
                       HoroscopeView(),
                     ],
                   ),
@@ -116,7 +111,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ],
           ),
-          // Плавающая нижняя панель
           Positioned(
             left: 0,
             right: 0,
@@ -136,8 +130,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isDarkMode = ref.watch(
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
-
-    // Добавляем padding для системной навигации
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
@@ -147,21 +139,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         AppSpacing.lg,
         AppSpacing.lg + bottomPadding,
       ),
-      decoration: const BoxDecoration(color: Colors.transparent),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const MiniPlayer(),
           SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.sm,
-            ),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: isDarkMode
                   ? AppColors.cardBackground.withValues(alpha: 0.98)
-                  : Colors.white.withValues(alpha: 1.0),
+                  : Colors.white,
               borderRadius: BorderRadius.circular(AppEffects.radiusFull),
               border: Border.all(
                 color: isDarkMode
@@ -175,10 +163,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               children: [
                 _buildNavItem(Icons.sensors_rounded, 0, 'Радио'),
                 _buildNavItem(Icons.filter_drama_rounded, 1, 'Погода'),
-                _buildNavItem(Icons.auto_awesome_rounded, 2, 'Звезды'),
-                _buildSettingsButton(
-                  isDarkMode ? Icons.settings_rounded : Icons.settings_outlined,
-                ),
+                _buildNavItem(Icons.music_note_rounded, 2, 'Топ'),
+                _buildNavItem(Icons.auto_awesome_rounded, 3, 'Звезды'),
               ],
             ),
           ),
@@ -187,146 +173,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  /// Возвращает цвет иконки в зависимости от состояния и темы
-  Color _getIconColor(bool isActive, bool isDark) {
-    if (isActive) return Colors.black;
-    return isDark ? Colors.white.withValues(alpha: 0.5) : AppColors.iconGrey;
-  }
-
   Widget _buildNavItem(IconData icon, int index, String label) {
     final bool active = _currentTab == index;
     final accentColor = Theme.of(context).primaryColor;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: Consumer(
-        builder: (context, ref, _) {
-          final isDark = ref.watch(
-            themeProvider.select((s) => s.value?.isDarkTheme ?? true),
-          );
-          return GestureDetector(
-            onTap: () => _onTabChanged(index),
-            behavior: HitTestBehavior.opaque,
-            child: AnimatedContainer(
-              duration: AppEffects.durationNormal,
-              curve: AppEffects.curve,
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-              decoration: BoxDecoration(
-                color: active ? accentColor : Colors.transparent,
-                borderRadius: BorderRadius.circular(AppEffects.radiusFull),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 26, color: _getIconColor(active, isDark)),
-                  if (active) ...[
-                    SizedBox(width: AppSpacing.xs),
-                    Text(
-                      label,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
-  }
 
-  Widget _buildSettingsButton(IconData icon) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const SettingsScreen()),
-          );
-        },
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(AppEffects.radiusFull),
-          ),
-          child: Icon(
-            icon,
-            size: 26,
-            color:
-                ref.watch(
-                  themeProvider.select((s) => s.value?.isDarkTheme ?? true),
-                )
-                ? Colors.white.withValues(alpha: 0.5)
-                : AppColors.iconGrey,
-          ),
+    return GestureDetector(
+      onTap: () => _onTabChanged(index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: AppEffects.durationNormal,
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: active ? accentColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon, 
+              size: 24, 
+              color: active 
+                ? Colors.black 
+                : (isDark ? Colors.white54 : AppColors.iconGrey)
+            ),
+            if (active) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 }
 
-class _AppHeader extends ConsumerStatefulWidget {
+class _AppHeader extends ConsumerWidget {
   const _AppHeader();
 
-  @override
-  ConsumerState<_AppHeader> createState() => _AppHeaderState();
-}
-
-class _AppHeaderState extends ConsumerState<_AppHeader>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _blurAnimation;
-  late Animation<double> _rotateAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _blurAnimation = Tween<double>(
-      begin: 4.0,
-      end: 16.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _rotateAnimation = Tween<double>(
-      begin: 0.0,
-      end: 2 * 3.14159,
-    ).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  /// Виджет SVG-иконки приветствия на основе времени суток
   Widget _buildGreetingSvg(bool isDarkMode) {
     final hour = DateTime.now().hour;
     String assetName;
-
     if (hour >= 6 && hour < 12) {
       assetName = 'morning';
     } else if (hour >= 12 && hour < 18) {
@@ -348,7 +248,6 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
         ),
       );
     } catch (e) {
-      // Fallback если SVG файл не найден
       return Icon(
         hour >= 6 && hour < 18 ? Icons.wb_sunny : Icons.nightlight_round,
         size: 20,
@@ -358,7 +257,7 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final greetingAsync = ref.watch(greetingProvider);
     final isDark = ref.watch(
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
@@ -372,17 +271,11 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
     );
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: topPadding,
-        bottom: AppSpacing.md,
-      ),
+      padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.md),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               RichText(
@@ -392,104 +285,53 @@ class _AppHeaderState extends ConsumerState<_AppHeader>
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
-                    height: 1.0,
                     fontFamily: 'Inter',
                   ),
                   children: [
                     const TextSpan(text: "Sakha"),
                     TextSpan(
                       text: "Live",
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        height: 1.0,
-                      ),
+                      style: TextStyle(color: Theme.of(context).primaryColor),
                     ),
                   ],
                 ),
-                textHeightBehavior: const TextHeightBehavior(
-                  applyHeightToFirstAscent: false,
-                  applyHeightToLastDescent: false,
-                ),
               ),
-              SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: 4),
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     greeting,
                     style: GoogleFonts.inter(
-                      color: isDark
-                          ? AppColors.textTertiary
-                          : AppColors.textName,
+                      color: isDark ? AppColors.textTertiary : AppColors.textName,
                       fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      letterSpacing: 4.0,
-                      height: 1.0,
-                    ),
-                    textHeightBehavior: const TextHeightBehavior(
-                      applyHeightToFirstAscent: false,
-                      applyHeightToLastDescent: false,
+                      fontSize: 11,
+                      letterSpacing: 3.0,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: 8),
                   _buildGreetingSvg(isDark),
                 ],
               ),
             ],
           ),
-          // Анимированный логотип "Дыхание" с вращением
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Transform.rotate(
-                  angle: _rotateAnimation.value * 0.05,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                          Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withValues(alpha: 0.3),
-                          blurRadius: _blurAnimation.value,
-                          spreadRadius: _controller.value * 2,
-                        ),
-                      ],
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: isDark
-                          ? AppColors.cardBackground
-                          : Theme.of(context).scaffoldBackgroundColor,
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/load.png',
-                          width: 36,
-                          height: 36,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+          IconButton(
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.cardBackground : Colors.black.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isDark ? Icons.settings_rounded : Icons.settings_outlined,
+                color: isDark ? AppColors.textPrimary : AppColors.textName,
+              ),
+            ),
           ),
         ],
       ),
@@ -507,27 +349,17 @@ class _MarqueeSection extends ConsumerWidget {
       height: 32.0,
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-            blurRadius: 8,
-            spreadRadius: 0,
-          ),
-        ],
       ),
       alignment: Alignment.center,
       child: Marquee(
-        text:
-            "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
+        text: "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
         style: GoogleFonts.inter(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
           color: Colors.black,
         ),
         velocity: 30,
         blankSpace: 100,
-        accelerationDuration: const Duration(seconds: 1),
-        accelerationCurve: Curves.easeIn,
       ),
     );
   }

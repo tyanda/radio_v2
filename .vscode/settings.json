@@ -3,8 +3,23 @@
     "**/defaultSettings.jsonc": true
   },
   "files.watcherExclude": {
-    "**/defaultSettings.jsonc": true
+    "**/defaultSettings.jsonc": true,
+    "**/build/**": true,
+    "**/.dart_tool/**": true
   },
   "json.validate.enable": false,
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "python.terminal.useEnvFile": true,
+  "dart.flutterSdkPath": "/home/tyanda/snap/flutter/common/flutter",
+  "dart.hotReloadOnSave": "manual",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "Dart-Code.dart-code",
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.quickSuggestions": {
+      "strings": true,
+      "comments": true,
+      "other": true
+    }
+  }
 }

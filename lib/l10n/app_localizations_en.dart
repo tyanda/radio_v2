@@ -67,4 +67,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String error_playback(String error) {
     return 'Playback error: $error';
   }
+
+  @override
+  String get ad_concert_title => 'Big Concert in Yakutsk!';
+
+  @override
+  String get ad_concert_action => 'Buy Tickets';
+
+  @override
+  String get ad_concert_duration => '25s';
+
+  @override
+  String get ad_album_title => 'New Album Available Now!';
+
+  @override
+  String get ad_album_action => 'Listen';
+
+  @override
+  String get ad_album_duration => '30s';
+
+  @override
+  String get ad_festival_title => 'Music Festival 2026';
+
+  @override
+  String get ad_festival_action => 'Learn More';
+
+  @override
+  String get ad_festival_duration => '20s';
+
+  @override
+  String get ad_studio_title => 'Recording Studio - 20% Off';
+
+  @override
+  String get ad_studio_action => 'Book Now';
+
+  @override
+  String get ad_studio_duration => '35s';
+
+  @override
+  String get ad_instruments_title => 'Musical Instruments - New Store';
+
+  @override
+  String get ad_instruments_action => 'Visit';
+
+  @override
+  String get ad_instruments_duration => '28s';
+
+  @override
+  String get charts_title => 'Top Chart';
+
+  @override
+  String get charts_subtitle => 'Most popular in Yakutia today';
+
+  @override
+  String get ad_label => 'ADVERTISEMENT';
 }

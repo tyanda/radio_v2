@@ -24,4 +24,11 @@ plugins {
     id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
+// Оптимизация: ленивая конфигурация проектов
+gradle.beforeProject {
+    if (project.name == "app") {
+        project.extra.set("enableD8", true)
+    }
+}
+
 include(":app")

@@ -104,5 +104,83 @@
         "type": "String"
       }
     }
+  },
+
+  "ad_concert_title": "Большой концерт в Якутске!",
+  "@ad_concert_title": {
+    "description": "Реклама концерта"
+  },
+  "ad_concert_action": "Купить билеты",
+  "@ad_concert_action": {
+    "description": "Текст кнопки для концерта"
+  },
+  "ad_concert_duration": "25с",
+  "@ad_concert_duration": {
+    "description": "Длительность рекламы концерта"
+  },
+
+  "ad_album_title": "Новый альбом уже доступен!",
+  "@ad_album_title": {
+    "description": "Реклама нового альбома"
+  },
+  "ad_album_action": "Слушать",
+  "@ad_album_action": {
+    "description": "Текст кнопки для альбома"
+  },
+  "ad_album_duration": "30с",
+  "@ad_album_duration": {
+    "description": "Длительность рекламы альбома"
+  },
+
+  "ad_festival_title": "Фестиваль музыки 2026",
+  "@ad_festival_title": {
+    "description": "Реклама музыкального фестиваля"
+  },
+  "ad_festival_action": "Узнать больше",
+  "@ad_festival_action": {
+    "description": "Текст кнопки для фестиваля"
+  },
+  "ad_festival_duration": "20с",
+  "@ad_festival_duration": {
+    "description": "Длительность рекламы фестиваля"
+  },
+
+  "ad_studio_title": "Студия звукозаписи - Скидка 20%",
+  "@ad_studio_title": {
+    "description": "Реклама студии звукозаписи"
+  },
+  "ad_studio_action": "Забронировать",
+  "@ad_studio_action": {
+    "description": "Текст кнопки для студии"
+  },
+  "ad_studio_duration": "35с",
+  "@ad_studio_duration": {
+    "description": "Длительность рекламы студии"
+  },
+
+  "ad_instruments_title": "Музыкальные инструменты - Новый магазин",
+  "@ad_instruments_title": {
+    "description": "Реклама магазина инструментов"
+  },
+  "ad_instruments_action": "Посетить",
+  "@ad_instruments_action": {
+    "description": "Текст кнопки для магазина"
+  },
+  "ad_instruments_duration": "28с",
+  "@ad_instruments_duration": {
+    "description": "Длительность рекламы магазина"
+  },
+
+  "charts_title": "Топ Чарт",
+  "@charts_title": {
+    "description": "Заголовок экрана топа"
+  },
+  "charts_subtitle": "Самое популярное в Якутии сегодня",
+  "@charts_subtitle": {
+    "description": "Подзаголовок экрана топа"
+  },
+  "ad_label": "РЕКЛАМА",
+  "@ad_label": {
+    "description": "Метка рекламы"
   }
 }

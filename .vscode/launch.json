@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Run (Debug)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "${workspaceFolder}/lib/main.dart",
+      "args": ["-d", "emulator-5554"],
+      "console": "terminal"
+    },
+    {
+      "name": "Flutter Run (Profile)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "program": "${workspaceFolder}/lib/main.dart",
+      "args": ["-d", "emulator-5554"],
+      "console": "terminal"
+    },
+    {
+      "name": "Flutter Run (Release)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "program": "${workspaceFolder}/lib/main.dart",
+      "args": ["-d", "emulator-5554"],
+      "console": "terminal"
+    },
+    {
+      "name": "Flutter Test (Current File)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${file}",
+      "console": "terminal",
+      "env": {
+        "FLUTTER_TEST": "true"
+      }
+    }
+  ]
+}

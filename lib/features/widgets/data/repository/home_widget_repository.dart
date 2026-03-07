@@ -1,4 +1,5 @@
 import 'package:home_widget/home_widget.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:sakha_live/core/utils/logger.dart';
 
@@ -15,6 +16,9 @@ class HomeWidgetRepository {
     String? albumArt,
     bool isPlaying = false,
   }) async {
+    // Виджеты не поддерживаются на Web
+    if (kIsWeb) return;
+
     try {
       // Сохраняем данные в SharedPreferences для виджета
       await HomeWidget.saveWidgetData<String>('stationName', stationName);
@@ -45,6 +49,9 @@ class HomeWidgetRepository {
 
   /// Проверка наличия виджета на экране
   Future<bool> isWidgetAdded() async {
+    // Виджеты не поддерживаются на Web
+    if (kIsWeb) return false;
+
     // HomeWidget не предоставляет прямого метода проверки
     // Возвращаем true для совместимости
     return true;
@@ -52,6 +59,9 @@ class HomeWidgetRepository {
 
   /// Настройка callback для взаимодействия с виджетом
   Future<void> setupCallback() async {
+    // Виджеты не поддерживаются на Web
+    if (kIsWeb) return;
+
     try {
       HomeWidget.widgetClicked.listen((uri) {
         // Обработка клика по виджету
@@ -64,6 +74,7 @@ class HomeWidgetRepository {
 
   /// Получить платформу
   String get platform {
+    if (kIsWeb) return 'web';
     if (Platform.isAndroid) return 'android';
     if (Platform.isIOS) return 'ios';
     return 'unknown';

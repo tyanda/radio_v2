@@ -23,19 +23,28 @@ import 'package:sakha_live/l10n/app_localizations.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Инициализация обработчика аудио (один раз на весь цикл жизни приложения)
-  final audioHandler = await AudioService.init(
-    builder: () => RadioAudioHandler(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.sakhalive.player',
-      androidNotificationChannelName: 'SakhaLive Playback',
-      androidStopForegroundOnPause: true,
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidShowNotificationBadge: true,
-    ),
-  );
+  // 1. Загрузка конфигурации (должна быть перед Firebase!)
+  await AppConfig.initialize();
 
-  // Инициализация Firebase
+  // 2. Инициализация обработчика аудио (только для Android/iOS, не работает на Web)
+  dynamic audioHandler;
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    audioHandler = await AudioService.init(
+      builder: () => RadioAudioHandler(),
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.sakhalive.player',
+        androidNotificationChannelName: 'SakhaLive Playback',
+        androidStopForegroundOnPause: true,
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidShowNotificationBadge: true,
+      ),
+    );
+    Logger.log("AudioService initialized", tag: 'Main');
+  } else {
+    Logger.log("AudioService skipped for Web/Desktop", tag: 'Main');
+  }
+
+  // 3. Инициализация Firebase
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
@@ -48,7 +57,7 @@ Future<void> main() async {
     Logger.error("Firebase init error: $e", tag: 'Main');
   }
 
-  // Инициализация Home Widget (только для Android/iOS, не работает на Web)
+  // 4. Инициализация Home Widget (только для Android/iOS, не работает на Web)
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     try {
       await HomeWidget.setAppGroupId('group.com.sakhalive.shared');
@@ -58,12 +67,13 @@ Future<void> main() async {
     }
   }
 
-  // Загрузка конфигурации
-  await AppConfig.initialize();
-
   runApp(
     ProviderScope(
-      overrides: [audioHandlerProvider.overrideWithValue(audioHandler)],
+      overrides: [
+        // Переопределяем audioHandlerProvider для всех платформ
+        // На вебе будет null, на Android/iOS - реальный AudioHandler
+        audioHandlerProvider.overrideWithValue(audioHandler),
+      ],
       child: const MyApp(),
     ),
   );

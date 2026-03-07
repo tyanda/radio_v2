@@ -8,8 +8,8 @@ import 'package:sakha_live/widgets/scroll_scale_card.dart';
 import 'package:sakha_live/core/providers/weather_provider.dart';
 import 'package:sakha_live/core/utils/responsive_utils.dart';
 import 'package:sakha_live/core/utils/snackbar_helper.dart';
+import 'package:sakha_live/core/design/design.dart';
 import 'package:sakha_live/core/design/app_constants.dart';
-import 'package:sakha_live/core/design/design_tokens.dart';
 import 'package:sakha_live/core/providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/weather_model.dart';
@@ -117,7 +117,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
-        16,
+        AppSpacing.md,
         horizontalPadding,
         bottomPlayerHeight,
       ),

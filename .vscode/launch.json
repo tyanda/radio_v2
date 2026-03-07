@@ -7,8 +7,7 @@
       "type": "dart",
       "flutterMode": "debug",
       "program": "${workspaceFolder}/lib/main.dart",
-      "args": ["-d", "emulator-5554"],
-      "console": "terminal"
+      "args": ["-d", "emulator-5554"]
     },
     {
       "name": "Flutter Run (Profile)",
@@ -16,8 +15,7 @@
       "type": "dart",
       "flutterMode": "profile",
       "program": "${workspaceFolder}/lib/main.dart",
-      "args": ["-d", "emulator-5554"],
-      "console": "terminal"
+      "args": ["-d", "emulator-5554"]
     },
     {
       "name": "Flutter Run (Release)",
@@ -25,15 +23,13 @@
       "type": "dart",
       "flutterMode": "release",
       "program": "${workspaceFolder}/lib/main.dart",
-      "args": ["-d", "emulator-5554"],
-      "console": "terminal"
+      "args": ["-d", "emulator-5554"]
     },
     {
       "name": "Flutter Test (Current File)",
       "type": "dart",
       "request": "launch",
       "program": "${file}",
-      "console": "terminal",
       "env": {
         "FLUTTER_TEST": "true"
       }

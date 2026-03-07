@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions ios = FirebaseOptions(
-    apiKey: '',
+    apiKey: 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q',
     appId: '1:1097107309921:ios:b8fb3ac41625f5ac2d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',

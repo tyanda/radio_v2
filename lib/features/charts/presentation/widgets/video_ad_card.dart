@@ -41,45 +41,53 @@ class _VideoAdCardState extends State<VideoAdCard> {
   // 2. ЛОГИКА ПОЛУЧЕНИЯ ССЫЛКИ (Firebase Firestore - как в React)
   void _initFirebaseListener() {
     // Ссылка на документ "sakhalive-remote" в коллекции "artifacts"
-    final videoDocRef = FirebaseFirestore.instance.collection('artifacts').doc('sakhalive-remote');
-    
+    final videoDocRef = FirebaseFirestore.instance
+        .collection('artifacts')
+        .doc('sakhalive-remote');
+
     // onSnapshot следит за базой: как только меняешь ссылку в Firebase,
     // эта функция сразу срабатывает и обновляет видео в приложении
-    _videoSubscription = videoDocRef.snapshots().listen((snap) {
-      if (snap.exists) {
-        final data = snap.data();
-        final videoUrl = data?['videoUrl'] as String?;
-        
-        if (videoUrl != null && videoUrl.isNotEmpty) {
-          _initVideoPlayer(videoUrl);
+    _videoSubscription = videoDocRef.snapshots().listen(
+      (snap) {
+        if (snap.exists) {
+          final data = snap.data();
+          final videoUrl = data?['videoUrl'] as String?;
+
+          if (videoUrl != null && videoUrl.isNotEmpty) {
+            _initVideoPlayer(videoUrl);
+          }
         }
-      }
-    }, onError: (error) {
-      debugPrint('❌ VideoAd: Ошибка Firestore: $error');
-    });
+      },
+      onError: (error) {
+        debugPrint('❌ VideoAd: Ошибка Firestore: $error');
+      },
+    );
   }
 
   // 3. ВИЗУАЛЬНЫЙ ПЛЕЕР (аналог <video> в React)
   void _initVideoPlayer(String url) async {
     // key={myVideoUrl} - заставляет плеер перезагрузиться при смене ссылки
     await _controller?.dispose();
-    
+
     _controller = VideoPlayerController.networkUrl(Uri.parse(url));
-    
-    await _controller!.initialize().then((_) {
-      setState(() {
-        _videoLoaded = true; // onLoadedData(() => setVideoLoaded(true))
-      });
-      
-      // autoPlay
-      _controller!.play();
-      // loop
-      _controller!.setLooping(true);
-      // muted={isMuted}
-      _controller!.setVolume(_isMuted ? 0.0 : 1.0);
-    }).catchError((error) {
-      debugPrint('❌ VideoAd: Ошибка: $error');
-    });
+
+    await _controller!
+        .initialize()
+        .then((_) {
+          setState(() {
+            _videoLoaded = true; // onLoadedData(() => setVideoLoaded(true))
+          });
+
+          // autoPlay
+          _controller!.play();
+          // loop
+          _controller!.setLooping(true);
+          // muted={isMuted}
+          _controller!.setVolume(_isMuted ? 0.0 : 1.0);
+        })
+        .catchError((error) {
+          debugPrint('❌ VideoAd: Ошибка: $error');
+        });
   }
 
   @override
@@ -116,7 +124,10 @@ class _VideoAdCardState extends State<VideoAdCard> {
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppEffects.radius2xl),
-              child: _videoLoaded && _controller != null && _controller!.value.isInitialized
+              child:
+                  _videoLoaded &&
+                      _controller != null &&
+                      _controller!.value.isInitialized
                   ? VideoPlayer(_controller!)
                   : Container(
                       color: widget.isDark
@@ -143,7 +154,7 @@ class _VideoAdCardState extends State<VideoAdCard> {
                     ),
             ),
           ),
-          
+
           // Градиент поверх видео (для красоты)
           Positioned.fill(
             child: Container(

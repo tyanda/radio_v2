@@ -197,11 +197,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              icon, 
-              size: 24, 
-              color: active 
-                ? Colors.black 
-                : (isDark ? Colors.white54 : AppColors.iconGrey)
+              icon,
+              size: 24,
+              color: active
+                  ? Colors.black
+                  : (isDark ? Colors.white54 : AppColors.iconGrey),
             ),
             if (active) ...[
               const SizedBox(width: 8),
@@ -271,7 +271,12 @@ class _AppHeader extends ConsumerWidget {
     );
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.md),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        topPadding,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -302,7 +307,9 @@ class _AppHeader extends ConsumerWidget {
                   Text(
                     greeting,
                     style: GoogleFonts.inter(
-                      color: isDark ? AppColors.textTertiary : AppColors.textName,
+                      color: isDark
+                          ? AppColors.textTertiary
+                          : AppColors.textName,
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                       letterSpacing: 3.0,
@@ -324,7 +331,9 @@ class _AppHeader extends ConsumerWidget {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.cardBackground : Colors.black.withValues(alpha: 0.05),
+                color: isDark
+                    ? AppColors.cardBackground
+                    : Colors.black.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -347,12 +356,11 @@ class _MarqueeSection extends ConsumerWidget {
     final marqueeText = ref.watch(marqueeTextProvider);
     return Container(
       height: 32.0,
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-      ),
+      decoration: BoxDecoration(color: Theme.of(context).primaryColor),
       alignment: Alignment.center,
       child: Marquee(
-        text: "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
+        text:
+            "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w700,
           fontSize: 13,

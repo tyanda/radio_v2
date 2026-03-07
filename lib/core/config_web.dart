@@ -18,10 +18,10 @@ class AppConfig {
   static String apiVerveKey = '';
 
   static Future<void> initialize() async {
-    // В веб-версии НЕ загружаем .env напрямую через rootBundle, 
+    // В веб-версии НЕ загружаем .env напрямую через rootBundle,
     // так как это часто вызывает ошибки 404 (assets/.env)
     // Вместо этого используем значения по умолчанию или localStorage
-    
+
     // Значения по умолчанию (production)
     openWeatherApiKey = '8a392c6308671b581410d09e97f6ecac';
     firebaseWebApiKey = 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q';
@@ -44,7 +44,8 @@ class AppConfig {
       firebaseIOSApiKey =
           web.window.localStorage.getItem('FIREBASE_IOS_API_KEY') ??
           firebaseIOSApiKey;
-      rssFeedUrl = web.window.localStorage.getItem('RSS_FEED_URL') ?? rssFeedUrl;
+      rssFeedUrl =
+          web.window.localStorage.getItem('RSS_FEED_URL') ?? rssFeedUrl;
       apiNinjasKey =
           web.window.localStorage.getItem('API_NINJAS_KEY') ?? apiNinjasKey;
       apiVerveKey =

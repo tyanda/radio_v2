@@ -99,6 +99,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
   build_runner: ^2.4.15
+  
+  # Testing
+  mockito: ^5.4.4
 
 flutter_launcher_icons:
   image_path: "assets/images/icon.png"

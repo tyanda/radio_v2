@@ -21,7 +21,10 @@ void main() {
       expect(firstTrack.artist, isNotEmpty);
       expect(firstTrack.rank, equals(1));
       expect(firstTrack.coverUrl, isNotEmpty);
-      expect(firstTrack.coverUrl, contains('600x600bb')); // Проверка улучшения качества
+      expect(
+        firstTrack.coverUrl,
+        contains('600x600bb'),
+      ); // Проверка улучшения качества
 
       // Печатаем данные для визуальной проверки в логах
       debugPrint('First track: ${firstTrack.title} by ${firstTrack.artist}');

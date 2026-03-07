@@ -30,7 +30,14 @@ class ChartsScreen extends ConsumerWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => ref.read(chartsProvider.notifier).refresh(),
-          child: _buildChartsTab(chartsAsync, theme, isDark, ref, context, currentSource),
+          child: _buildChartsTab(
+            chartsAsync,
+            theme,
+            isDark,
+            ref,
+            context,
+            currentSource,
+          ),
         ),
       ),
     );
@@ -52,7 +59,7 @@ class ChartsScreen extends ConsumerWidget {
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.md,
+            AppSpacing.lg,
             AppSpacing.lg,
             100, // Padding для нижней навигации
           ),
@@ -63,7 +70,7 @@ class ChartsScreen extends ConsumerWidget {
               Padding(
                 padding: EdgeInsets.only(
                   left: AppSpacing.xs,
-                  bottom: AppSpacing.sm,
+                  bottom: AppSpacing.md,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,13 +278,15 @@ class ChartsScreen extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: isActive 
+          color: isActive
               ? (isDark ? AppColors.cardBackground : Colors.grey.shade300)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isActive 
-                ? (isDark ? Colors.white24 : Colors.black.withValues(alpha: 0.24))
+            color: isActive
+                ? (isDark
+                      ? Colors.white24
+                      : Colors.black.withValues(alpha: 0.24))
                 : Colors.transparent,
             width: 1,
           ),

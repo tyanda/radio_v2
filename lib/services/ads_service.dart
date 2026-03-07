@@ -15,7 +15,10 @@ class AdsService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        Logger.log('ℹ️ Рекламные объявления не найдены в Firestore', tag: 'AdsService');
+        Logger.log(
+          'ℹ️ Рекламные объявления не найдены в Firestore',
+          tag: 'AdsService',
+        );
         return [];
       }
 
@@ -28,14 +31,17 @@ class AdsService {
           // В Firestore используем поле videoUrl для самого видео
           videoUrl: data['videoUrl'] ?? '',
           // Ссылка для перехода при клике
-          previewUrl: data['linkUrl'] ?? '', 
+          previewUrl: data['linkUrl'] ?? '',
           actionText: data['actionText'] ?? 'Подробнее',
           duration: data['duration'] ?? '30s',
           coverUrl: data['thumbnailUrl'] ?? '',
         );
       }).toList();
     } catch (e) {
-      Logger.error('❌ Ошибка загрузки рекламы из Firestore: $e', tag: 'AdsService');
+      Logger.error(
+        '❌ Ошибка загрузки рекламы из Firestore: $e',
+        tag: 'AdsService',
+      );
       return [];
     }
   }

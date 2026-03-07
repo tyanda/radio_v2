@@ -50,60 +50,62 @@ class ItunesChartService {
         // В iTunes RSS все элементы в массиве entry - это треки
         final tracks = entries;
 
-        return tracks
-            .asMap()
-            .entries
-            .map((entry) {
-              final index = entry.key;
-              final track = entry.value as Map<String, dynamic>;
+        return tracks.asMap().entries.map((entry) {
+          final index = entry.key;
+          final track = entry.value as Map<String, dynamic>;
 
-              // Правильный парсинг структуры iTunes RSS с префиксами im:
-              // im:name - название песни
-              final title = track['im:name']?['label'] as String? ?? 
-                           track['title']?['label'] as String? ?? '';
-              
-              // im:artist - исполнитель
-              final artist = track['im:artist']?['label'] as String? ?? 
-                            track['artist']?['label'] as String? ?? '';
-              
-              // Обложка: iTunes возвращает массив изображений в im:image
-              final images = track['im:image'] as List? ?? [];
-              String coverUrl = '';
-              if (images.isNotEmpty) {
-                // Берём изображение с наивысшим разрешением (последнее)
-                coverUrl = images.last['label'] as String? ?? '';
+          // Правильный парсинг структуры iTunes RSS с префиксами im:
+          // im:name - название песни
+          final title =
+              track['im:name']?['label'] as String? ??
+              track['title']?['label'] as String? ??
+              '';
+
+          // im:artist - исполнитель
+          final artist =
+              track['im:artist']?['label'] as String? ??
+              track['artist']?['label'] as String? ??
+              '';
+
+          // Обложка: iTunes возвращает массив изображений в im:image
+          final images = track['im:image'] as List? ?? [];
+          String coverUrl = '';
+          if (images.isNotEmpty) {
+            // Берём изображение с наивысшим разрешением (последнее)
+            coverUrl = images.last['label'] as String? ?? '';
+          }
+
+          // Preview URL: обычно находится в массиве link
+          String previewUrl = '';
+          final links = track['link'];
+          if (links is List) {
+            for (var link in links) {
+              final attributes = link['attributes'] as Map? ?? {};
+              if (attributes['im:assetType'] == 'preview') {
+                previewUrl = attributes['href'] as String? ?? '';
+                break;
               }
-              
-              // Preview URL: обычно находится в массиве link
-              String previewUrl = '';
-              final links = track['link'];
-              if (links is List) {
-                for (var link in links) {
-                  final attributes = link['attributes'] as Map? ?? {};
-                  if (attributes['im:assetType'] == 'preview') {
-                    previewUrl = attributes['href'] as String? ?? '';
-                    break;
-                  }
-                }
-              } else if (links is Map) {
-                previewUrl = links['attributes']?['href'] as String? ?? '';
-              }
+            }
+          } else if (links is Map) {
+            previewUrl = links['attributes']?['href'] as String? ?? '';
+          }
 
-              // ID трека: im:id в атрибутах id
-              final id = track['id']?['attributes']?['im:id'] as String? ?? 
-                        track['id']?['label'] as String? ?? '';
+          // ID трека: im:id в атрибутах id
+          final id =
+              track['id']?['attributes']?['im:id'] as String? ??
+              track['id']?['label'] as String? ??
+              '';
 
-              return ChartItem(
-                id: id,
-                type: ChartItemType.song,
-                title: title,
-                artist: artist,
-                rank: index + 1,
-                coverUrl: _getHighResCover(coverUrl),
-                previewUrl: previewUrl,
-              );
-            })
-            .toList();
+          return ChartItem(
+            id: id,
+            type: ChartItemType.song,
+            title: title,
+            artist: artist,
+            rank: index + 1,
+            coverUrl: _getHighResCover(coverUrl),
+            previewUrl: previewUrl,
+          );
+        }).toList();
       } else {
         Logger.error(
           '❌ iTunes API error: ${response.statusCode}',
@@ -136,7 +138,7 @@ class ItunesChartService {
     if (sizeRegex.hasMatch(url)) {
       return url.replaceFirst(sizeRegex, '600x600bb');
     }
-    
+
     // Если паттерн не найден, пробуем обычные замены
     return url
         .replaceAll('100x100bb', '600x600bb')

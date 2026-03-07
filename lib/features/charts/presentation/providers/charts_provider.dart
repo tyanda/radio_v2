@@ -34,7 +34,7 @@ class ChartsNotifier extends StateNotifier<AsyncValue<List<ChartItem>>> {
   final DeezerChartService _deezerService = DeezerChartService();
   final ItunesChartService _itunesService = ItunesChartService();
   final AdsService _adsService = AdsService();
-  
+
   ChartsNotifier() : super(const AsyncValue.loading()) {
     _loadCharts();
   }
@@ -43,8 +43,8 @@ class ChartsNotifier extends StateNotifier<AsyncValue<List<ChartItem>>> {
     try {
       // Загружаем треки и рекламу параллельно
       final results = await Future.wait<List<ChartItem>>([
-        _currentSource == ChartSource.itunes 
-            ? _loadFromItunes() 
+        _currentSource == ChartSource.itunes
+            ? _loadFromItunes()
             : _loadFromDeezer(),
         _adsService.fetchVideoAds(),
       ]);
@@ -53,11 +53,18 @@ class ChartsNotifier extends StateNotifier<AsyncValue<List<ChartItem>>> {
       final List<ChartItem> ads = results[1];
 
       // Фильтруем треки без previewUrl (не воспроизводимые)
-      tracks = tracks.where((track) => track.previewUrl != null && track.previewUrl!.isNotEmpty).toList();
+      tracks = tracks
+          .where(
+            (track) => track.previewUrl != null && track.previewUrl!.isNotEmpty,
+          )
+          .toList();
 
       // Если API вернул пустой результат или мало треков (< 5), используем fallback
       if (tracks.isEmpty || tracks.length < 5) {
-        Logger.log('⚠️ Мало треков (${tracks.length}), используем fallback', tag: 'Charts');
+        Logger.log(
+          '⚠️ Мало треков (${tracks.length}), используем fallback',
+          tag: 'Charts',
+        );
         state = AsyncValue.data(_getFallbackCharts());
         return;
       }
@@ -67,11 +74,14 @@ class ChartsNotifier extends StateNotifier<AsyncValue<List<ChartItem>>> {
         tracks = tracks.take(10).toList();
       }
 
-      Logger.log('✅ Загружено ${tracks.length} треков для чарта', tag: 'Charts');
+      Logger.log(
+        '✅ Загружено ${tracks.length} треков для чарта',
+        tag: 'Charts',
+      );
 
       // Вставляем рекламу
       final List<ChartItem> combinedList = List.from(tracks);
-      
+
       if (ads.isNotEmpty) {
         // Вставляем первое активное объявление на 5-ю позицию
         if (combinedList.length >= 5) {
@@ -82,8 +92,8 @@ class ChartsNotifier extends StateNotifier<AsyncValue<List<ChartItem>>> {
       } else {
         // Если из Firestore реклама не пришла, используем статический заглушечный вариант
         combinedList.insert(
-          combinedList.length >= 5 ? 5 : combinedList.length, 
-          _getStaticAd()
+          combinedList.length >= 5 ? 5 : combinedList.length,
+          _getStaticAd(),
         );
       }
 
@@ -101,7 +111,8 @@ class ChartsNotifier extends StateNotifier<AsyncValue<List<ChartItem>>> {
       id: 'ad_static_v1',
       type: ChartItemType.videoAd,
       title: 'SakhaLive Radio',
-      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      videoUrl:
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
       previewUrl: 'https://sakhalive.ru',
       actionText: 'Подробнее',
       duration: '30s',

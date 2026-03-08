@@ -242,7 +242,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       controller: _scrollController,
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        0,
+        AppSpacing.lg, // Верхний отступ 16px
         AppSpacing.lg,
         bottomPlayerHeight,
       ),
@@ -306,7 +306,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        0,
+        AppSpacing.lg, // Верхний отступ 16px
         AppSpacing.lg,
         bottomPlayerHeight,
       ),

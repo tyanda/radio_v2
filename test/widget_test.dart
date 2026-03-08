@@ -2,11 +2,8 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sakha_live/core/design/design_tokens.dart';
 import 'package:sakha_live/core/providers.dart';
-import 'package:sakha_live/core/providers/dynamic_theme_provider.dart';
 import 'package:sakha_live/core/providers/radio_providers.dart';
-import 'package:sakha_live/core/theme_provider.dart';
 import 'package:sakha_live/features/radio/presentation/providers/player_provider.dart';
 import 'package:sakha_live/main.dart';
 import 'package:sakha_live/services/audio_handler.dart';
@@ -51,12 +48,10 @@ void main() {
         overrides: [
           audioHandlerProvider.overrideWithValue(MockAudioHandler()),
           themeProvider.overrideWith(MockThemeNotifier.new),
-          dynamicThemeManagerProvider.overrideWithValue(null),
           playerProvider.overrideWith(MockPlayerNotifier.new),
           newsProvider.overrideWith((ref) => Future.value([])),
           tickerProvider.overrideWith((ref) => Stream.value("")),
           greetingProvider.overrideWith((ref) => Stream.value("ДОБРОЕ УТРО")),
-          dynamicColorProvider.overrideWith((ref) => AppColors.primary),
         ],
         child: const MyApp(),
       ),

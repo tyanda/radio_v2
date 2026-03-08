@@ -11,7 +11,6 @@ import 'package:home_widget/home_widget.dart';
 
 import 'package:sakha_live/core/config.dart';
 import 'package:sakha_live/core/providers.dart';
-import 'package:sakha_live/core/providers/dynamic_theme_provider.dart';
 import 'package:sakha_live/core/utils/logger.dart';
 import 'package:sakha_live/features/home/home_screen.dart';
 import 'package:sakha_live/firebase_options.dart';
@@ -107,27 +106,22 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Инициализируем менеджер динамической темы (слушает плеер)
-    ref.watch(dynamicThemeManagerProvider);
-
     // Подписываемся на изменения темы для пересборки ShadTheme/MaterialApp
-    ref.watch(themeProvider);
-    final themeNotifier = ref.read(themeProvider.notifier);
-    final targetColor = ref.watch(dynamicColorProvider);
+    final themeState = ref.watch(themeProvider);
 
-    return TweenAnimationBuilder<Color?>(
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeInOut,
-      tween: ColorTween(end: targetColor),
-      builder: (context, color, child) {
-        final animatedColor = color ?? targetColor;
+    return themeState.when(
+      data: (state) {
+        final themeNotifier = ref.read(themeProvider.notifier);
+        final themeData = themeNotifier.getThemeData();
 
         return ShadTheme(
-          data: themeNotifier.getShadcnTheme(animatedColor),
+          data: themeNotifier.getShadcnTheme(),
           child: MaterialApp(
             title: 'SakhaLive',
             debugShowCheckedModeBanner: false,
-            theme: themeNotifier.getThemeData(animatedColor),
+            theme: themeData.lightTheme,
+            darkTheme: themeData.darkTheme,
+            themeMode: state.isDarkTheme ? ThemeMode.dark : ThemeMode.light,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -136,11 +130,16 @@ class _MyAppState extends ConsumerState<MyApp> {
             ],
             supportedLocales: const [Locale('ru'), Locale('en')],
             locale: const Locale('ru'),
-            // Ключевое изменение: показываем либо сплэш, либо главный экран без Navigator.push
             home: _isInitialized ? const HomeScreen() : const SplashScreen(),
           ),
         );
       },
+      loading: () => const MaterialApp(
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      ),
+      error: (_, _) => const MaterialApp(
+        home: Scaffold(body: Center(child: Text('Ошибка загрузки темы'))),
+      ),
     );
   }
 }

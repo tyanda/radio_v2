@@ -62,7 +62,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.md,
+        AppSpacing.lg, // Верхний отступ 16px
         AppSpacing.lg,
         bottomPlayerHeight,
       ),

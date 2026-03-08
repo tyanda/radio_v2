@@ -85,21 +85,18 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
     return playerAsync.when(
       data: (playerState) {
-        final isVisible =
-            playerState.currentStation != null &&
-            (playerState.isPlaying || playerState.isBuffering);
+        // Определяем тип контента: радио или трек
+        final isPlayingTrack =
+            playerState.currentStation == null &&
+            playerState.trackTitle != null;
+        final isVisible = playerState.isPlaying || playerState.isBuffering;
 
         return AnimatedOpacity(
           duration: AppEffects.durationSlow,
           curve: AppEffects.curve,
           opacity: isVisible ? 1.0 : 0.0,
           child: isVisible
-              ? _buildPlayerUI(
-                  context,
-                  ref,
-                  playerState,
-                  playerState.currentStation!,
-                )
+              ? _buildPlayerUI(context, ref, playerState, isPlayingTrack)
               : const SizedBox.shrink(),
         );
       },
@@ -126,8 +123,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
     if (playerState == null) return;
 
-    // Свайп влево/вправо для переключения станций
-    if (_dragOffsetX.abs() > 80) {
+    // Свайп влево/вправо для переключения станций (только для радио)
+    final isPlayingTrack =
+        playerState.currentStation == null && playerState.trackTitle != null;
+
+    if (!isPlayingTrack && _dragOffsetX.abs() > 80) {
       final stations = ref.read(stationListProvider);
       final currentIndex = stations.indexWhere(
         (s) => s.id == playerState.currentStation?.id,
@@ -155,11 +155,20 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     BuildContext context,
     WidgetRef ref,
     PlayerState playerState,
-    Station currentStation,
+    bool isPlayingTrack,
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isBuffering = playerState.isBuffering;
+
+    // Определяем отображаемые данные
+    // Для трека: title = название песни, subtitle = артист
+    // Для радио: title = название станции, subtitle = "ПРЯМОЙ ЭФИР" или метаданные трека
+    final displayTitle = isPlayingTrack
+        ? (playerState.trackTitle ?? 'SakhaLive')
+        : (playerState.currentStation?.name ?? 'SakhaLive');
+
+    final currentStation = playerState.currentStation;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -180,7 +189,15 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
             if (playerState.isPlaying) {
               ref.read(playerProvider.notifier).stop();
             } else {
-              ref.read(playerProvider.notifier).playStation(currentStation);
+              // Если играет трек из чарта - показываем сообщение
+              if (isPlayingTrack) {
+                SnackbarHelper.showError(
+                  context: context,
+                  message: 'Нажмите на трек в списке для воспроизведения',
+                );
+              } else if (currentStation != null) {
+                ref.read(playerProvider.notifier).playStation(currentStation);
+              }
             }
           },
           onPanStart: _handleDragStart,
@@ -264,20 +281,20 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                 context,
                                 ref,
                                 playerState,
-                                currentStation,
+                                isPlayingTrack,
                                 isDark,
                               ),
                             );
                           },
                         ),
                         SizedBox(width: AppSpacing.sm),
-                        // Информация о станции
+                        // Информация о треке/станции
                         Flexible(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Название станции
+                              // Название (трека или станции)
                               isBuffering
                                   ? ShimmerWidget.text(
                                       width: 120,
@@ -289,7 +306,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       ),
                                     )
                                   : Text(
-                                      currentStation.name,
+                                      displayTitle,
                                       style: GoogleFonts.inter(
                                         color: theme.colorScheme.onSurface,
                                         fontWeight: FontWeight.w900,
@@ -301,7 +318,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       overflow: TextOverflow.ellipsis,
                                     ),
                               SizedBox(height: AppSpacing.xs),
-                              // Название трека (бегущая строка) или "ПРЯМОЙ ЭФИР"
+                              // Вторая строка: артист ИЛИ "ПРЯМОЙ ЭФИР" ИЛИ метаданные радио
                               isBuffering
                                   ? ShimmerWidget.text(
                                       width: 80,
@@ -315,9 +332,30 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                         letterSpacing: 1.2,
                                       ),
                                     )
-                                  : playerState.trackTitle != null &&
-                                        playerState.trackTitle!.isNotEmpty
-                                  ? // Бегущая строка с названием трека
+                                  : isPlayingTrack
+                                  ? // Трек из чарта: показываем артиста
+                                    playerState.trackArtist != null &&
+                                            playerState.trackArtist!.isNotEmpty
+                                        ? Text(
+                                            playerState.trackArtist!,
+                                            style: GoogleFonts.inter(
+                                              color: isDark
+                                                  ? theme.primaryColor
+                                                  : AppColors.primaryDark,
+                                              fontSize: 8.5,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.5,
+                                              height: 1.0,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          )
+                                        : const SizedBox.shrink()
+                                  : // Радио: показываем метаданные трека или "ПРЯМОЙ ЭФИР"
+                                    playerState.trackTitle != null &&
+                                        playerState.trackTitle !=
+                                            currentStation?.name
+                                  ? // Бегущая строка с названием трека из метаданных радио
                                     SizedBox(
                                       height: 14,
                                       child: Marquee(
@@ -344,7 +382,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                         decelerationCurve: Curves.easeInOut,
                                       ),
                                     )
-                                  : // "ПРЯМОЙ ЭФИР" если нет названия трека
+                                  : // "ПРЯМОЙ ЭФИР" если нет метаданных
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -389,9 +427,20 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                 ref.read(playerProvider.notifier).stop();
                               } else {
                                 try {
-                                  await ref
-                                      .read(playerProvider.notifier)
-                                      .playStation(currentStation);
+                                  // Если играет трек из чарта - нужно возобновить его
+                                  if (isPlayingTrack) {
+                                    // Для треков просто показываем сообщение
+                                    // Т.к. нет метода resumeTrack, предлагаем пользователю выбрать трек снова
+                                    SnackbarHelper.showError(
+                                      context: context,
+                                      message:
+                                          'Выберите трек в списке для воспроизведения',
+                                    );
+                                  } else if (currentStation != null) {
+                                    await ref
+                                        .read(playerProvider.notifier)
+                                        .playStation(currentStation);
+                                  }
                                 } catch (e) {
                                   if (context.mounted) {
                                     SnackbarHelper.showError(
@@ -461,7 +510,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     BuildContext context,
     WidgetRef ref,
     PlayerState playerState,
-    Station currentStation,
+    bool isPlayingTrack,
     bool isDark,
   ) {
     final theme = Theme.of(context);
@@ -500,7 +549,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                       ),
                     ),
                   )
-                : hasAlbumArt
+                : hasAlbumArt && isPlayingTrack
                 ? Image.network(
                     albumArtUrl,
                     fit: BoxFit.cover,
@@ -536,11 +585,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                       );
                     },
                     errorBuilder: (context, error, stackTrace) {
-                      // Fallback на картинку станции
-                      return _buildStationArt(currentStation);
+                      // Fallback на заглушку для треков
+                      return _buildPlaceholderArt();
                     },
                   )
-                : _buildStationArt(currentStation),
+                : _buildStationArt(playerState.currentStation),
           ),
         ),
         if (playerState.isPlaying && !isBuffering) ...[
@@ -573,19 +622,27 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     );
   }
 
-  Widget _buildStationArt(Station currentStation) {
-    return Image.asset(
-      currentStation.art,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-          ),
-          child: const Icon(Icons.music_note, color: Colors.white, size: 20),
-        );
-      },
+  Widget _buildStationArt(Station? currentStation) {
+    if (currentStation != null && currentStation.art.isNotEmpty) {
+      return Image.asset(
+        currentStation.art,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholderArt();
+        },
+      );
+    }
+    // Для треков из чарта показываем заглушку
+    return _buildPlaceholderArt();
+  }
+
+  Widget _buildPlaceholderArt() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+      ),
+      child: const Icon(Icons.music_note, color: Colors.white, size: 20),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/design/app_constants.dart';
 import '../../../../core/providers.dart';
 import '../presentation/providers/charts_provider.dart';
 import '../data/models/chart_item.dart';
@@ -23,22 +24,15 @@ class ChartsScreen extends ConsumerWidget {
     final chartsAsync = ref.watch(chartsProvider);
     final currentSource = ref.watch(chartSourceProvider);
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.background
-          : AppColors.backgroundLight,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () => ref.read(chartsProvider.notifier).refresh(),
-          child: _buildChartsTab(
-            chartsAsync,
-            theme,
-            isDark,
-            ref,
-            context,
-            currentSource,
-          ),
-        ),
+    return RefreshIndicator(
+      onRefresh: () => ref.read(chartsProvider.notifier).refresh(),
+      child: _buildChartsTab(
+        chartsAsync,
+        theme,
+        isDark,
+        ref,
+        context,
+        currentSource,
       ),
     );
   }
@@ -59,9 +53,9 @@ class ChartsScreen extends ConsumerWidget {
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
             AppSpacing.lg,
+            AppSpacing.lg, // Верхний отступ 16px
             AppSpacing.lg,
-            AppSpacing.lg,
-            100, // Padding для нижней навигации
+            bottomPlayerHeight, // Отступ для мини-плеера
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

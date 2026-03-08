@@ -25,12 +25,22 @@ class ChartItemTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playerState = ref.watch(playerProvider).value;
+
+    // Определяем, играет ли текущий трек
+    // Проверяем по названию И артисту для точной идентификации
     final isCurrentPlaying =
-        playerState?.trackTitle == item.title &&
-        (playerState?.isPlaying ?? false);
+        playerState != null &&
+        playerState.currentStation == null && // Не радио
+        playerState.trackTitle == item.title &&
+        playerState.trackArtist == item.artist &&
+        playerState.isPlaying;
+
     final isBuffering =
-        playerState?.trackTitle == item.title &&
-        (playerState?.isBuffering ?? false);
+        playerState != null &&
+        playerState.currentStation == null && // Не радио
+        playerState.trackTitle == item.title &&
+        playerState.trackArtist == item.artist &&
+        playerState.isBuffering;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,

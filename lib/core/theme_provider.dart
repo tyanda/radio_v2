@@ -6,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'design/design_tokens.dart';
 
+/// Состояние темы приложения
 class ThemeState {
   final bool isDarkTheme;
   final bool isLoaded;
@@ -20,8 +21,28 @@ class ThemeState {
   }
 }
 
+/// Провайдер темы
+final themeProvider = AsyncNotifierProvider<ThemeNotifier, ThemeState>(
+  ThemeNotifier.new,
+);
+
+/// Менеджер темы приложения
+///
+/// Фиксированные брендовые цвета:
+/// - Primary: #F2C94C (жёлтый SakhaLive)
+/// - Primary Dark: #C9A53A (золотой бренд)
+/// - Background Dark: #0F0F0F
+/// - Background Light: #F5F5F7
+/// - Card Dark: #1A1A1A
+/// - Card Light: #FFFFFF
 class ThemeNotifier extends AsyncNotifier<ThemeState> {
   static const String _themeKey = 'is_dark_theme';
+
+  /// Фиксированный брендовый цвет (жёлтый SakhaLive)
+  static const Color brandPrimary = AppColors.primary;
+
+  /// Фиксированный тёмный вариант бренда (золотой)
+  static const Color brandPrimaryDark = AppColors.primaryDark;
 
   @override
   Future<ThemeState> build() async {
@@ -46,6 +67,7 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
     );
   }
 
+  /// Переключить тему (светлая/тёмная)
   Future<void> toggleTheme() async {
     final currentState = await future;
     final newState = !currentState.isDarkTheme;
@@ -58,124 +80,139 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
     state = AsyncValue.data(ThemeState(isDarkTheme: newState, isLoaded: true));
   }
 
+  /// Проверить, тёмная ли тема активна
   bool get isDarkTheme {
     final currentState = state.value;
     return currentState?.isDarkTheme ?? true;
   }
 
-  ShadThemeData getShadcnTheme(Color primaryColor) {
-    // Вычисляем очень темный вариант для фона на основе обложки
-    final hsl = HSLColor.fromColor(primaryColor);
-    final backgroundColor = hsl
-        .withLightness(0.04)
-        .withSaturation(0.2)
-        .toColor();
-    final cardColor = hsl.withLightness(0.08).withSaturation(0.15).toColor();
-    final mutedColor = hsl.withLightness(0.12).withSaturation(0.1).toColor();
-
-    return isDarkTheme
-        ? ShadThemeData(
-            brightness: Brightness.dark,
-            colorScheme: ShadColorScheme(
-              primary: primaryColor,
-              primaryForeground: Colors.black,
-              background: backgroundColor,
-              foreground: Colors.white,
-              card: cardColor,
-              cardForeground: Colors.white,
-              border: Colors.white.withValues(alpha: 0.1),
-              muted: mutedColor,
-              mutedForeground: Colors.white70,
-              accent: primaryColor.withValues(alpha: 0.15),
-              accentForeground: Colors.white,
-              destructive: AppColors.error,
-              destructiveForeground: Colors.white,
-              input: cardColor,
-              popover: cardColor,
-              popoverForeground: Colors.white,
-              ring: primaryColor,
-              secondary: primaryColor.withValues(alpha: 0.3),
-              secondaryForeground: Colors.white,
-              selection: primaryColor.withValues(alpha: 0.3),
-            ),
-          )
-        : ShadThemeData(
-            brightness: Brightness.light,
-            colorScheme: ShadColorScheme(
-              primary: primaryColor,
-              primaryForeground: Colors.black,
-              background: AppColors.backgroundLight,
-              foreground: AppColors.textPrimaryLight,
-              card: Colors.white,
-              cardForeground: AppColors.textPrimaryLight,
-              border: AppColors.dividerLight,
-              muted: AppColors.surfaceVariantLight,
-              mutedForeground: AppColors.textSecondaryLight,
-              accent: primaryColor.withValues(alpha: 0.1),
-              accentForeground: Colors.black,
-              destructive: AppColors.error,
-              destructiveForeground: Colors.white,
-              input: AppColors.surfaceVariantLight,
-              popover: Colors.white,
-              popoverForeground: AppColors.textPrimaryLight,
-              ring: primaryColor,
-              secondary: primaryColor.withValues(alpha: 0.2),
-              secondaryForeground: Colors.black,
-              selection: primaryColor.withValues(alpha: 0.3),
-            ),
-          );
+  /// Получить тему данных для shadcn_ui
+  /// Использует фиксированные брендовые цвета
+  ShadThemeData getShadcnTheme() {
+    return isDarkTheme ? _getDarkShadTheme() : _getLightShadTheme();
   }
 
-  ThemeData getThemeData(Color primaryColor) {
-    final hsl = HSLColor.fromColor(primaryColor);
-    final backgroundColor = hsl
-        .withLightness(0.04)
-        .withSaturation(0.2)
-        .toColor();
-    final cardColor = hsl.withLightness(0.08).withSaturation(0.15).toColor();
-
-    if (isDarkTheme) {
-      return ThemeData.dark().copyWith(
-        primaryColor: primaryColor,
-        scaffoldBackgroundColor: backgroundColor,
-        cardColor: cardColor,
-        dividerColor: Colors.white.withValues(alpha: 0.1),
-        textTheme: const TextTheme().apply(fontFamily: 'Inter'),
-        colorScheme: ColorScheme.dark(
-          primary: primaryColor,
-          secondary: primaryColor.withValues(alpha: 0.3),
-          surface: backgroundColor,
-          onPrimary: Colors.black,
-          onSurface: Colors.white,
-        ),
-      );
-    } else {
-      return ThemeData.light().copyWith(
-        primaryColor: primaryColor,
-        canvasColor: AppColors.primaryDark,
-        scaffoldBackgroundColor: AppColors.backgroundLight,
-        cardColor: Colors.white,
-        dividerColor: AppColors.dividerLight,
-        textTheme:
-            const TextTheme(
-              bodyLarge: TextStyle(color: AppColors.textPrimaryLight),
-              bodyMedium: TextStyle(color: AppColors.textPrimaryLight),
-              titleLarge: TextStyle(color: AppColors.textPrimaryLight),
-            ).apply(
-              fontFamily: 'Inter',
-              bodyColor: AppColors.textPrimaryLight,
-              displayColor: AppColors.textPrimaryLight,
-            ),
-        colorScheme: ColorScheme.light(
-          primary: primaryColor,
-          secondary: AppColors.primaryDark,
-          surface: Colors.white,
-          error: AppColors.error,
-          onPrimary: Colors.black,
-          onSurface: AppColors.textPrimaryLight,
-          onSurfaceVariant: AppColors.textSecondaryLight,
-        ),
-      );
-    }
+  /// Тёмная тема shadcn_ui
+  ShadThemeData _getDarkShadTheme() {
+    return ShadThemeData(
+      brightness: Brightness.dark,
+      colorScheme: ShadColorScheme(
+        primary: brandPrimary,
+        primaryForeground: Colors.black,
+        background: AppColors.background,
+        foreground: Colors.white,
+        card: AppColors.cardBackground,
+        cardForeground: Colors.white,
+        border: AppColors.divider,
+        muted: AppColors.surfaceVariant,
+        mutedForeground: AppColors.textSecondary,
+        accent: brandPrimary.withValues(alpha: 0.15),
+        accentForeground: Colors.white,
+        destructive: AppColors.error,
+        destructiveForeground: Colors.white,
+        input: AppColors.cardBackground,
+        popover: AppColors.cardBackground,
+        popoverForeground: Colors.white,
+        ring: brandPrimary,
+        secondary: brandPrimary.withValues(alpha: 0.3),
+        secondaryForeground: Colors.white,
+        selection: brandPrimary.withValues(alpha: 0.3),
+      ),
+    );
   }
+
+  /// Светлая тема shadcn_ui
+  ShadThemeData _getLightShadTheme() {
+    return ShadThemeData(
+      brightness: Brightness.light,
+      colorScheme: ShadColorScheme(
+        primary: brandPrimary,
+        primaryForeground: Colors.black,
+        background: AppColors.backgroundLight,
+        foreground: AppColors.textPrimaryLight,
+        card: Colors.white,
+        cardForeground: AppColors.textPrimaryLight,
+        border: AppColors.dividerLight,
+        muted: AppColors.surfaceVariantLight,
+        mutedForeground: AppColors.textSecondaryLight,
+        accent: brandPrimary.withValues(alpha: 0.1),
+        accentForeground: Colors.black,
+        destructive: AppColors.error,
+        destructiveForeground: Colors.white,
+        input: AppColors.surfaceVariantLight,
+        popover: Colors.white,
+        popoverForeground: AppColors.textPrimaryLight,
+        ring: brandPrimary,
+        secondary: brandPrimary.withValues(alpha: 0.2),
+        secondaryForeground: Colors.black,
+        selection: brandPrimary.withValues(alpha: 0.3),
+      ),
+    );
+  }
+
+  /// Получить ThemeData для Material виджетов
+  /// Использует фиксированные брендовые цвета
+  ThemeBundle getThemeData() {
+    return ThemeBundle(
+      darkTheme: _getDarkTheme(),
+      lightTheme: _getLightTheme(),
+    );
+  }
+
+  /// Тёмная тема Material
+  ThemeData _getDarkTheme() {
+    return ThemeData.dark().copyWith(
+      primaryColor: brandPrimary,
+      scaffoldBackgroundColor: AppColors.background,
+      cardColor: AppColors.cardBackground,
+      dividerColor: AppColors.divider,
+      textTheme: const TextTheme().apply(fontFamily: 'Inter'),
+      colorScheme: ColorScheme.dark(
+        primary: brandPrimary,
+        secondary: brandPrimaryDark,
+        surface: AppColors.background,
+        onPrimary: Colors.black,
+        onSurface: Colors.white,
+        onSurfaceVariant: AppColors.textSecondary,
+      ),
+    );
+  }
+
+  /// Светлая тема Material
+  ThemeData _getLightTheme() {
+    return ThemeData.light().copyWith(
+      primaryColor: brandPrimary,
+      canvasColor: brandPrimaryDark,
+      scaffoldBackgroundColor: AppColors.backgroundLight,
+      cardColor: Colors.white,
+      dividerColor: AppColors.dividerLight,
+      textTheme:
+          const TextTheme(
+            bodyLarge: TextStyle(color: AppColors.textPrimaryLight),
+            bodyMedium: TextStyle(color: AppColors.textPrimaryLight),
+            titleLarge: TextStyle(color: AppColors.textPrimaryLight),
+          ).apply(
+            fontFamily: 'Inter',
+            bodyColor: AppColors.textPrimaryLight,
+            displayColor: AppColors.textPrimaryLight,
+          ),
+      colorScheme: ColorScheme.light(
+        primary: brandPrimary,
+        secondary: brandPrimaryDark,
+        surface: Colors.white,
+        error: AppColors.error,
+        onPrimary: Colors.black,
+        onSurface: AppColors.textPrimaryLight,
+        onSurfaceVariant: AppColors.textSecondaryLight,
+      ),
+    );
+  }
+}
+
+///Bundle тем для светлой и тёмной версии
+class ThemeBundle {
+  final ThemeData darkTheme;
+  final ThemeData lightTheme;
+
+  const ThemeBundle({required this.darkTheme, required this.lightTheme});
 }

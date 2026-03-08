@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/audio_handler.dart';
-import '../core/theme_provider.dart';
+
+// Экспортируем theme_provider для доступа к themeProvider
+export 'theme_provider.dart';
 
 // Провайдер для AudioHandler (инициализируется в main)
 // На вебе возвращаем null, так как AudioService не поддерживается
@@ -12,7 +14,4 @@ final audioHandlerProvider = Provider<RadioAudioHandler?>((ref) {
   );
 });
 
-// Провайдер для ThemeProvider
-final themeProvider = AsyncNotifierProvider<ThemeNotifier, ThemeState>(
-  ThemeNotifier.new,
-);
+// Провайдер для ThemeProvider экспортируется из core/theme_provider.dart

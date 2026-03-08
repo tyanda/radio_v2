@@ -73,11 +73,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     );
     final weatherAsync = ref.watch(weatherProvider);
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.background
-          : AppColors.backgroundLight,
-      body: weatherAsync.when(
+    return RefreshIndicator(
+      onRefresh: () => ref.read(weatherProvider.notifier).refreshWeather(),
+      child: weatherAsync.when(
         data: (weatherData) => weatherData != null
             ? _buildWeatherContent(weatherData, isDark)
             : _buildLoadingView(isDark),
@@ -117,7 +115,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
-        AppSpacing.md,
+        AppSpacing.lg, // Верхний отступ 16px
         horizontalPadding,
         bottomPlayerHeight,
       ),

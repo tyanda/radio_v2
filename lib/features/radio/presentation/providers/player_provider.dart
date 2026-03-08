@@ -16,6 +16,7 @@ import 'package:sakha_live/features/radio/services/album_art_service.dart';
 import 'package:sakha_live/core/providers.dart';
 import 'package:sakha_live/features/widgets/widgets.dart';
 import '../../../../../core/utils/logger.dart';
+import '../../../charts/data/models/chart_item.dart';
 
 @immutable
 class PlayerState {
@@ -24,6 +25,7 @@ class PlayerState {
   final String? trackTitle; // Название текущего трека
   final String? trackArtist; // Артист трека
   final String? albumArt; // Обложка альбома из метаданных
+  final String? currentTrackId; // ID текущего трека (для чарта)
   final double volume;
   final bool showVolumeSlider;
   final bool isBuffering;
@@ -34,6 +36,7 @@ class PlayerState {
     this.trackTitle,
     this.trackArtist,
     this.albumArt,
+    this.currentTrackId,
     this.volume = 0.65,
     this.showVolumeSlider = false,
     this.isBuffering = false,
@@ -45,6 +48,7 @@ class PlayerState {
     String? trackTitle,
     String? trackArtist,
     String? albumArt,
+    String? currentTrackId,
     double? volume,
     bool? showVolumeSlider,
     bool? isBuffering,
@@ -55,6 +59,7 @@ class PlayerState {
       trackTitle: trackTitle ?? this.trackTitle,
       trackArtist: trackArtist ?? this.trackArtist,
       albumArt: albumArt ?? this.albumArt,
+      currentTrackId: currentTrackId ?? this.currentTrackId,
       volume: volume ?? this.volume,
       showVolumeSlider: showVolumeSlider ?? this.showVolumeSlider,
       isBuffering: isBuffering ?? this.isBuffering,
@@ -74,6 +79,13 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   StreamSubscription? _nextSubscription;
   StreamSubscription? _prevSubscription;
   String? _lastSearchKey; // Для кэширования последнего поиска обложки
+
+  // Очередь треков для чарта
+  List<ChartItem> _playlistTracks = [];
+  int _currentPlaylistIndex = -1;
+  StreamSubscription? _playlistStateSubscription;
+  bool _isSwitchingTrack =
+      false; // Флаг для предотвращения рекурсивных переключений
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
@@ -173,6 +185,21 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       }
     });
 
+    // Подписка на изменение состояния плеера для автопереключения треков в плейлисте
+    _playlistStateSubscription = _radioPlayer.playerStateStream.listen((
+      playerState,
+    ) {
+      // Если трек закончился и есть следующий в плейлисте
+      // Проверяем флаг _isSwitchingTrack для предотвращения рекурсивных вызовов
+      if (!_isSwitchingTrack &&
+          playerState.processingState == ProcessingState.completed &&
+          _currentPlaylistIndex >= 0 &&
+          _currentPlaylistIndex < _playlistTracks.length - 1) {
+        // Переключаем на следующий трек
+        _playNextPlaylistTrack();
+      }
+    });
+
     ref.onDispose(() {
       _playerStateSubscription?.cancel();
       _processingStateSubscription?.cancel();
@@ -180,6 +207,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       _metadataSubscription?.cancel();
       _nextSubscription?.cancel();
       _prevSubscription?.cancel();
+      _playlistStateSubscription?.cancel();
       _metadataService.stopFetchingMetadata();
       _metadataService.dispose();
       _radioPlayer.dispose();
@@ -254,7 +282,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     if (currentState == null || track.previewUrl == null) return;
 
     // Если этот же трек уже играет, ставим на паузу
-    if (currentState.trackTitle == track.title && currentState.isPlaying) {
+    if (currentState.currentTrackId == track.id && currentState.isPlaying) {
       await _radioPlayer.pause();
       return;
     }
@@ -263,6 +291,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       state = AsyncData(
         currentState.copyWith(
           currentStation: null, // Сбрасываем станцию при игре трека
+          currentTrackId: track.id, // Сохраняем ID трека для идентификации
           trackTitle: track.title,
           trackArtist: track.artist,
           albumArt: track.coverUrl,
@@ -292,9 +321,137 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     }
   }
 
+  /// Воспроизведение плейлиста чарта с очередью треков
+  Future<void> playPlaylist(List<ChartItem> tracks, int startIndex) async {
+    final currentState = state.asData?.value;
+    if (currentState == null || tracks.isEmpty) return;
+
+    final track = tracks[startIndex];
+    if (track.previewUrl == null) return;
+
+    try {
+      // Фильтруем треки без previewUrl
+      final validTracks = tracks
+          .where((t) => t.previewUrl != null && t.previewUrl!.isNotEmpty)
+          .toList();
+
+      if (validTracks.isEmpty) return;
+
+      // Находим индекс текущего трека в отфильтрованном списке
+      final validStartIndex = validTracks.indexWhere((t) => t.id == track.id);
+      _currentPlaylistIndex = validStartIndex >= 0 ? validStartIndex : 0;
+      _playlistTracks = validTracks;
+
+      state = AsyncData(
+        currentState.copyWith(
+          currentStation: null,
+          currentTrackId: track.id,
+          trackTitle: track.title,
+          trackArtist: track.artist,
+          albumArt: track.coverUrl,
+          isPlaying: false,
+          isBuffering: true,
+        ),
+      );
+
+      await _radioPlayer.stop();
+      await _radioPlayer.playStream(
+        url: track.previewUrl!,
+        title: track.title,
+        artist: track.artist ?? 'SakhaLive',
+        album: 'Top Chart',
+        artUri: track.coverUrl,
+      );
+
+      await _radioPlayer.play();
+      state = AsyncData(
+        state.asData!.value.copyWith(isPlaying: true, isBuffering: false),
+      );
+
+      Logger.log(
+        '🎵 Playlist started with ${validTracks.length} tracks, from index $_currentPlaylistIndex',
+        tag: 'Player',
+      );
+    } catch (e) {
+      Logger.error("playPlaylist error: $e", tag: 'Player');
+      state = AsyncData(
+        currentState.copyWith(isPlaying: false, isBuffering: false),
+      );
+    }
+  }
+
+  /// Переключение на следующий трек в плейлисте
+  Future<void> _playNextPlaylistTrack() async {
+    // Защита от рекурсивных вызовов
+    if (_isSwitchingTrack) return;
+
+    if (_currentPlaylistIndex < 0 ||
+        _currentPlaylistIndex >= _playlistTracks.length - 1) {
+      return; // Нет следующего трека
+    }
+
+    _isSwitchingTrack = true;
+
+    try {
+      final nextIndex = _currentPlaylistIndex + 1;
+      final nextTrack = _playlistTracks[nextIndex];
+
+      if (nextTrack.previewUrl == null) {
+        // Пропускаем трек без previewUrl
+        _currentPlaylistIndex = nextIndex;
+        await _playNextPlaylistTrack();
+        return;
+      }
+
+      final currentState = state.asData?.value;
+      if (currentState == null) return;
+
+      Logger.log(
+        '🎵 Playlist: auto-switching to track ${nextIndex + 1}: ${nextTrack.title}',
+        tag: 'Player',
+      );
+
+      state = AsyncData(
+        currentState.copyWith(
+          currentTrackId: nextTrack.id,
+          trackTitle: nextTrack.title,
+          trackArtist: nextTrack.artist,
+          albumArt: nextTrack.coverUrl,
+          isBuffering: true,
+        ),
+      );
+
+      // Сначала устанавливаем новый поток, потом останавливаем старый
+      await _radioPlayer.playStream(
+        url: nextTrack.previewUrl!,
+        title: nextTrack.title,
+        artist: nextTrack.artist ?? 'SakhaLive',
+        album: 'Top Chart',
+        artUri: nextTrack.coverUrl,
+      );
+
+      await _radioPlayer.play();
+      _currentPlaylistIndex = nextIndex;
+
+      state = AsyncData(
+        state.asData!.value.copyWith(isPlaying: true, isBuffering: false),
+      );
+    } catch (e) {
+      Logger.error("Error switching playlist track: $e", tag: 'Player');
+      rethrow;
+    } finally {
+      _isSwitchingTrack = false;
+    }
+  }
+
   Future<void> playStation(Station station) async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
+
+    // Сбрасываем плейлист при переключении на радио
+    _playlistTracks = [];
+    _currentPlaylistIndex = -1;
+    _isSwitchingTrack = false;
 
     // Сравниваем по id для корректного определения той же станции
     if (currentState.currentStation?.id == station.id) {

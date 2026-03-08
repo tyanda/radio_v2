@@ -5,26 +5,28 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
 import '../../data/models/chart_item.dart';
+import '../../../radio/presentation/providers/player_provider.dart';
 
 /// Виджет видео-рекламы с 30-секундным видео из Firebase Firestore
 /// Адаптация React-версии для Flutter
 ///
 /// Firebase Firestore:
 /// - artifacts/sakhalive-remote/videoUrl
-class VideoAdCard extends StatefulWidget {
+class VideoAdCard extends ConsumerStatefulWidget {
   final ChartItem item;
   final bool isDark;
 
   const VideoAdCard({super.key, required this.item, required this.isDark});
 
   @override
-  State<VideoAdCard> createState() => _VideoAdCardState();
+  ConsumerState<VideoAdCard> createState() => _VideoAdCardState();
 }
 
-class _VideoAdCardState extends State<VideoAdCard> {
+class _VideoAdCardState extends ConsumerState<VideoAdCard> {
   // 1. ПЕРЕМЕННЫЕ СОСТОЯНИЯ (как в React)
   bool _videoLoaded = false; // Загрузилось ли видео?
   bool _isMuted = true; // Включен или выключен звук
@@ -232,12 +234,23 @@ class _VideoAdCardState extends State<VideoAdCard> {
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
-                onTap: () {
+                onTap: () async {
                   HapticFeedback.lightImpact();
+                  final newMuted = !_isMuted;
                   setState(() {
-                    _isMuted = !_isMuted;
+                    _isMuted = newMuted;
                   });
-                  _controller?.setVolume(_isMuted ? 0.0 : 1.0);
+
+                  // Если включаем звук (было muted, стало unmuted) - ставим радио на паузу
+                  if (!newMuted) {
+                    // Включаем звук видео
+                    await _controller?.setVolume(1.0);
+                    // Ставим радио на паузу
+                    ref.read(playerProvider.notifier).stop();
+                  } else {
+                    // Если выключаем звук - возвращаем громкость видео в 0
+                    await _controller?.setVolume(0.0);
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),

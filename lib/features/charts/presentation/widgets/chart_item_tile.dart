@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/utils/logger.dart';
 import '../../data/models/chart_item.dart';
 import '../../../radio/presentation/providers/player_provider.dart';
+import '../providers/charts_provider.dart';
 
 /// Виджет элемента песни в чарте
 /// Дизайн из React-версии SakhaLive
@@ -26,31 +27,48 @@ class ChartItemTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playerState = ref.watch(playerProvider).value;
 
-    // Определяем, играет ли текущий трек
-    // Проверяем по названию И артисту для точной идентификации
+    // Определяем, играет ли текущий трек по ID
     final isCurrentPlaying =
         playerState != null &&
         playerState.currentStation == null && // Не радио
-        playerState.trackTitle == item.title &&
-        playerState.trackArtist == item.artist &&
+        playerState.currentTrackId == item.id &&
         playerState.isPlaying;
 
     final isBuffering =
         playerState != null &&
         playerState.currentStation == null && // Не радио
-        playerState.trackTitle == item.title &&
-        playerState.trackArtist == item.artist &&
+        playerState.currentTrackId == item.id &&
         playerState.isBuffering;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () {
+        onTap: () async {
           HapticFeedback.lightImpact();
           if (item.isVideoAd) {
             _handleAdTap(context);
           } else if (item.previewUrl != null) {
-            ref.read(playerProvider.notifier).playTrack(item);
+            // Получаем список всех треков из виджета списка
+            final chartsState = ref.read(chartsProvider);
+            final chartsAsync = chartsState.value;
+
+            if (chartsAsync != null) {
+              // Фильтруем только треки (не рекламу)
+              final tracks = chartsAsync.where((i) => i.isSong).toList();
+              final trackIndex = tracks.indexWhere((t) => t.id == item.id);
+
+              if (trackIndex >= 0) {
+                // Воспроизводим плейлист с очередью
+                ref
+                    .read(playerProvider.notifier)
+                    .playPlaylist(tracks, trackIndex);
+              } else {
+                // Fallback: играем только трек
+                ref.read(playerProvider.notifier).playTrack(item);
+              }
+            } else {
+              ref.read(playerProvider.notifier).playTrack(item);
+            }
           }
         },
         child: Container(

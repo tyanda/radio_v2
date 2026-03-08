@@ -176,56 +176,66 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   }
 
   Widget _buildTopBar() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SakhaFuturism.horizontalMargin,
         AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
+        SakhaFuturism.horizontalMargin,
         AppSpacing.md,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Переключатель видов
-          ViewTypeSelector(
-            currentType: _currentViewType,
-            onChanged: (type) {
-              // Сохраняем в провайдер
-              ref.read(viewModeProvider.notifier).setRadioViewType(type);
-              setState(() {
-                _currentViewType = type;
-              });
-            },
-          ),
-          SizedBox(height: AppSpacing.md),
-          // Фильтры
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterChip(
-                  icon: Icons.list_rounded,
-                  label: 'Все',
-                  isSelected: !_showFavoritesOnly,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    setState(() => _showFavoritesOnly = false);
-                  },
-                ),
-                SizedBox(width: AppSpacing.sm),
-                _buildFilterChip(
-                  icon: Icons.favorite_rounded,
-                  label: 'Избранные',
-                  isSelected: _showFavoritesOnly,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    setState(() => _showFavoritesOnly = true);
-                  },
-                ),
-              ],
+      child: SakhaFuturism.glass(
+        context,
+        accent: Theme.of(context).primaryColor,
+        radius: 28,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SakhaSectionTitle(
+              eyebrow: 'SAKHA WAVE',
+              title: 'Радио',
+              subtitle:
+                  'Станции в стеклянных карточках с мягким свечением и строгой сеткой 16px.',
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.lg),
+            ViewTypeSelector(
+              currentType: _currentViewType,
+              onChanged: (type) {
+                HapticFeedback.lightImpact();
+                ref.read(viewModeProvider.notifier).setRadioViewType(type);
+                setState(() {
+                  _currentViewType = type;
+                });
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip(
+                    icon: Icons.grid_view_rounded,
+                    label: 'Все станции',
+                    isSelected: !_showFavoritesOnly,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() => _showFavoritesOnly = false);
+                    },
+                  ),
+                  SizedBox(width: AppSpacing.sm),
+                  _buildFilterChip(
+                    icon: Icons.favorite_rounded,
+                    label: 'Избранные',
+                    isSelected: _showFavoritesOnly,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() => _showFavoritesOnly = true);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -375,60 +385,49 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
           curve: AppEffects.curve,
           padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            gradient: isActive
-                ? LinearGradient(
-                    colors: [accentColor, accentColor.withValues(alpha: 0.9)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  )
-                : null,
-            color: isActive
-                ? null
-                : isDark
-                ? AppColors.cardBackground
-                : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppEffects.radiusLg),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isActive
+                  ? [
+                      accentColor.withValues(alpha: 0.92),
+                      accentColor.withValues(alpha: 0.76),
+                    ]
+                  : [
+                      SakhaFuturism.glassFill(isDark, opacity: 0.74),
+                      SakhaFuturism.glassFill(isDark, opacity: 0.56),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(28),
             border: Border.all(
               color: isActive
                   ? accentColor
-                  : isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.05),
-              width: isActive ? 2 : 1,
+                  : SakhaFuturism.glassBorder(isDark, accent: accentColor),
+              width: isActive ? 1.4 : 1,
             ),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                : isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+            boxShadow: SakhaFuturism.shadow(
+              isDark,
+              accent: accentColor,
+              lift: isActive ? 1.15 : 1,
+            ),
           ),
           child: Row(
             children: [
-              // Изображение
               Container(
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-                  color: const Color(0xFF000000),
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.92),
+                      accentColor.withValues(alpha: 0.24),
+                    ],
+                  ),
                 ),
                 child: station.art.isNotEmpty
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          AppEffects.radiusMd,
-                        ),
+                        borderRadius: BorderRadius.circular(20),
                         child: Image.asset(
                           station.art,
                           fit: BoxFit.cover,
@@ -460,7 +459,6 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
               SizedBox(width: AppSpacing.md),
 
-              // Информация
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,7 +527,6 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
 
                     SizedBox(height: 2),
 
-                    // Описание
                     Text(
                       station.desc,
                       style: GoogleFonts.inter(
@@ -546,7 +543,6 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 ),
               ),
 
-              // Кнопка избранного
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -600,18 +596,32 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         curve: AppEffects.curve,
         padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
+          vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? accentColor : Colors.transparent,
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [accentColor, accentColor.withValues(alpha: 0.78)],
+                )
+              : null,
+          color: isSelected
+              ? null
+              : (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(AppEffects.radiusFull),
           border: Border.all(
             color: isSelected
                 ? accentColor
-                : isDark
-                ? Colors.white.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.1),
+                : SakhaFuturism.glassBorder(isDark, accent: accentColor),
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

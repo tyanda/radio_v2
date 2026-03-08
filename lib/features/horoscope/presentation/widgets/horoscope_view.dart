@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sakha_live/core/design/design.dart';
@@ -45,7 +46,6 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final theme = Theme.of(context);
 
     final horoscopeState = ref.watch(horoscopeProvider);
 
@@ -60,28 +60,20 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
+        SakhaFuturism.horizontalMargin,
         AppSpacing.lg, // Верхний отступ 16px
-        AppSpacing.lg,
+        SakhaFuturism.horizontalMargin,
         bottomPlayerHeight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.only(left: 4.0),
-            child: Text(
-              AppLocalizations.of(context).select_zodiac_sign,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 2.0,
-              ),
-            ),
+          SakhaSectionTitle(
+            eyebrow: 'SAKHA CONSTELLATION',
+            title: 'Гороскоп',
+            subtitle: AppLocalizations.of(context).select_zodiac_sign,
           ),
           SizedBox(height: AppSpacing.md),
-          // Сетка знаков зодиака
           GridView.builder(
             padding: EdgeInsets.zero,
             shrinkWrap: true,
@@ -99,6 +91,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
 
               return ScrollScaleCard(
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   setState(() {
                     _selectedIndex = index;
                   });
@@ -130,39 +123,26 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
-        color: isSelected
-            ? theme.primaryColor
-            : (isDark
-                  ? AppColors.cardBackground
-                  : AppColors.cardBackgroundLight),
-        borderRadius: BorderRadius.circular(
-          20,
-        ), // Slightly rounded for mini cards
+        gradient: LinearGradient(
+          colors: isSelected
+              ? [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.78)]
+              : [
+                  SakhaFuturism.glassFill(isDark, opacity: 0.74),
+                  SakhaFuturism.glassFill(isDark, opacity: 0.56),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isSelected
               ? theme.primaryColor
-              : (isDark
-                    ? Colors.transparent
-                    : Colors.black.withValues(alpha: 0.05)),
-          width: 2,
+              : SakhaFuturism.glassBorder(isDark, accent: theme.primaryColor),
+          width: isSelected ? 1.5 : 1,
         ),
-        boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: theme.primaryColor.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                ),
-              ]
-            : (!isDark
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null),
+        boxShadow: SakhaFuturism.shadow(
+          isDark,
+          accent: theme.primaryColor,
+          lift: isSelected ? 1.05 : 1,
+        ),
       ),
       child: Center(
         child: Padding(
@@ -200,18 +180,21 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.cardBackground
-            : AppColors.cardBackgroundLight,
-        borderRadius: BorderRadius.circular(AppEffects.radius2xl),
-        border: Border(left: BorderSide(color: theme.primaryColor, width: 10)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
-            blurRadius: isDark ? 16 : 10,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        gradient: LinearGradient(
+          colors: [
+            SakhaFuturism.glassFill(isDark, opacity: 0.76),
+            SakhaFuturism.glassFill(isDark, opacity: 0.58),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: SakhaFuturism.glassBorder(isDark, accent: theme.primaryColor),
+        ),
+        boxShadow: SakhaFuturism.shadow(
+          isDark,
+          accent: theme.primaryColor,
+          lift: 1.08,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

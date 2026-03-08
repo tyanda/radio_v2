@@ -12,4 +12,6 @@ library;
 export 'design_tokens.dart';
 export 'spacing.dart';
 export 'effects.dart';
+export 'sakha_futurism.dart';
+export 'sakha_section_title.dart';
 export 'typography.dart';

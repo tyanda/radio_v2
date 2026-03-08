@@ -1,21 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'package:sakha_live/features/radio/domain/station.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/design/design.dart';
 
-/// Улучшенная карточка радиостанции v2
-///
-/// Особенности:
-/// - LIVE бейдж для активной станции
-/// - Частота на карточке
-/// - Улучшенная визуальная иерархия
-/// - Пульсирующая анимация для избранных
-/// - Hover-эффекты для desktop/web
-/// - 3D tilt эффект при наведении
 class RadioCardV2 extends StatefulWidget {
   final Station station;
   final bool isActive;
@@ -50,6 +42,7 @@ class _RadioCardV2State extends State<RadioCardV2>
   late Animation<double> _hoverAnimation;
   late AnimationController _liveController;
   late Animation<double> _liveAnimation;
+  late Future<Color> _accentFuture;
 
   bool _isHovered = false;
 
@@ -57,7 +50,6 @@ class _RadioCardV2State extends State<RadioCardV2>
   void initState() {
     super.initState();
 
-    // Пульсация для избранных
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -67,7 +59,6 @@ class _RadioCardV2State extends State<RadioCardV2>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Hover анимация
     _hoverController = AnimationController(
       duration: AppEffects.durationNormal,
       vsync: this,
@@ -77,7 +68,6 @@ class _RadioCardV2State extends State<RadioCardV2>
       CurvedAnimation(parent: _hoverController, curve: Curves.easeInOut),
     );
 
-    // LIVE бейдж анимация
     _liveController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -86,6 +76,18 @@ class _RadioCardV2State extends State<RadioCardV2>
     _liveAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _liveController, curve: Curves.easeInOut),
     );
+
+    _accentFuture = _resolveAccentColor();
+  }
+
+  @override
+  void didUpdateWidget(covariant RadioCardV2 oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.station.id != widget.station.id ||
+        oldWidget.station.logoUrl != widget.station.logoUrl ||
+        oldWidget.station.art != widget.station.art) {
+      _accentFuture = _resolveAccentColor();
+    }
   }
 
   @override
@@ -110,7 +112,6 @@ class _RadioCardV2State extends State<RadioCardV2>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final accentColor = theme.colorScheme.primary;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -128,7 +129,6 @@ class _RadioCardV2State extends State<RadioCardV2>
         child: AnimatedBuilder(
           animation: Listenable.merge([_hoverAnimation, _pulseAnimation]),
           builder: (context, child) {
-            // 3D tilt эффект
             final tiltAngle = _hoverAnimation.value * 0.03;
             final scale = 1.0 + (_hoverAnimation.value * 0.02);
 
@@ -140,7 +140,14 @@ class _RadioCardV2State extends State<RadioCardV2>
                   ..setEntry(3, 2, 0.001)
                   ..rotateX(tiltAngle)
                   ..rotateY(-tiltAngle),
-                child: _buildCard(theme, isDark, accentColor),
+                child: FutureBuilder<Color>(
+                  future: _accentFuture,
+                  builder: (context, snapshot) {
+                    final accentColor =
+                        snapshot.data ?? theme.colorScheme.primary;
+                    return _buildCard(theme, isDark, accentColor);
+                  },
+                ),
               ),
             );
           },
@@ -155,71 +162,56 @@ class _RadioCardV2State extends State<RadioCardV2>
       curve: Curves.easeInOut,
       clipBehavior: Clip.none,
       decoration: BoxDecoration(
-        gradient: widget.isActive
-            ? LinearGradient(
-                colors: [accentColor, accentColor.withValues(alpha: 0.9)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : _isHovered
-            ? LinearGradient(
-                colors: isDark
-                    ? [
-                        AppColors.cardBackground.withValues(alpha: 0.98),
-                        AppColors.surface.withValues(alpha: 0.95),
-                      ]
-                    : [
-                        theme.colorScheme.surface.withValues(alpha: 1.0),
-                        theme.colorScheme.surface.withValues(alpha: 0.95),
-                      ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        color: widget.isActive ? null : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppEffects.radius2xl),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: widget.isActive
+              ? [
+                  accentColor.withValues(alpha: 0.95),
+                  Color.alphaBlend(
+                    AppColors.primary.withValues(alpha: 0.18),
+                    accentColor.withValues(alpha: 0.76),
+                  ),
+                ]
+              : [
+                  SakhaFuturism.glassFill(
+                    isDark,
+                    opacity: _isHovered ? 0.80 : 0.74,
+                  ),
+                  Color.alphaBlend(
+                    accentColor.withValues(alpha: _isHovered ? 0.16 : 0.08),
+                    SakhaFuturism.glassFill(
+                      isDark,
+                      opacity: _isHovered ? 0.58 : 0.50,
+                    ),
+                  ),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: widget.isActive
-              ? accentColor
-              : _isHovered
-              ? accentColor.withValues(alpha: 0.5)
-              : (isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : Colors.black.withValues(alpha: 0.05)),
-          width: widget.isActive ? 2.5 : (_isHovered ? 1.5 : 1.0),
+              ? accentColor.withValues(alpha: 0.95)
+              : SakhaFuturism.glassBorder(isDark, accent: accentColor),
+          width: widget.isActive ? 1.4 : (_isHovered ? 1.2 : 1),
         ),
-        boxShadow: widget.isActive
-            ? [
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.4),
-                  blurRadius: 24,
-                  spreadRadius: 3,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : _isHovered
-            ? [
-                ...AppEffects.shadowLg,
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.15),
-                  blurRadius: 16,
-                  spreadRadius: 1,
-                ),
-              ]
-            : (!isDark
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFF000000).withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null),
+        boxShadow: [
+          ...SakhaFuturism.shadow(
+            isDark,
+            accent: accentColor,
+            lift: widget.isActive ? 1.25 : (_isHovered ? 1.12 : 1),
+          ),
+          if (widget.isActive)
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.34),
+              blurRadius: 36,
+              spreadRadius: 2,
+              offset: const Offset(0, 14),
+            ),
+        ],
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Анимация для активной станции
           if (widget.isActive)
             Positioned(
               right: -5,
@@ -237,26 +229,19 @@ class _RadioCardV2State extends State<RadioCardV2>
                 ),
               ),
             ),
-
-          // Основной контент
           Padding(
             padding: const EdgeInsets.only(
-              top: 8.0,
-              left: 12.0,
-              right: 12.0,
-              bottom: 12.0,
+              top: 10,
+              left: 12,
+              right: 12,
+              bottom: 12,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Изображение с LIVE бейджем
-                Expanded(child: _buildImageSection(isDark, accentColor)),
-
-                // Вертикальный отступ
-                const SizedBox(height: 12.0),
-
-                // Текстовый блок
-                _buildTextSection(theme, isDark, accentColor),
+                Expanded(child: _buildImageSection(accentColor)),
+                const SizedBox(height: 12),
+                _buildTextSection(theme, accentColor),
               ],
             ),
           ),
@@ -265,22 +250,33 @@ class _RadioCardV2State extends State<RadioCardV2>
     );
   }
 
-  Widget _buildImageSection(bool isDark, Color accentColor) {
+  Widget _buildImageSection(Color accentColor) {
     final hasLogoUrl =
         widget.station.logoUrl != null && widget.station.logoUrl!.isNotEmpty;
 
     return Stack(
       children: [
-        // Контейнер с изображением
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF000000),
-            borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.black.withValues(alpha: 0.92),
+                accentColor.withValues(alpha: 0.30),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withValues(
+                alpha: widget.isActive ? 0.18 : 0.08,
+              ),
+            ),
           ),
           child: hasLogoUrl
               ? ClipRRect(
-                  borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+                  borderRadius: BorderRadius.circular(24),
                   child: CachedNetworkImage(
                     imageUrl: widget.station.logoUrl!,
                     fit: BoxFit.cover,
@@ -292,7 +288,7 @@ class _RadioCardV2State extends State<RadioCardV2>
                 )
               : widget.station.art.isNotEmpty
               ? ClipRRect(
-                  borderRadius: BorderRadius.circular(AppEffects.radiusXl),
+                  borderRadius: BorderRadius.circular(24),
                   child: Image.asset(
                     widget.station.art,
                     fit: BoxFit.cover,
@@ -303,8 +299,6 @@ class _RadioCardV2State extends State<RadioCardV2>
                 )
               : _buildPlaceholder(),
         ),
-
-        // LIVE бейдж для активной станции
         if (widget.isActive)
           Positioned(
             top: 8,
@@ -319,7 +313,7 @@ class _RadioCardV2State extends State<RadioCardV2>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: _liveAnimation.value),
-                    borderRadius: BorderRadius.circular(AppEffects.radiusSm),
+                    borderRadius: BorderRadius.circular(AppEffects.radiusFull),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.red.withValues(alpha: 0.5),
@@ -355,8 +349,6 @@ class _RadioCardV2State extends State<RadioCardV2>
               },
             ),
           ),
-
-        // Иконка избранного с пульсацией
         Positioned(
           top: 8,
           right: 8,
@@ -373,11 +365,10 @@ class _RadioCardV2State extends State<RadioCardV2>
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withValues(alpha: 0.44),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 1,
+                        color: Colors.white.withValues(alpha: 0.16),
                       ),
                     ),
                     child: Icon(
@@ -385,9 +376,9 @@ class _RadioCardV2State extends State<RadioCardV2>
                           ? Icons.favorite_rounded
                           : Icons.favorite_outline_rounded,
                       color: widget.isFavorite
-                          ? const Color(0xFFFF0000)
+                          ? const Color(0xFFFF4B5C)
                           : Colors.white,
-                      size: 18.0,
+                      size: 18,
                     ),
                   ),
                 );
@@ -423,46 +414,90 @@ class _RadioCardV2State extends State<RadioCardV2>
     );
   }
 
-  Widget _buildTextSection(ThemeData theme, bool isDark, Color accentColor) {
+  Widget _buildTextSection(ThemeData theme, Color accentColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Название станции
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            widget.station.name.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-              color: widget.isActive
-                  ? Colors.black
-                  : theme.colorScheme.onSurface,
-              letterSpacing: -0.3,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        Text(
+          widget.station.name.toUpperCase(),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w900,
+            fontSize: 15,
+            color: widget.isActive ? Colors.black : theme.colorScheme.onSurface,
+            letterSpacing: -0.4,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        // Описание
-        if (widget.station.desc.isNotEmpty)
+        if (widget.station.frequency.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: widget.isActive
+                  ? Colors.black.withValues(alpha: 0.10)
+                  : accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+            ),
+            child: Text(
+              widget.station.frequency.toUpperCase(),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w800,
+                fontSize: 10,
+                letterSpacing: 1.3,
+                color: widget.isActive
+                    ? Colors.black.withValues(alpha: 0.78)
+                    : accentColor,
+              ),
+            ),
+          ),
+        ],
+        if (widget.station.desc.isNotEmpty) ...[
+          const SizedBox(height: 8),
           Text(
             widget.station.desc,
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w500,
               fontSize: 10,
               color: widget.isActive
-                  ? Colors.black.withValues(alpha: 0.6)
+                  ? Colors.black.withValues(alpha: 0.66)
                   : theme.colorScheme.onSurfaceVariant,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+        ],
       ],
     );
   }
+
+  Future<Color> _resolveAccentColor() async {
+    try {
+      final ImageProvider? provider =
+          widget.station.logoUrl != null && widget.station.logoUrl!.isNotEmpty
+          ? CachedNetworkImageProvider(widget.station.logoUrl!)
+          : widget.station.art.isNotEmpty
+          ? AssetImage(widget.station.art)
+          : null;
+
+      if (provider == null) {
+        return AppColors.primary;
+      }
+
+      final palette = await PaletteGenerator.fromImageProvider(
+        provider,
+        size: const Size(96, 96),
+        maximumColorCount: 12,
+      );
+
+      return palette.vibrantColor?.color ??
+          palette.dominantColor?.color ??
+          palette.lightVibrantColor?.color ??
+          AppColors.primary;
+    } catch (_) {
+      return AppColors.primary;
+    }
+  }
 }
 
-/// Типы отображения карточек
 enum ViewType { grid, list, horizontal }

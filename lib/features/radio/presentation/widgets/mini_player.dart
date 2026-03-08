@@ -291,17 +291,16 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                     curve: AppEffects.curve,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: isDark
-                            ? [
-                                AppColors.cardBackground.withValues(
-                                  alpha: 0.98,
-                                ),
-                                AppColors.surface.withValues(alpha: 0.95),
-                              ]
-                            : [
-                                Colors.white.withValues(alpha: 1.0),
-                                Colors.white.withValues(alpha: 0.95),
-                              ],
+                        colors: [
+                          SakhaFuturism.glassFill(
+                            isDark,
+                            opacity: _isHovered ? 0.84 : 0.76,
+                          ),
+                          SakhaFuturism.glassFill(
+                            isDark,
+                            opacity: _isHovered ? 0.62 : 0.54,
+                          ),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -309,30 +308,16 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                         AppEffects.radiusFull,
                       ),
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.05),
+                        color: SakhaFuturism.glassBorder(
+                          isDark,
+                          accent: theme.primaryColor,
+                        ),
                       ),
-                      boxShadow: _isHovered
-                          ? [
-                              ...AppEffects.shadowLg,
-                              BoxShadow(
-                                color: theme.primaryColor.withValues(
-                                  alpha: 0.1,
-                                ),
-                                blurRadius: 20,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha: isDark ? 0.5 : 0.05,
-                                ),
-                                blurRadius: isDark ? 40 : 10,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
+                      boxShadow: SakhaFuturism.shadow(
+                        isDark,
+                        accent: theme.primaryColor,
+                        lift: _isHovered ? 1.15 : 1.05,
+                      ),
                     ),
                     constraints: const BoxConstraints(maxWidth: 280),
                     height: 64.0,

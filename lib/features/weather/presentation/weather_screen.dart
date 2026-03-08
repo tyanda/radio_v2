@@ -104,11 +104,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     final dfTime = DateFormat.Hm('ru');
     final dfDate = DateFormat('EEEE, d MMM', 'ru');
 
-    // Адаптивность для веба
     final isWeb = kIsWeb;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = isWeb && screenWidth > 800 ? 80.0 : 16.0;
-    final maxCardWidth = isWeb && screenWidth > 600 ? 600.0 : double.infinity;
+    final horizontalPadding = SakhaFuturism.horizontalMargin;
+    final maxCardWidth = isWeb && MediaQuery.of(context).size.width > 840
+        ? 680.0
+        : double.infinity;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -121,24 +121,37 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ГЛАВНЫЙ ВИДЖЕТ (КАРТОЧКА)
+          SakhaSectionTitle(
+            eyebrow: 'SAKHA SKY',
+            title: 'Погода',
+            subtitle:
+                'Единая стеклянная система: мягкий blur, теплые акценты и спокойная иерархия.',
+          ),
+          const SizedBox(height: AppSpacing.lg),
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxCardWidth),
               child: Container(
                 padding: EdgeInsets.all(ResponsivePadding.large(context)),
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
+                  gradient: LinearGradient(
+                    colors: [
+                      SakhaFuturism.glassFill(isDark, opacity: 0.76),
+                      SakhaFuturism.glassFill(isDark, opacity: 0.58),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: isDark ? 0.5 : 0.05,
-                      ),
-                      blurRadius: isDark ? 20 : 10,
-                      offset: const Offset(0, 10),
+                  border: Border.all(
+                    color: SakhaFuturism.glassBorder(
+                      isDark,
+                      accent: theme.primaryColor,
                     ),
-                  ],
+                  ),
+                  boxShadow: SakhaFuturism.shadow(
+                    isDark,
+                    accent: theme.primaryColor,
+                    lift: 1.1,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,38 +287,55 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
             ),
           ),
 
-          const SizedBox(height: 20),
-
-          // Тонкий разделитель
-          Divider(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : theme.dividerColor,
-            height: 1,
-          ),
-
-          // БЛОК ВОСХОДА/ЗАКАТА
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildSunInfo('ВОСХОД', dfTime.format(sunrise)),
-                _buildSunInfo('ЗАКАТ', dfTime.format(sunset)),
-              ],
+          const SizedBox(height: AppSpacing.lg),
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxCardWidth),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.lg,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      SakhaFuturism.glassFill(isDark, opacity: 0.72),
+                      SakhaFuturism.glassFill(isDark, opacity: 0.52),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: SakhaFuturism.glassBorder(
+                      isDark,
+                      accent: theme.primaryColor,
+                    ),
+                  ),
+                  boxShadow: SakhaFuturism.shadow(
+                    isDark,
+                    accent: theme.primaryColor,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildSunInfo('ВОСХОД', dfTime.format(sunrise)),
+                    _buildSunInfo('ЗАКАТ', dfTime.format(sunset)),
+                  ],
+                ),
+              ),
             ),
           ),
 
-          // ЗАГОЛОВОК
+          const SizedBox(height: AppSpacing.lg),
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 4),
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               'ПРОГНОЗ НА НЕДЕЛЮ',
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 2.0,
+                color: theme.primaryColor.withValues(alpha: 0.86),
+                letterSpacing: 2.4,
               ),
             ),
           ),
@@ -367,12 +397,22 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.cardColor,
+                        gradient: LinearGradient(
+                          colors: [
+                            SakhaFuturism.glassFill(isDark, opacity: 0.74),
+                            SakhaFuturism.glassFill(isDark, opacity: 0.54),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.05),
+                          color: SakhaFuturism.glassBorder(
+                            isDark,
+                            accent: theme.primaryColor,
+                          ),
+                        ),
+                        boxShadow: SakhaFuturism.shadow(
+                          isDark,
+                          accent: theme.primaryColor,
                         ),
                       ),
                       child: Row(

@@ -52,73 +52,86 @@ class ChartsScreen extends ConsumerWidget {
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
-            AppSpacing.lg,
+            SakhaFuturism.horizontalMargin,
             AppSpacing.lg, // Верхний отступ 16px
-            AppSpacing.lg,
+            SakhaFuturism.horizontalMargin,
             bottomPlayerHeight, // Отступ для мини-плеера
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Заголовок и селектор
-              Padding(
-                padding: EdgeInsets.only(
-                  left: AppSpacing.xs,
-                  bottom: AppSpacing.md,
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      SakhaFuturism.glassFill(isDark, opacity: 0.76),
+                      SakhaFuturism.glassFill(isDark, opacity: 0.56),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: SakhaFuturism.glassBorder(
+                      isDark,
+                      accent: theme.primaryColor,
+                    ),
+                  ),
+                  boxShadow: SakhaFuturism.shadow(
+                    isDark,
+                    accent: theme.primaryColor,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    SakhaSectionTitle(
+                      eyebrow: 'SAKHA TOPLINE',
+                      title: 'Топ Чарт',
+                      subtitle: currentCategory == ChartCategory.russian
+                          ? 'Топ 10 русских хитов'
+                          : 'Топ 10 зарубежных хитов',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Топ Чарт',
-                              style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: isDark
-                                    ? AppColors.textPrimary
-                                    : AppColors.textName,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            // Переключатель источника
-                            SizedBox(height: 4),
-                            Row(
-                              children: [
-                                _buildSourceButton(
-                                  ref,
-                                  '🍎 iTunes',
-                                  ChartSource.itunes,
-                                  currentSource == ChartSource.itunes,
-                                  isDark,
-                                ),
-                                SizedBox(width: 8),
-                                _buildSourceButton(
-                                  ref,
-                                  '🎵 Deezer',
-                                  ChartSource.deezer,
-                                  currentSource == ChartSource.deezer,
-                                  isDark,
-                                ),
-                              ],
-                            ),
-                          ],
+                        _buildSourceButton(
+                          context,
+                          ref,
+                          'iTunes',
+                          ChartSource.itunes,
+                          currentSource == ChartSource.itunes,
+                          isDark,
                         ),
-                        // Селектор категорий
+                        _buildSourceButton(
+                          context,
+                          ref,
+                          'Deezer',
+                          ChartSource.deezer,
+                          currentSource == ChartSource.deezer,
+                          isDark,
+                        ),
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.cardBackground
-                                : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              colors: [
+                                SakhaFuturism.glassFill(isDark, opacity: 0.48),
+                                SakhaFuturism.glassFill(isDark, opacity: 0.34),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: SakhaFuturism.glassBorder(
+                                isDark,
+                                accent: theme.primaryColor,
+                              ),
+                            ),
                           ),
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               _buildCategoryButton(
                                 context,
@@ -140,19 +153,6 @@ class ChartsScreen extends ConsumerWidget {
                           ),
                         ),
                       ],
-                    ),
-                    SizedBox(height: AppSpacing.xs),
-                    Text(
-                      currentCategory == ChartCategory.russian
-                          ? 'Топ 10 русских хитов по версии iTunes'
-                          : 'Топ 10 зарубежных хитов по версии iTunes',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? AppColors.textSecondary
-                            : AppColors.textSecondaryLight,
-                      ),
                     ),
                   ],
                 ),
@@ -238,7 +238,15 @@ class ChartsScreen extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? Theme.of(context).primaryColor : Colors.transparent,
+          gradient: isActive
+              ? LinearGradient(
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withValues(alpha: 0.78),
+                  ],
+                )
+              : null,
+          color: isActive ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -256,6 +264,7 @@ class ChartsScreen extends ConsumerWidget {
   }
 
   Widget _buildSourceButton(
+    BuildContext context,
     WidgetRef ref,
     String label,
     ChartSource source,
@@ -272,15 +281,22 @@ class ChartsScreen extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: isActive
-              ? (isDark ? AppColors.cardBackground : Colors.grey.shade300)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          gradient: isActive
+              ? LinearGradient(
+                  colors: [
+                    SakhaFuturism.glassFill(isDark, opacity: 0.86),
+                    SakhaFuturism.glassFill(isDark, opacity: 0.70),
+                  ],
+                )
+              : null,
+          color: isActive ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isActive
-                ? (isDark
-                      ? Colors.white24
-                      : Colors.black.withValues(alpha: 0.24))
+                ? SakhaFuturism.glassBorder(
+                    isDark,
+                    accent: Theme.of(context).primaryColor,
+                  )
                 : Colors.transparent,
             width: 1,
           ),

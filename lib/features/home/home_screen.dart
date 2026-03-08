@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
@@ -83,9 +84,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           : AppColors.backgroundLight,
       body: Stack(
         children: [
+          SakhaFuturism.ambientBackground(context),
           Column(
             children: [
-              // Статический хедер с бегущей строкой - общий для всех экранов
               const AppHeaderWithMarquee(),
               Expanded(
                 child: FadeTransition(
@@ -128,41 +129,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final accentColor = Theme.of(context).primaryColor;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg + bottomPadding,
+        SakhaFuturism.horizontalMargin,
+        AppSpacing.md,
+        SakhaFuturism.horizontalMargin,
+        AppSpacing.md + bottomPadding,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const MiniPlayer(),
-          SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? AppColors.cardBackground.withValues(alpha: 0.98)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(AppEffects.radiusFull),
-              border: Border.all(
-                color: isDarkMode
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05),
+          SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(34),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: SakhaFuturism.glassBlur + 2,
+                sigmaY: SakhaFuturism.glassBlur + 2,
               ),
-              boxShadow: isDarkMode ? null : AppEffects.shadowMd,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(Icons.sensors_rounded, 0, 'Радио'),
-                _buildNavItem(Icons.filter_drama_rounded, 1, 'Погода'),
-                _buildNavItem(Icons.auto_awesome_rounded, 2, 'Звезды'),
-                _buildNavItem(Icons.music_note_rounded, 3, 'Топ'),
-              ],
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      (isDarkMode ? const Color(0xFF14161A) : Colors.white)
+                          .withValues(alpha: 0.86),
+                      (isDarkMode
+                              ? const Color(0xFF101113)
+                              : const Color(0xFFF8F8FA))
+                          .withValues(alpha: 0.74),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(34),
+                  border: Border.all(
+                    color: Colors.white.withValues(
+                      alpha: isDarkMode ? 0.12 : 0.65,
+                    ),
+                  ),
+                  boxShadow: SakhaFuturism.shadow(
+                    isDarkMode,
+                    accent: accentColor,
+                    lift: 1.15,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(Icons.sensors_rounded, 0, 'Радио'),
+                    _buildNavItem(Icons.filter_drama_rounded, 1, 'Погода'),
+                    _buildNavItem(Icons.auto_awesome_rounded, 2, 'Звезды'),
+                    _buildNavItem(Icons.music_note_rounded, 3, 'Топ'),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -181,14 +203,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       onTap: () => _onTabChanged(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: AppEffects.durationNormal,
+        duration: AppEffects.durationSlow,
+        curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
+          horizontal: active ? AppSpacing.lg : AppSpacing.md,
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: active ? accentColor : Colors.transparent,
+          gradient: active
+              ? LinearGradient(
+                  colors: [accentColor, accentColor.withValues(alpha: 0.78)],
+                )
+              : null,
+          color: active ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.34),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -206,7 +243,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 label,
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 12,
+                  letterSpacing: 0.2,
                   color: Colors.black,
                 ),
               ),

@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
+
+// Импортируем Web Push только для веба
+import '../../services/web_push_notification_service.dart'
+    if (dart.library.io) '../../services/web_push_notification_service_stub.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -240,13 +245,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppEffects.radiusXl),
         ),
-        title: Text(
-          'Уведомления',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-            color: isDark ? Colors.white : Colors.black,
-          ),
+        title: Row(
+          children: [
+            Icon(Icons.notifications_rounded, 
+                color: isDark ? AppColors.primary : AppColors.primaryDark),
+            SizedBox(width: 8),
+            Text(
+              'Уведомления',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -274,6 +286,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     .toggleNewsNotifications(value);
               },
             ),
+            
+            // Web Push Notifications (только для веба)
+            if (kIsWeb) ...[
+              Divider(color: isDark ? Colors.white12 : Colors.black12),
+              _buildWebPushOption(context, isDark),
+            ],
           ],
         ),
         actions: [
@@ -283,6 +301,88 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Опция Web Push Notifications для веба
+  Widget _buildWebPushOption(BuildContext context, bool isDark) {
+    final pushService = WebPushNotificationService();
+    final isSupported = WebPushNotificationService.isSupported;
+
+    return FutureBuilder<bool>(
+      future: pushService.isSubscribed(),
+      builder: (context, snapshot) {
+        final isSubscribed = snapshot.data ?? false;
+
+        return ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            isSubscribed ? Icons.cloud_done_rounded : Icons.cloud_upload_rounded,
+            color: isSubscribed
+                ? AppColors.success
+                : isDark
+                    ? AppColors.primary
+                    : AppColors.primaryDark,
+          ),
+          title: Text(
+            isSubscribed ? 'Push включены' : 'Web Push',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          subtitle: Text(
+            isSubscribed
+                ? 'Вы подписаны на уведомления'
+                : isSupported
+                    ? 'Подпишитесь на push-уведомления'
+                    : 'Не поддерживается в этом браузере',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          trailing: isSupported
+              ? Switch(
+                  value: isSubscribed,
+                  onChanged: (value) {
+                    HapticFeedback.lightImpact();
+                    if (value) {
+                      // Подписка
+                      pushService.subscribe().then((success) {
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('✅ Вы подписаны на push-уведомления'),
+                              backgroundColor: AppColors.success,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      });
+                    } else {
+                      // Отписка
+                      pushService.unsubscribe().then((success) {
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('❌ Вы отписались от push-уведомлений'),
+                              backgroundColor: AppColors.error,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      });
+                    }
+                  },
+                )
+              : Icon(
+                  Icons.info_outline_rounded,
+                  color: isDark ? Colors.white30 : Colors.black26,
+                ),
+        );
+      },
     );
   }
 

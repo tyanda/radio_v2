@@ -49,7 +49,17 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      await PushNotificationService.initialize();
+      
+      // На вебе инициализируем уведомления с осторожностью, так как это может блокировать поток
+      if (kIsWeb) {
+        // На вебе часто требуется VAPID ключ для FCM, поэтому инициализируем асинхронно без ожидания
+        PushNotificationService.initialize().catchError((e) {
+          Logger.error("Web Push init error: $e", tag: 'Main');
+        });
+      } else {
+        await PushNotificationService.initialize();
+      }
+      
       Logger.log("Firebase initialized", tag: 'Main');
     }
   } catch (e) {

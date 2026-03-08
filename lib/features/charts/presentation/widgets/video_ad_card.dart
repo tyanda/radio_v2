@@ -116,18 +116,29 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard> {
     return Container(
       height: 250,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppEffects.radius2xl),
+        borderRadius: BorderRadius.circular(30),
         gradient: LinearGradient(
           colors: [
-            theme.primaryColor.withValues(alpha: 0.3),
-            theme.primaryColor.withValues(alpha: 0.1),
+            SakhaFuturism.glassFill(widget.isDark, opacity: 0.72),
+            Color.alphaBlend(
+              theme.primaryColor.withValues(alpha: 0.16),
+              SakhaFuturism.glassFill(widget.isDark, opacity: 0.52),
+            ),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: theme.primaryColor.withValues(alpha: 0.3),
-          width: 1.5,
+          color: SakhaFuturism.glassBorder(
+            widget.isDark,
+            accent: theme.primaryColor,
+          ),
+          width: 1.2,
+        ),
+        boxShadow: SakhaFuturism.shadow(
+          widget.isDark,
+          accent: theme.primaryColor,
+          lift: 1.1,
         ),
       ),
       child: Stack(
@@ -143,7 +154,7 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard> {
                   ? VideoPlayer(_controller!)
                   : Container(
                       color: widget.isDark
-                          ? AppColors.cardBackground
+                          ? AppColors.cardBackground.withValues(alpha: 0.9)
                           : Colors.grey.shade200,
                       child: Center(
                         child: !_videoLoaded

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,77 +64,136 @@ class AppHeader extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
+        SakhaFuturism.horizontalMargin,
         topPadding,
-        AppSpacing.lg,
-        AppSpacing.md,
+        SakhaFuturism.horizontalMargin,
+        AppSpacing.sm,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    color: isDark ? AppColors.textPrimary : AppColors.textName,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                    fontFamily: 'Inter',
+      child: SakhaFuturism.glass(
+        context,
+        accent: Theme.of(context).primaryColor,
+        radius: 30,
+        padding: const EdgeInsets.fromLTRB(18, 18, 10, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SAKHA FUTURISM / RADIO',
+                        style: GoogleFonts.inter(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 10,
+                          letterSpacing: 2.8,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.textPrimary
+                                : AppColors.textName,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.4,
+                            fontFamily: 'Inter',
+                          ),
+                          children: [
+                            const TextSpan(text: "Sakha"),
+                            TextSpan(
+                              text: "Live",
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  children: [
-                    const TextSpan(text: "Sakha"),
-                    TextSpan(
-                      text: "Live",
-                      style: TextStyle(color: Theme.of(context).primaryColor),
-                    ),
-                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    greeting,
-                    style: GoogleFonts.inter(
+                IconButton(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                  },
+                  icon: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (isDark ? Colors.white : Colors.black).withValues(
+                        alpha: isDark ? 0.06 : 0.05,
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(
+                          alpha: isDark ? 0.10 : 0.55,
+                        ),
+                      ),
+                    ),
+                    child: Icon(
+                      isDark ? Icons.tune_rounded : Icons.tune_outlined,
                       color: isDark
-                          ? AppColors.textTertiary
+                          ? AppColors.textPrimary
                           : AppColors.textName,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                      letterSpacing: 3.0,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  _buildGreetingSvg(isDark),
-                ],
-              ),
-            ],
-          ),
-          IconButton(
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.cardBackground
-                    : Colors.black.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isDark ? Icons.settings_rounded : Icons.settings_outlined,
-                color: isDark ? AppColors.textPrimary : AppColors.textName,
-              ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            SakhaFuturism.ornamentLine(context),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  greeting,
+                  style: GoogleFonts.inter(
+                    color: isDark ? AppColors.textTertiary : AppColors.textName,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 2.6,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildGreetingSvg(isDark),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+                  ),
+                  child: Text(
+                    'YAKUTSK / LIVE',
+                    style: GoogleFonts.inter(
+                      color: isDark ? Colors.white : AppColors.textName,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      letterSpacing: 1.8,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -145,21 +206,102 @@ class AppMarquee extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final marqueeText = ref.watch(marqueeTextProvider);
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
-    return Container(
-      height: 32.0,
-      decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-      alignment: Alignment.center,
-      child: Marquee(
-        text:
-            "SAKHALIVE  |  ${marqueeText.toUpperCase()}  |  ОСТАВАЙТЕСЬ С НАМИ  ",
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.w700,
-          fontSize: 13,
-          color: Colors.black,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SakhaFuturism.horizontalMargin,
+        0,
+        SakhaFuturism.horizontalMargin,
+        AppSpacing.sm,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(
+                    0xFF0B0D12,
+                  ).withValues(alpha: isDark ? 0.90 : 0.80),
+                  Theme.of(context).primaryColor.withValues(alpha: 0.30),
+                  const Color(
+                    0xFF090B10,
+                  ).withValues(alpha: isDark ? 0.92 : 0.80),
+                ],
+              ),
+              border: Border.all(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+              ),
+              boxShadow: [
+                ...SakhaFuturism.shadow(
+                  isDark,
+                  accent: Theme.of(context).primaryColor,
+                ),
+                BoxShadow(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.18),
+                  blurRadius: 28,
+                  spreadRadius: -4,
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.8),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0, 0.08, 0.92, 1],
+                    ).createShader(bounds),
+                    blendMode: BlendMode.dstIn,
+                    child: Marquee(
+                      text:
+                          "SAKHALIVE  //  ${marqueeText.toUpperCase()}  //  НОВОСТИ И ЭФИР БЕЗ ПАУЗ  ",
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        letterSpacing: 1.5,
+                        color: Colors.white,
+                      ),
+                      velocity: 24,
+                      blankSpace: 80,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        velocity: 30,
-        blankSpace: 100,
       ),
     );
   }

@@ -17,6 +17,13 @@ import 'package:sakha_live/features/widgets/widgets.dart';
 import '../../../../../core/utils/logger.dart';
 import '../../../charts/data/models/chart_item.dart';
 
+// Импортируем Web Media Session только для веба
+import 'package:sakha_live/services/web_media_session_service.dart'
+    if (dart.library.io) 'package:sakha_live/services/web_media_session_service_stub.dart';
+
+// Throttle для предотвращения частых обновлений состояния (мс)
+const _stateUpdateThrottleMs = 100;
+
 @immutable
 class PlayerState {
   final bool isPlaying;
@@ -85,6 +92,29 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   StreamSubscription? _playlistStateSubscription;
   bool _isSwitchingTrack =
       false; // Флаг для предотвращения рекурсивных переключений
+  
+  // Throttle для обновлений состояния
+  Timer? _stateUpdateTimer;
+  PlayerState? _pendingState;
+
+  /// Обновление состояния с throttle для предотвращения частых перерисовок
+  void _updateState(PlayerState Function(PlayerState) update) {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    _pendingState = update(currentState);
+
+    _stateUpdateTimer?.cancel();
+    _stateUpdateTimer = Timer(
+      const Duration(milliseconds: _stateUpdateThrottleMs),
+      () {
+        if (_pendingState != null) {
+          state = AsyncData(_pendingState!);
+          _pendingState = null;
+        }
+      },
+    );
+  }
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
@@ -111,11 +141,20 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
   @override
   Future<PlayerState> build() async {
+    // Инициализация AlbumArtService (для persistent кэша на вебе)
+    await _albumArtService.initialize();
+
     final audioHandler = ref.read(audioHandlerProvider);
 
     // На вебе создаём RadioPlayer без AudioHandler
     if (kIsWeb) {
       _radioPlayer = RadioPlayer(audioHandler: null);
+
+      // Инициализируем Web Media Session API
+      if (WebMediaSessionService.isSupported) {
+        WebMediaSessionService().init();
+        Logger.log('Web Media Session API initialized', tag: 'Player');
+      }
     } else {
       if (audioHandler == null) {
         throw Exception('AudioHandler не доступен на этой платформе');
@@ -135,35 +174,22 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     _playerStateSubscription = _radioPlayer.playerStateStream.listen((
       playerState,
     ) {
-      final currentState = state.asData?.value;
-      if (currentState != null) {
-        if (currentState.isPlaying != playerState.playing) {
-          state = AsyncData(
-            currentState.copyWith(isPlaying: playerState.playing),
-          );
-        }
-      }
+      _updateState((s) => s.copyWith(isPlaying: playerState.playing));
     });
 
     // Listen to processing state changes (buffering)
     _processingStateSubscription = _radioPlayer.processingStateStream.listen((
       processingState,
     ) {
-      final currentState = state.asData?.value;
-      if (currentState != null) {
-        final isBuffering =
-            processingState == ProcessingState.buffering ||
-            processingState == ProcessingState.loading;
-        if (currentState.isBuffering != isBuffering) {
-          state = AsyncData(currentState.copyWith(isBuffering: isBuffering));
-        }
-      }
+      final isBuffering =
+          processingState == ProcessingState.buffering ||
+          processingState == ProcessingState.loading;
+      _updateState((s) => s.copyWith(isBuffering: isBuffering));
     });
 
     // Listen to media item changes (track metadata from ICY)
     _mediaItemSubscription = _radioPlayer.mediaItemStream.listen((mediaItem) {
-      final currentState = state.asData?.value;
-      if (currentState != null && mediaItem != null) {
+      if (mediaItem != null) {
         String? albumArt = mediaItem.artUri?.toString();
 
         if (albumArt == null) {
@@ -174,13 +200,11 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           }
         }
 
-        state = AsyncData(
-          currentState.copyWith(
-            trackTitle: mediaItem.title,
-            trackArtist: mediaItem.artist,
-            albumArt: albumArt ?? currentState.albumArt,
-          ),
-        );
+        _updateState((s) => s.copyWith(
+          trackTitle: mediaItem.title,
+          trackArtist: mediaItem.artist,
+          albumArt: albumArt ?? s.albumArt,
+        ));
       }
     });
 
@@ -200,6 +224,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     });
 
     ref.onDispose(() {
+      _stateUpdateTimer?.cancel();
       _playerStateSubscription?.cancel();
       _processingStateSubscription?.cancel();
       _mediaItemSubscription?.cancel();
@@ -539,6 +564,16 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
             isPlaying: true,
           );
 
+      // Обновляем Web Media Session (для веба)
+      if (kIsWeb && WebMediaSessionService.isSupported) {
+        _updateWebMediaSession(
+          title: station.name,
+          artist: station.desc,
+          artwork: artUri?.toString(),
+          isPlaying: true,
+        );
+      }
+
       Logger.log("✅ Station switched: ${station.name}", tag: 'Player');
     } catch (e) {
       Logger.error("playStation error: $e", tag: 'Player');
@@ -678,6 +713,39 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       }
     } catch (e) {
       Logger.log("AlbumArt error: $e", tag: 'Player');
+    }
+  }
+
+  /// Обновление Web Media Session API
+  void _updateWebMediaSession({
+    required String title,
+    required String artist,
+    String? artwork,
+    required bool isPlaying,
+  }) {
+    if (!kIsWeb || !WebMediaSessionService.isSupported) return;
+
+    try {
+      final mediaSession = WebMediaSessionService();
+      
+      // Обновляем метаданные
+      mediaSession.updateMetadata(
+        title: title,
+        artist: artist,
+        artwork: artwork,
+        album: 'SakhaLive Radio',
+      );
+
+      // Обновляем состояние воспроизведения
+      mediaSession.setPlaybackState(
+        isPlaying: isPlaying,
+        hasNext: true,
+        hasPrevious: true,
+      );
+
+      Logger.log('Media Session updated: $title', tag: 'Player');
+    } catch (e) {
+      Logger.error('Media Session update error: $e', tag: 'Player');
     }
   }
 }

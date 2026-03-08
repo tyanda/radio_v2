@@ -74,15 +74,32 @@ class ChartItemTile extends ConsumerWidget {
         child: Container(
           padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.cardBackground : Colors.white,
-            borderRadius: BorderRadius.circular(AppEffects.radius2xl),
+            gradient: LinearGradient(
+              colors: [
+                SakhaFuturism.glassFill(
+                  isDark,
+                  opacity: isCurrentPlaying ? 0.82 : 0.74,
+                ),
+                SakhaFuturism.glassFill(
+                  isDark,
+                  opacity: isCurrentPlaying ? 0.64 : 0.54,
+                ),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
             border: Border.all(
               color: isCurrentPlaying
                   ? theme.primaryColor.withValues(alpha: 0.5)
-                  : (isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.05)),
-              width: isCurrentPlaying ? 2 : 1,
+                  : SakhaFuturism.glassBorder(
+                      isDark,
+                      accent: theme.primaryColor,
+                    ),
+              width: isCurrentPlaying ? 1.4 : 1,
+            ),
+            boxShadow: SakhaFuturism.shadow(
+              isDark,
+              accent: theme.primaryColor,
+              lift: isCurrentPlaying ? 1.12 : 1,
             ),
           ),
           child: Row(

@@ -23,10 +23,14 @@ class ViewTypeSelector extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
+        gradient: LinearGradient(
+          colors: [
+            SakhaFuturism.glassFill(isDark, opacity: 0.52),
+            SakhaFuturism.glassFill(isDark, opacity: 0.34),
+          ],
+        ),
         borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+        border: Border.all(color: SakhaFuturism.glassBorder(isDark)),
       ),
       child: Row(
         children: [
@@ -84,15 +88,29 @@ class _ViewTypeButton extends StatelessWidget {
           onChanged(type);
         },
         child: AnimatedContainer(
-          duration: AppEffects.durationNormal,
+          duration: AppEffects.durationSlow,
           curve: AppEffects.curve,
           padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? accentColor : Colors.transparent,
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: [accentColor, accentColor.withValues(alpha: 0.78)],
+                  )
+                : null,
+            color: isSelected ? null : Colors.transparent,
             borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.24),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
           child: FittedBox(
             fit: BoxFit.scaleDown,

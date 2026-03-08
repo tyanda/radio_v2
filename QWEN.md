@@ -5,6 +5,7 @@
 - В проекте Radio V4 используются навыки Superpowers: TDD (сначала тесты), systematic-debugging (4-фазный поиск багов), verification-before-completion (проверка перед коммитом)
 - Правила разработки Radio V4: 1) TDD - сначала тесты по-русски, 2) Feature-first структура, 3) Riverpod для состояния, 4) i18n - все строки в ARB файлах, 5) Firebase через Repository
 - Дизайн система Radio V4: фон #0D0D0D, карточки #1A1A1A, акцент #F2C94C (жёлтый), бренд #C9A53A (золотой), шрифты Inter и Poppins, закругления 20-24px
+- Radio V4 PWA: web/index.html настроен для PWA с iOS поддержкой (apple-mobile-web-app-capable, safe-area), manifest.json с shortcuts, CSP разрешает радиостанции (stream2.sakhafm.ru, icecast-saha.cdnvideo.ru, *.hostingradio.ru), service worker offline-first, сборка: flutter build web --release, PWA требует HTTPS (кроме localhost)
 
 ## Инструкция для Qwen Code (Автоматическая активация)
 

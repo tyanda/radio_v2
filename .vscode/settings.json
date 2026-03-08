@@ -10,7 +10,7 @@
   "json.validate.enable": false,
   "java.configuration.updateBuildConfiguration": "automatic",
   "python.terminal.useEnvFile": true,
-  "dart.flutterSdkPath": "/home/tyanda/snap/flutter/common/flutter",
+  "dart.flutterSdkPath": "C:\\src\\flutter",
   "dart.hotReloadOnSave": "manual",
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "Dart-Code.dart-code",

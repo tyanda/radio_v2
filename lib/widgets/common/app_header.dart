@@ -7,7 +7,6 @@ import 'package:marquee/marquee.dart';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
-import '../../core/providers/radio_providers.dart';
 import '../../features/settings/settings_screen.dart';
 
 /// Общий хедер приложения с логотипом, приветствием и кнопкой настроек

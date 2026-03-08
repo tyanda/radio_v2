@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sakha_live/widgets/scroll_scale_card.dart';
-import 'package:sakha_live/core/providers/weather_provider.dart';
 import 'package:sakha_live/core/utils/responsive_utils.dart';
 import 'package:sakha_live/core/utils/snackbar_helper.dart';
 import 'package:sakha_live/core/design/design.dart';

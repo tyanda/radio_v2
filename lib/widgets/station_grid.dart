@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/design/design.dart';
 import '../core/providers.dart';
-import '../core/providers/radio_providers.dart';
 import '../features/radio/domain/station.dart';
 import '../features/radio/presentation/providers/player_provider.dart';
 

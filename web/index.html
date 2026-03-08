@@ -7,9 +7,11 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="SakhaLive Radio - онлайн радио">
+  <meta name="description" content="SakhaLive Radio - онлайн радио Якутии">
   <meta name="theme-color" content="#0A0A0A">
-  
+  <meta name="color-scheme" content="dark light">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
   <!-- CSP для веб-версии - разрешаем все необходимые ресурсы -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self' 'unsafe-inline' 'unsafe-eval'
@@ -19,7 +21,6 @@
       https://*.gstatic.com
       https://*.firebaseio.com
       https://*.google-analytics.com
-      https://*.analytics.google.com
       https://*.googletagmanager.com
       https://lottie.host
       https://cdn.jsdelivr.net
@@ -57,7 +58,16 @@
       https://www.gstatic.com
       https://*.hostingradio.ru
       https://*.cdnvideo.ru
-      https://*.nip.io;
+      https://*.nip.io
+      https://stream2.sakhafm.ru
+      https://icecast-saha.cdnvideo.ru
+      https://i.sakhafm.ru
+      https://nvsakh.ru
+      https://irrADIO.ru
+      https://europaplus.ru
+      https://radiorecord.ru
+      https://stream2.radiotoday.ru
+      http://stream2.radiotoday.ru:8000;
     frame-src 'self' https:;
     worker-src 'self' blob:;
     child-src 'self' blob:;
@@ -66,41 +76,94 @@
     form-action 'self';
   ">
 
-  <!-- iOS meta tags & icons -->
+  <!-- PWA Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="SakhaLive Radio">
-  <meta name="theme-color" content="#0A0A0A">
+  <meta name="apple-mobile-web-app-title" content="SakhaLive">
   <meta name="apple-mobile-web-app-orientation" content="any">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="application-name" content="SakhaLive Radio">
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/Icon-512.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.png"/>
 
   <title>SakhaLive Radio</title>
   <link rel="manifest" href="manifest.json">
   <style>
     body {
-      background-color: #0A0A0A; /* Твой цвет фона из AppColors */
+      background-color: #0A0A0A;
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
-    
+
     /* Адаптация под ориентацию устройства */
     @media screen and (orientation: landscape) {
-      /* Горизонтальная ориентация - центрируем контент */
       body {
         display: flex;
         align-items: center;
         justify-content: center;
       }
     }
+
+    /* Safe area для iPhone X и новее */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      body {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+
+    /* Splash screen */
+    .splash {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #0A0A0A;
+    }
+    .splash-text {
+      color: #F2C94C;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   </style>
+
+  <!-- PWA Script -->
+  <script>
+    // Отключаем зум на iOS
+    document.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+  </script>
 </head>
 <body>
+  <!-- Splash screen до загрузки Flutter -->
+  <div id="splash" class="splash">
+    <div class="splash-text">SakhaLive Radio</div>
+  </div>
+
+  <!-- Загрузка Flutter -->
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

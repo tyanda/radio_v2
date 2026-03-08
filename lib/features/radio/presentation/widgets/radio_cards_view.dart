@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/design/app_constants.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../core/providers/radio_providers.dart';
 import '../../../../core/providers.dart';
 import '../providers/player_provider.dart';
 import '../../domain/station.dart';
@@ -42,7 +41,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
   final Map<int, GlobalKey> _cardKeys = {}; // Ключи для карточек в списке
 
   bool _showFavoritesOnly = false;
-  ViewType _currentViewType = ViewType.grid;
+  ViewType _currentViewType = ViewType.grid; // Значение по умолчанию
 
   @override
   void initState() {
@@ -52,6 +51,16 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       vsync: this,
       duration: AppEffects.durationSlow,
     );
+
+    // Загружаем режим из провайдера асинхронно
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final viewModeAsync = await ref.read(viewModeProvider.future);
+      if (mounted) {
+        setState(() {
+          _currentViewType = viewModeAsync.radioViewType;
+        });
+      }
+    });
 
     // Запускаем анимацию с небольшой задержкой для плавности
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -181,6 +190,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
           ViewTypeSelector(
             currentType: _currentViewType,
             onChanged: (type) {
+              // Сохраняем в провайдер
+              ref.read(viewModeProvider.notifier).setRadioViewType(type);
               setState(() {
                 _currentViewType = type;
               });

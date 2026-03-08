@@ -6,7 +6,6 @@ import 'package:marquee/marquee.dart';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
-import '../../core/providers/radio_providers.dart';
 import '../../core/utils/logger.dart';
 import '../radio/presentation/providers/player_provider.dart';
 import '../radio/domain/station.dart';

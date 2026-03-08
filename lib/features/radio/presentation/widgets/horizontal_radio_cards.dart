@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/design/app_constants.dart';
-import '../../../../core/providers/radio_providers.dart';
 import '../../../../core/providers.dart';
 import '../providers/player_provider.dart';
 import '../../domain/station.dart';

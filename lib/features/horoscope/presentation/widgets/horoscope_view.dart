@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sakha_live/core/design/design.dart';
 import 'package:sakha_live/core/design/app_constants.dart';
 import 'package:sakha_live/features/horoscope/domain/zodiac_sign.dart';
-import 'package:sakha_live/core/providers/horoscope_provider.dart';
 import 'package:sakha_live/core/providers.dart';
 import 'package:sakha_live/widgets/scroll_scale_card.dart';
 import '../../../../l10n/app_localizations.dart';

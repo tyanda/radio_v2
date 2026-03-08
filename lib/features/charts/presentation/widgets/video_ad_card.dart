@@ -213,7 +213,7 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.item.title.toUpperCase(),
+                  'видео недели',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,

@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/design/design.dart';
 import '../../core/providers.dart';
-import '../../core/providers/settings_provider.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends ConsumerStatefulWidget {

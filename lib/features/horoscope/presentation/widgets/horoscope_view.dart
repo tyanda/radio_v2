@@ -48,6 +48,9 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
     super.build(context);
 
     final horoscopeState = ref.watch(horoscopeProvider);
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.isDarkTheme ?? true),
+    );
 
     // Перезапуск анимации при изменении текста гороскопа
     final currentHoroscopeText = horoscopeState.horoscopeData?.text;
@@ -68,12 +71,32 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SakhaSectionTitle(
-            eyebrow: 'SAKHA CONSTELLATION',
-            title: 'Гороскоп',
-            subtitle: AppLocalizations.of(context).select_zodiac_sign,
+          // Заголовок "Гороскоп"
+          Text(
+            'Гороскоп',
+            style: GoogleFonts.inter(
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.2,
+              color: isDark
+                  ? AppColors.textPrimary
+                  : AppColors.textPrimaryLight,
+            ),
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
+          // Подсказка "ВЫБЕРИТЕ ЗНАК"
+          Text(
+            AppLocalizations.of(context).select_zodiac_sign.toUpperCase(),
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+              color: isDark
+                  ? AppColors.textTertiary
+                  : AppColors.textSecondary,
+            ),
+          ),
+          SizedBox(height: AppSpacing.lg),
           GridView.builder(
             padding: EdgeInsets.zero,
             shrinkWrap: true,

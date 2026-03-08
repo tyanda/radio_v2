@@ -18,6 +18,7 @@ class RadioPlayer {
   // Поток для метаданных треков
   final _mediaItemController = StreamController<MediaItem?>.broadcast();
   StreamSubscription? _icyMetadataSubscription;
+  String? _lastMetadataTitle; // Для предотвращения дубликатов
 
   RadioPlayer({this.audioHandler})
     : isWeb = kIsWeb,
@@ -38,38 +39,83 @@ class RadioPlayer {
     }
   }
 
+  /// Парсинг ICY-метаданных в формате "Artist - Title"
+  Map<String, String?> _parseMetadata(String title) {
+    String? artist;
+    String? trackTitle;
+
+    // Пробуем разделить по " - "
+    final separatorIndex = title.indexOf(' - ');
+    if (separatorIndex != -1) {
+      artist = title.substring(0, separatorIndex).trim();
+      trackTitle = title.substring(separatorIndex + 3).trim();
+    } else {
+      // Если нет разделителя, используем весь текст как название трека
+      trackTitle = title.trim();
+    }
+
+    // Очищаем от лишних символов
+    artist = artist?.replaceAll(RegExp(r'\s+'), ' ').trim();
+    trackTitle = trackTitle.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    // Удаляем лишние кавычки
+    artist = artist?.replaceAll('"', '').trim();
+    trackTitle = trackTitle.replaceAll('"', '').trim();
+
+    return {'artist': artist, 'title': trackTitle};
+  }
+
   /// Подписка на ICY-метаданные из потока
   void _subscribeToIcyMetadata() {
     if (isWeb || player == null) return;
 
     _icyMetadataSubscription?.cancel();
     _icyMetadataSubscription = player!.icyMetadataStream.listen((icyMetadata) {
-      if (icyMetadata != null && icyMetadata.info != null) {
-        final title = icyMetadata.info!.title;
-        Logger.log("🎵 ICY Metadata: title=$title", tag: 'RadioPlayer');
-
-        if (title != null && title.isNotEmpty) {
-          // Парсим "Artist - Title" формат
-          String? artist;
-          String trackTitle = title;
-
-          final separatorIndex = title.indexOf(' - ');
-          if (separatorIndex != -1) {
-            artist = title.substring(0, separatorIndex).trim();
-            trackTitle = title.substring(separatorIndex + 3).trim();
-          }
-
-          _updateMediaItem(
-            MediaItem(
-              id: 'icy_metadata',
-              title: trackTitle,
-              artist: artist,
-              album: 'SakhaLive',
-              artUri: _mediaItemController.stream.value?.artUri,
-            ),
+      try {
+        if (icyMetadata != null && icyMetadata.info != null) {
+          final rawTitle = icyMetadata.info!.title;
+          Logger.log(
+            "🎵 ICY Raw: $rawTitle",
+            tag: 'RadioPlayer',
           );
+
+          if (rawTitle != null &&
+              rawTitle.isNotEmpty &&
+              rawTitle != _lastMetadataTitle) {
+            _lastMetadataTitle = rawTitle;
+
+            // Парсим "Artist - Title" формат
+            final parsed = _parseMetadata(rawTitle);
+            final artist = parsed['artist'];
+            final trackTitle = parsed['title'];
+
+            Logger.log(
+              "🎵 ICY Parsed: ${artist ?? 'N/A'} - ${trackTitle ?? 'N/A'}",
+              tag: 'RadioPlayer',
+            );
+
+            _updateMediaItem(
+              MediaItem(
+                id: 'icy_${DateTime.now().millisecondsSinceEpoch}',
+                title: trackTitle ?? rawTitle,
+                artist: artist,
+                album: 'SakhaLive',
+                artUri: _mediaItemController.stream.value?.artUri,
+              ),
+            );
+          }
         }
+      } catch (e) {
+        Logger.error(
+          "🎵 ICY Metadata parse error: $e",
+          tag: 'RadioPlayer',
+        );
       }
+    }, onError: (error) {
+      Logger.error(
+        "🎵 ICY Metadata stream error: $error",
+        tag: 'RadioPlayer',
+      );
     });
   }
 

@@ -51,6 +51,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
   // Флаг: играет ли сейчас трек из чарта (не радио)
   bool _isPlayingTrack = false;
+  
+  // Для отслеживания переключения станции
+  String? _lastStationId;
 
   @override
   void initState() {
@@ -78,6 +81,35 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
     // Подписываемся на sequenceStateStream для обновления метаданных
     _subscribeToMediaItem();
+    
+    // Подписка на изменения плеера для сброса обложки при переключении
+    _subscribeToPlayerChanges();
+  }
+
+  void _subscribeToPlayerChanges() {
+    // Слушаем изменения в playerProvider для детектирования переключения станции
+    ref.listen<sakha_live.AsyncValue<sakha_live.PlayerState>>(
+      playerProvider,
+      (previous, next) {
+        if (previous == null || next == null) return;
+        
+        final prevStation = previous.value?.currentStation;
+        final currStation = next.value?.currentStation;
+        
+        // Если станция изменилась
+        if (prevStation?.id != currStation?.id) {
+          Logger.log(
+            'MiniPlayer: Station switched from ${prevStation?.name} to ${currStation?.name}',
+            tag: 'MiniPlayer',
+          );
+          
+          // Сбрасываем последнюю станцию для триггера обновления UI
+          setState(() {
+            _lastStationId = currStation?.id;
+          });
+        }
+      },
+    );
   }
 
   void _subscribeToMediaItem() {
@@ -581,6 +613,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     // Используем обложку из метаданных или картинку станции
     final albumArtUrl = playerState.albumArt;
     final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
+    final currentStation = playerState.currentStation;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -591,67 +624,18 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
             width: 44,
             height: 44,
             child: isBuffering
-                ? Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.cardBackground
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-                    ),
-                    child: Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
+                ? _buildBufferingPlaceholder(theme, isDark)
                 : hasAlbumArt && isPlayingTrack
-                ? Image.network(
-                    albumArtUrl,
+                ? CachedNetworkImage(
+                    imageUrl: albumArtUrl,
                     fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.cardBackground
-                              : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(
-                            AppEffects.radiusMd,
-                          ),
-                        ),
-                        child: Center(
-                          child: SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.primaryColor,
-                              ),
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded
-                                            .toDouble() /
-                                        loadingProgress.expectedTotalBytes!
-                                            .toDouble()
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      // Fallback на заглушку для треков
-                      return _buildPlaceholderArt();
-                    },
+                    fadeInDuration: const Duration(milliseconds: 150),
+                    fadeOutDuration: const Duration(milliseconds: 150),
+                    placeholder: (context, url) => _buildLoadingPlaceholder(),
+                    errorWidget: (context, error, stackTrace) =>
+                        _buildPlaceholderArt(),
                   )
-                : _buildStationArt(playerState.currentStation),
+                : _buildStationArt(currentStation),
           ),
         ),
         if (playerState.isPlaying && !isBuffering) ...[
@@ -686,16 +670,68 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
   Widget _buildStationArt(Station? currentStation) {
     if (currentStation != null && currentStation.art.isNotEmpty) {
-      return Image.asset(
-        currentStation.art,
+      return CachedNetworkImage(
+        imageUrl: _getStationLogoUrl(currentStation),
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildPlaceholderArt();
-        },
+        fadeInDuration: const Duration(milliseconds: 150),
+        fadeOutDuration: const Duration(milliseconds: 150),
+        placeholder: (context, url) => _buildLoadingPlaceholder(),
+        errorWidget: (context, error, stackTrace) => _buildPlaceholderArt(),
       );
     }
     // Для треков из чарта показываем заглушку
     return _buildPlaceholderArt();
+  }
+
+  /// Возвращает URL логотипа станции или null для использования asset
+  String? _getStationLogoUrl(Station station) {
+    // Возвращаем null для использования локальных assets
+    // В будущем можно добавить logoUrl в Station
+    return null;
+  }
+
+  /// Заглушка во время загрузки обложки
+  Widget _buildLoadingPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+      ),
+      child: Center(
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppColors.primary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Заглушка при буферизации
+  Widget _buildBufferingPlaceholder(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardBackground : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+      ),
+      child: Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildPlaceholderArt() {

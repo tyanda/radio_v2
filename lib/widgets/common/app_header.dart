@@ -54,7 +54,7 @@ class AppHeader extends ConsumerWidget {
     final isDark = ref.watch(
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
-    final topPadding = MediaQuery.of(context).padding.top + AppSpacing.sm;
+    final topPadding = MediaQuery.of(context).padding.top + AppSpacing.xs;
 
     final greeting = greetingAsync.when(
       data: (data) => data.toUpperCase(),
@@ -67,130 +67,93 @@ class AppHeader extends ConsumerWidget {
         SakhaFuturism.horizontalMargin,
         topPadding,
         SakhaFuturism.horizontalMargin,
-        AppSpacing.sm,
+        AppSpacing.xs,
       ),
       child: SakhaFuturism.glass(
         context,
         accent: Theme.of(context).primaryColor,
         radius: 30,
-        padding: const EdgeInsets.fromLTRB(18, 18, 10, 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.textPrimary
+                          : AppColors.textName,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.4,
+                      fontFamily: 'Inter',
+                    ),
                     children: [
-                      Text(
-                        'SAKHA FUTURISM / RADIO',
-                        style: GoogleFonts.inter(
+                      const TextSpan(text: "Sakha"),
+                      TextSpan(
+                        text: "Live",
+                        style: TextStyle(
                           color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 10,
-                          letterSpacing: 2.8,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            color: isDark
-                                ? AppColors.textPrimary
-                                : AppColors.textName,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.4,
-                            fontFamily: 'Inter',
-                          ),
-                          children: [
-                            const TextSpan(text: "Sakha"),
-                            TextSpan(
-                              text: "Live",
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsScreen(),
-                      ),
-                    );
-                  },
-                  icon: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: (isDark ? Colors.white : Colors.black).withValues(
-                        alpha: isDark ? 0.06 : 0.05,
-                      ),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(
-                          alpha: isDark ? 0.10 : 0.55,
-                        ),
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      greeting,
+                      style: GoogleFonts.inter(
+                        color: isDark
+                            ? AppColors.textTertiary
+                            : AppColors.textName,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    child: Icon(
-                      isDark ? Icons.tune_rounded : Icons.tune_outlined,
-                      color: isDark
-                          ? AppColors.textPrimary
-                          : AppColors.textName,
-                    ),
-                  ),
+                    const SizedBox(width: 4),
+                    _buildGreetingSvg(isDark),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            SakhaFuturism.ornamentLine(context),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(
-                  greeting,
-                  style: GoogleFonts.inter(
-                    color: isDark ? AppColors.textTertiary : AppColors.textName,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                    letterSpacing: 2.6,
+            IconButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                _buildGreetingSvg(isDark),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                );
+              },
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black).withValues(
+                    alpha: isDark ? 0.06 : 0.05,
                   ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).primaryColor.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(AppEffects.radiusFull),
-                  ),
-                  child: Text(
-                    'YAKUTSK / LIVE',
-                    style: GoogleFonts.inter(
-                      color: isDark ? Colors.white : AppColors.textName,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                      letterSpacing: 1.8,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(
+                      alpha: isDark ? 0.10 : 0.55,
                     ),
                   ),
                 ),
-              ],
+                child: Icon(
+                  isDark ? Icons.tune_rounded : Icons.tune_outlined,
+                  color: isDark
+                      ? AppColors.textPrimary
+                      : AppColors.textName,
+                ),
+              ),
             ),
           ],
         ),

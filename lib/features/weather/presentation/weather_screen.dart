@@ -121,11 +121,17 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SakhaSectionTitle(
-            eyebrow: 'SAKHA SKY',
-            title: 'Погода',
-            subtitle:
-                'Единая стеклянная система: мягкий blur, теплые акценты и спокойная иерархия.',
+          // Заголовок "Погода"
+          Text(
+            'Погода',
+            style: GoogleFonts.inter(
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.2,
+              color: isDark
+                  ? AppColors.textPrimary
+                  : AppColors.textPrimaryLight,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           Center(

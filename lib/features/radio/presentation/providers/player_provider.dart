@@ -706,10 +706,24 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         title: title,
       );
       final currentState = state.asData?.value;
-      if (artUrl != null &&
-          currentState != null &&
-          currentState.trackTitle == title) {
-        state = AsyncData(currentState.copyWith(albumArt: artUrl));
+      if (artUrl != null && currentState != null) {
+        // Обновляем обложку, даже если trackTitle изменился
+        // Проверяем что это ещё та же станция или трек
+        final isSameTrack = currentState.trackTitle == title ||
+            currentState.currentStation == null; // Если не радио, а трек
+        
+        if (isSameTrack) {
+          state = AsyncData(currentState.copyWith(albumArt: artUrl));
+          Logger.log(
+            "🎨 AlbumArt: State updated with artUrl",
+            tag: 'Player',
+          );
+        } else {
+          Logger.log(
+            "🎨 AlbumArt: Skipped - track changed (was '$title', now '${currentState.trackTitle}')",
+            tag: 'Player',
+          );
+        }
       }
     } catch (e) {
       Logger.log("AlbumArt error: $e", tag: 'Player');

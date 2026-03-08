@@ -179,62 +179,65 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         SakhaFuturism.horizontalMargin,
-        AppSpacing.lg,
+        AppSpacing.sm,
         SakhaFuturism.horizontalMargin,
-        AppSpacing.md,
+        AppSpacing.xs,
       ),
       child: SakhaFuturism.glass(
         context,
         accent: Theme.of(context).primaryColor,
         radius: 28,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SakhaSectionTitle(
-              eyebrow: 'SAKHA WAVE',
-              title: 'Радио',
-              subtitle:
-                  'Станции в стеклянных карточках с мягким свечением и строгой сеткой 16px.',
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ViewTypeSelector(
-              currentType: _currentViewType,
-              onChanged: (type) {
-                HapticFeedback.lightImpact();
-                ref.read(viewModeProvider.notifier).setRadioViewType(type);
-                setState(() {
-                  _currentViewType = type;
-                });
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(
-                    icon: Icons.grid_view_rounded,
-                    label: 'Все станции',
-                    isSelected: !_showFavoritesOnly,
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => _showFavoritesOnly = false);
-                    },
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  _buildFilterChip(
-                    icon: Icons.favorite_rounded,
-                    label: 'Избранные',
-                    isSelected: _showFavoritesOnly,
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => _showFavoritesOnly = true);
-                    },
-                  ),
-                ],
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Фильтры
+              _buildFilterChip(
+                icon: Icons.grid_view_rounded,
+                label: 'Все',
+                isSelected: !_showFavoritesOnly,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _showFavoritesOnly = false);
+                },
               ),
-            ),
-          ],
+              SizedBox(width: AppSpacing.xs),
+              _buildFilterChip(
+                icon: Icons.favorite_rounded,
+                label: 'Избранные',
+                isSelected: _showFavoritesOnly,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _showFavoritesOnly = true);
+                },
+              ),
+              // Разделитель
+              Container(
+                width: 1,
+                height: 20,
+                margin: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                color: (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black)
+                    .withValues(alpha: 0.2),
+              ),
+              // Переключатель видов
+              ViewTypeSelector(
+                currentType: _currentViewType,
+                onChanged: (type) {
+                  HapticFeedback.lightImpact();
+                  ref.read(viewModeProvider.notifier).setRadioViewType(type);
+                  setState(() {
+                    _currentViewType = type;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -595,8 +598,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         duration: AppEffects.durationNormal,
         curve: AppEffects.curve,
         padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
           gradient: isSelected
@@ -628,7 +631,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
           children: [
             Icon(
               icon,
-              size: 16,
+              size: 14,
               color: isSelected
                   ? Colors.black
                   : isDark
@@ -640,7 +643,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
               label,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontSize: 12,
                 color: isSelected
                     ? Colors.black
                     : isDark

@@ -429,29 +429,6 @@ class _RadioCardV2State extends State<RadioCardV2>
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if (widget.station.frequency.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: widget.isActive
-                  ? Colors.black.withValues(alpha: 0.10)
-                  : accentColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppEffects.radiusFull),
-            ),
-            child: Text(
-              widget.station.frequency.toUpperCase(),
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w800,
-                fontSize: 10,
-                letterSpacing: 1.3,
-                color: widget.isActive
-                    ? Colors.black.withValues(alpha: 0.78)
-                    : accentColor,
-              ),
-            ),
-          ),
-        ],
         if (widget.station.desc.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(

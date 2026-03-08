@@ -69,21 +69,31 @@ class _VideoAdCardState extends State<VideoAdCard> {
     // key={myVideoUrl} - заставляет плеер перезагрузиться при смене ссылки
     await _controller?.dispose();
 
-    _controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    // mixWithOthers: true - видео не перехватывает Audio Focus
+    // Это позволяет музыке продолжать воспроизводиться при просмотре видео
+    _controller = VideoPlayerController.networkUrl(
+      Uri.parse(url),
+      videoPlayerOptions: VideoPlayerOptions(
+        mixWithOthers: true,
+        allowBackgroundPlayback: false,
+      ),
+    );
 
     await _controller!
         .initialize()
-        .then((_) {
+        .then((_) async {
+          // СНАЧАЛА устанавливаем громкость в 0 (чтобы не было звука при инициализации)
+          await _controller!.setVolume(0.0);
+
           setState(() {
             _videoLoaded = true; // onLoadedData(() => setVideoLoaded(true))
+            _isMuted = true; // Синхронизируем состояние
           });
 
           // autoPlay
-          _controller!.play();
+          await _controller!.play();
           // loop
           _controller!.setLooping(true);
-          // muted={isMuted}
-          _controller!.setVolume(_isMuted ? 0.0 : 1.0);
         })
         .catchError((error) {
           debugPrint('❌ VideoAd: Ошибка: $error');

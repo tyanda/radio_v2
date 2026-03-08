@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:marquee/marquee.dart';
+import 'package:audio_service/audio_service.dart' as as_service;
 
 import '../../../../core/design/design.dart';
 import '../../../../widgets/equalizer_animation.dart';
@@ -11,9 +13,12 @@ import '../../../../widgets/shimmer_widget.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../domain/station.dart';
+import '../providers/player_provider.dart' as sakha_live;
 import '../providers/player_provider.dart';
+import '../../../../core/providers.dart';
 import '../../../../core/providers/radio_providers.dart';
 import '../../../player/full_player_screen.dart';
+import '../../../../core/utils/logger.dart';
 
 /// Улучшенный MiniPlayer с жестами и расширенными анимациями
 ///
@@ -24,6 +29,7 @@ import '../../../player/full_player_screen.dart';
 /// - Haptic feedback для всех взаимодействий
 /// - Пульсирующая анимация обложки при воспроизведении
 /// - Градиентные эффекты
+/// - Автоматическая синхронизация метаданных из sequenceStateStream
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});
 
@@ -40,6 +46,12 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   late Animation<double> _bounceAnimation;
 
   double _dragOffsetX = 0;
+
+  // Подписка на mediaItem для синхронизации метаданных
+  StreamSubscription<as_service.MediaItem?>? _sequenceStateSubscription;
+
+  // Флаг: играет ли сейчас трек из чарта (не радио)
+  bool _isPlayingTrack = false;
 
   @override
   void initState() {
@@ -64,12 +76,45 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     _bounceAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
     );
+
+    // Подписываемся на sequenceStateStream для обновления метаданных
+    _subscribeToMediaItem();
+  }
+
+  void _subscribeToMediaItem() {
+    final audioHandler = ref.read(audioHandlerProvider);
+    if (audioHandler == null) return;
+
+    // Подписываемся на mediaItemStream для синхронизации метаданных
+    _sequenceStateSubscription = audioHandler.mediaItem.listen((mediaItem) {
+      if (!mounted) return;
+
+      if (mediaItem != null) {
+        // Проверяем тип контента по URL
+        final uriString = mediaItem.artUri.toString();
+        final isStream =
+            mediaItem.id.contains('stream://') ||
+            uriString.contains('/stream/') ||
+            uriString.contains('.m3u') ||
+            uriString.contains('.pls');
+
+        setState(() {
+          _isPlayingTrack = !isStream;
+        });
+
+        Logger.log(
+          'MiniPlayer: mediaItem updated, isPlayingTrack=$_isPlayingTrack, title=${mediaItem.title}, artUri=$uriString',
+          tag: 'MiniPlayer',
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _bounceController.dispose();
+    _sequenceStateSubscription?.cancel();
     super.dispose();
   }
 
@@ -86,9 +131,12 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     return playerAsync.when(
       data: (playerState) {
         // Определяем тип контента: радио или трек
+        // Приоритет: sequenceStateStream > playerState
         final isPlayingTrack =
-            playerState.currentStation == null &&
-            playerState.trackTitle != null;
+            _isPlayingTrack ||
+            (playerState.currentStation == null &&
+                playerState.trackTitle != null &&
+                playerState.trackTitle != playerState.currentStation?.name);
         final isVisible = playerState.isPlaying || playerState.isBuffering;
 
         return AnimatedOpacity(
@@ -154,21 +202,37 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   Widget _buildPlayerUI(
     BuildContext context,
     WidgetRef ref,
-    PlayerState playerState,
+    sakha_live.PlayerState playerState,
     bool isPlayingTrack,
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isBuffering = playerState.isBuffering;
 
-    // Определяем отображаемые данные
-    // Для трека: title = название песни, subtitle = артист
-    // Для радио: title = название станции, subtitle = "ПРЯМОЙ ЭФИР" или метаданные трека
+    // Определяем отображаемые данные на основе типа контента
+    // Для трека (iTunes/Chart): показываем название песни и артиста
+    // Для радио: показываем название станции и "ПРЯМОЙ ЭФИР" или метаданные трека
     final displayTitle = isPlayingTrack
         ? (playerState.trackTitle ?? 'SakhaLive')
         : (playerState.currentStation?.name ?? 'SakhaLive');
 
     final currentStation = playerState.currentStation;
+
+    // Вторая строка: артист (для трека) или статус (для радио)
+    String? displaySubtitle;
+    if (isPlayingTrack) {
+      // Трек из чарта: показываем артиста
+      displaySubtitle = playerState.trackArtist;
+    } else {
+      // Радио: показываем метаданные трека (если есть) или "ПРЯМОЙ ЭФИР"
+      final hasRadioMetadata =
+          playerState.trackTitle != null &&
+          playerState.trackTitle != currentStation?.name;
+      if (hasRadioMetadata) {
+        displaySubtitle = playerState.trackTitle;
+      }
+      // Если нет метаданных, displaySubtitle останется null — покажем "ПРЯМОЙ ЭФИР"
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -318,7 +382,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                       overflow: TextOverflow.ellipsis,
                                     ),
                               SizedBox(height: AppSpacing.xs),
-                              // Вторая строка: артист ИЛИ "ПРЯМОЙ ЭФИР" ИЛИ метаданные радио
+                              // Вторая строка: артист (для трека) ИЛИ "ПРЯМОЙ ЭФИР"/метаданные (для радио)
                               isBuffering
                                   ? ShimmerWidget.text(
                                       width: 80,
@@ -332,12 +396,12 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                         letterSpacing: 1.2,
                                       ),
                                     )
-                                  : isPlayingTrack
-                                  ? // Трек из чарта: показываем артиста
-                                    playerState.trackArtist != null &&
-                                            playerState.trackArtist!.isNotEmpty
-                                        ? Text(
-                                            playerState.trackArtist!,
+                                  : displaySubtitle != null &&
+                                        displaySubtitle.isNotEmpty
+                                  ? isPlayingTrack
+                                        ? // Трек: показываем артиста
+                                          Text(
+                                            displaySubtitle,
                                             style: GoogleFonts.inter(
                                               color: isDark
                                                   ? theme.primaryColor
@@ -350,38 +414,37 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           )
-                                        : const SizedBox.shrink()
-                                  : // Радио: показываем метаданные трека или "ПРЯМОЙ ЭФИР"
-                                    playerState.trackTitle != null &&
-                                        playerState.trackTitle !=
-                                            currentStation?.name
-                                  ? // Бегущая строка с названием трека из метаданных радио
-                                    SizedBox(
-                                      height: 14,
-                                      child: Marquee(
-                                        text: playerState.trackTitle!,
-                                        style: GoogleFonts.inter(
-                                          color: isDark
-                                              ? theme.primaryColor
-                                              : AppColors.primaryDark,
-                                          fontSize: 8.5,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.5,
-                                          height: 1.0,
-                                        ),
-                                        velocity: 30,
-                                        blankSpace: 50,
-                                        startPadding: 0,
-                                        accelerationDuration: const Duration(
-                                          milliseconds: 500,
-                                        ),
-                                        accelerationCurve: Curves.easeInOut,
-                                        decelerationDuration: const Duration(
-                                          milliseconds: 500,
-                                        ),
-                                        decelerationCurve: Curves.easeInOut,
-                                      ),
-                                    )
+                                        : // Радио: показываем метаданные трека (бегущая строка)
+                                          SizedBox(
+                                            height: 14,
+                                            child: Marquee(
+                                              text: displaySubtitle,
+                                              style: GoogleFonts.inter(
+                                                color: isDark
+                                                    ? theme.primaryColor
+                                                    : AppColors.primaryDark,
+                                                fontSize: 8.5,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                                height: 1.0,
+                                              ),
+                                              velocity: 30,
+                                              blankSpace: 50,
+                                              startPadding: 0,
+                                              accelerationDuration:
+                                                  const Duration(
+                                                    milliseconds: 500,
+                                                  ),
+                                              accelerationCurve:
+                                                  Curves.easeInOut,
+                                              decelerationDuration:
+                                                  const Duration(
+                                                    milliseconds: 500,
+                                                  ),
+                                              decelerationCurve:
+                                                  Curves.easeInOut,
+                                            ),
+                                          )
                                   : // "ПРЯМОЙ ЭФИР" если нет метаданных
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -509,7 +572,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   Widget _buildAlbumArt(
     BuildContext context,
     WidgetRef ref,
-    PlayerState playerState,
+    sakha_live.PlayerState playerState,
     bool isPlayingTrack,
     bool isDark,
   ) {

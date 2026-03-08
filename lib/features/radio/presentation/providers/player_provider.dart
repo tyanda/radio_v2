@@ -296,7 +296,8 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     final currentState = state.asData?.value;
     if (currentState == null) return;
 
-    if (currentState.currentStation?.name == station.name) {
+    // Сравниваем по id для корректного определения той же станции
+    if (currentState.currentStation?.id == station.id) {
       if (currentState.isPlaying) {
         await _radioPlayer.pause();
       } else {
@@ -306,9 +307,19 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     }
 
     try {
+      Logger.log(
+        "📻 Switching to station: ${station.name} (id: ${station.id})",
+        tag: 'Player',
+      );
+
+      // СНАЧАЛА обновляем состояние с новыми метаданными станции
       state = AsyncData(
         currentState.copyWith(
           currentStation: station,
+          // Сбрасываем метаданные трека при переключении на радио
+          trackTitle: station.name,
+          trackArtist: null,
+          albumArt: null,
           isPlaying: false,
           isBuffering: true,
         ),
@@ -327,11 +338,14 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
         artUri: artUri?.toString(),
       );
 
+      // Сбрасываем старую подписку на метаданные
       _metadataService.stopFetchingMetadata();
+      _metadataSubscription?.cancel();
+
       final radioBrowserUuid = station.metadata?['radio_browser_uuid'];
       if (radioBrowserUuid != null) {
         _metadataService.startFetchingMetadata(radioBrowserUuid);
-        _metadataSubscription?.cancel();
+        // Подписываемся на новые метаданные
         _metadataSubscription = _metadataService.metadataStream.listen((
           songTitle,
         ) {
@@ -351,6 +365,14 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
       await _radioPlayer.play();
 
+      // ФИНАЛЬНОЕ обновление состояния - берём актуальное состояние
+      final newState = state.asData?.value;
+      if (newState != null) {
+        state = AsyncData(
+          newState.copyWith(isPlaying: true, isBuffering: false),
+        );
+      }
+
       // Обновляем виджет
       ref
           .read(homeWidgetStateProvider.notifier)
@@ -360,11 +382,16 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
             albumArt: artUri?.toString(),
             isPlaying: true,
           );
+
+      Logger.log("✅ Station switched: ${station.name}", tag: 'Player');
     } catch (e) {
       Logger.error("playStation error: $e", tag: 'Player');
-      state = AsyncData(
-        currentState.copyWith(isPlaying: false, isBuffering: false),
-      );
+      final currentState = state.asData?.value;
+      if (currentState != null) {
+        state = AsyncData(
+          currentState.copyWith(isPlaying: false, isBuffering: false),
+        );
+      }
     }
   }
 

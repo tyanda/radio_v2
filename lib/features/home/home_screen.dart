@@ -98,10 +98,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       });
                     },
                     children: const [
-                      RadioView(),
-                      WeatherScreen(),
-                      ChartsScreen(),
-                      HoroscopeView(),
+                      RadioView(), // 0 - Радио
+                      WeatherScreen(), // 1 - Погода
+                      HoroscopeView(), // 2 - Гороскоп
+                      ChartsScreen(), // 3 - Топ Чарт (последний)
                     ],
                   ),
                 ),
@@ -160,8 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               children: [
                 _buildNavItem(Icons.sensors_rounded, 0, 'Радио'),
                 _buildNavItem(Icons.filter_drama_rounded, 1, 'Погода'),
-                _buildNavItem(Icons.music_note_rounded, 2, 'Топ'),
-                _buildNavItem(Icons.auto_awesome_rounded, 3, 'Звезды'),
+                _buildNavItem(Icons.auto_awesome_rounded, 2, 'Звезды'),
+                _buildNavItem(Icons.music_note_rounded, 3, 'Топ'),
               ],
             ),
           ),

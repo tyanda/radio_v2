@@ -555,7 +555,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   Future<void> stop() async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
-    await _radioPlayer.stop();
+    await _radioPlayer.pause(); // Пауза вместо stop - плеер остается видимым
     state = AsyncData(currentState.copyWith(isPlaying: false));
 
     // Обновляем виджет
@@ -565,6 +565,56 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           stationName: currentState.currentStation?.name ?? 'SakhaLive',
           isPlaying: false,
         );
+  }
+
+  /// Возобновление воспроизведения после паузы
+  Future<void> resume() async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    // Если была станция - возобновляем радио
+    if (currentState.currentStation != null) {
+      await _radioPlayer.play();
+      state = AsyncData(currentState.copyWith(isPlaying: true));
+      return;
+    }
+
+    // Если был трек - возобновляем трек
+    if (currentState.currentTrackId != null &&
+        currentState.trackTitle != null) {
+      await _radioPlayer.play();
+      state = AsyncData(currentState.copyWith(isPlaying: true));
+      return;
+    }
+  }
+
+  /// Полная остановка и очистка состояния (плеер исчезает)
+  Future<void> clear() async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    await _radioPlayer.stop();
+
+    // Сбрасываем плейлист
+    _playlistTracks = [];
+    _currentPlaylistIndex = -1;
+
+    // Очищаем состояние
+    state = AsyncData(
+      const PlayerState(
+        isPlaying: false,
+        currentStation: null,
+        trackTitle: null,
+        trackArtist: null,
+        albumArt: null,
+        currentTrackId: null,
+      ),
+    );
+
+    // Обновляем виджет
+    ref
+        .read(homeWidgetStateProvider.notifier)
+        .updateFromPlayerState(stationName: 'SakhaLive', isPlaying: false);
   }
 
   Future<void> setVolume(double volume) async {

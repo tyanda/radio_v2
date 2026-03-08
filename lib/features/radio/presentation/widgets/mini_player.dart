@@ -137,7 +137,18 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
             (playerState.currentStation == null &&
                 playerState.trackTitle != null &&
                 playerState.trackTitle != playerState.currentStation?.name);
-        final isVisible = playerState.isPlaying || playerState.isBuffering;
+
+        // Плеер виден если:
+        // 1. Есть активная станция (радио)
+        // 2. Или есть активный трек (не радио)
+        // 3. Или идет буферизация
+        // Пауза НЕ скрывает плеер!
+        final hasActiveStation = playerState.currentStation != null;
+        final hasActiveTrack =
+            playerState.currentStation == null &&
+            playerState.currentTrackId != null;
+        final isVisible =
+            hasActiveStation || hasActiveTrack || playerState.isBuffering;
 
         return AnimatedOpacity(
           duration: AppEffects.durationSlow,
@@ -486,23 +497,27 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                             onTap: () async {
                               _triggerBounce();
                               if (!kIsWeb) HapticFeedback.lightImpact();
+
+                              final playerNotifier = ref.read(
+                                playerProvider.notifier,
+                              );
+
                               if (playerState.isPlaying) {
-                                ref.read(playerProvider.notifier).stop();
+                                // Пауза - не скрывает плеер!
+                                await playerNotifier.stop();
                               } else {
+                                // Возобновление воспроизведения
                                 try {
-                                  // Если играет трек из чарта - нужно возобновить его
-                                  if (isPlayingTrack) {
-                                    // Для треков просто показываем сообщение
-                                    // Т.к. нет метода resumeTrack, предлагаем пользователю выбрать трек снова
-                                    SnackbarHelper.showError(
-                                      context: context,
-                                      message:
-                                          'Выберите трек в списке для воспроизведения',
-                                    );
+                                  // Если играет трек из чарта - возобновляем его
+                                  if (isPlayingTrack &&
+                                      playerState.currentTrackId != null) {
+                                    // Получаем текущее состояние и возобновляем
+                                    await playerNotifier.resume();
                                   } else if (currentStation != null) {
-                                    await ref
-                                        .read(playerProvider.notifier)
-                                        .playStation(currentStation);
+                                    // Радио - просто запускаем снова
+                                    await playerNotifier.playStation(
+                                      currentStation,
+                                    );
                                   }
                                 } catch (e) {
                                   if (context.mounted) {

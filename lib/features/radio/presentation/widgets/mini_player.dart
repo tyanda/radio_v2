@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:marquee/marquee.dart';
 import 'package:audio_service/audio_service.dart' as as_service;
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../widgets/equalizer_animation.dart';
@@ -13,8 +14,9 @@ import '../../../../widgets/shimmer_widget.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../domain/station.dart';
-import '../providers/player_provider.dart' as sakha_live;
-import '../providers/player_provider.dart';
+import '../providers/player_provider.dart'
+    show PlayerNotifier, PlayerState, playerProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import '../../../../core/providers.dart';
 import '../../../player/full_player_screen.dart';
 import '../../../../core/utils/logger.dart';
@@ -51,7 +53,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
   // Флаг: играет ли сейчас трек из чарта (не радио)
   bool _isPlayingTrack = false;
-  
+
   // Для отслеживания переключения станции
   String? _lastStationId;
 
@@ -81,35 +83,6 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
     // Подписываемся на sequenceStateStream для обновления метаданных
     _subscribeToMediaItem();
-    
-    // Подписка на изменения плеера для сброса обложки при переключении
-    _subscribeToPlayerChanges();
-  }
-
-  void _subscribeToPlayerChanges() {
-    // Слушаем изменения в playerProvider для детектирования переключения станции
-    ref.listen<sakha_live.AsyncValue<sakha_live.PlayerState>>(
-      playerProvider,
-      (previous, next) {
-        if (previous == null || next == null) return;
-        
-        final prevStation = previous.value?.currentStation;
-        final currStation = next.value?.currentStation;
-        
-        // Если станция изменилась
-        if (prevStation?.id != currStation?.id) {
-          Logger.log(
-            'MiniPlayer: Station switched from ${prevStation?.name} to ${currStation?.name}',
-            tag: 'MiniPlayer',
-          );
-          
-          // Сбрасываем последнюю станцию для триггера обновления UI
-          setState(() {
-            _lastStationId = currStation?.id;
-          });
-        }
-      },
-    );
   }
 
   void _subscribeToMediaItem() {
@@ -157,6 +130,30 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
   @override
   Widget build(BuildContext context) {
+    // Слушаем изменения в playerProvider для детектирования переключения станции
+    ref.listen<riverpod.AsyncValue<PlayerState>>(
+      playerProvider,
+      (previous, next) {
+        if (previous == null || next == null) return;
+
+        final prevStation = previous.value?.currentStation;
+        final currStation = next.value?.currentStation;
+
+        // Если станция изменилась
+        if (prevStation?.id != currStation?.id) {
+          Logger.log(
+            'MiniPlayer: Station switched from ${prevStation?.name} to ${currStation?.name}',
+            tag: 'MiniPlayer',
+          );
+
+          // Сбрасываем последнюю станцию для триггера обновления UI
+          setState(() {
+            _lastStationId = currStation?.id;
+          });
+        }
+      },
+    );
+
     final playerAsync = ref.watch(playerProvider);
 
     return playerAsync.when(
@@ -244,7 +241,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   Widget _buildPlayerUI(
     BuildContext context,
     WidgetRef ref,
-    sakha_live.PlayerState playerState,
+    PlayerState playerState,
     bool isPlayingTrack,
   ) {
     final theme = Theme.of(context);
@@ -603,7 +600,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   Widget _buildAlbumArt(
     BuildContext context,
     WidgetRef ref,
-    sakha_live.PlayerState playerState,
+    PlayerState playerState,
     bool isPlayingTrack,
     bool isDark,
   ) {
@@ -614,6 +611,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     final albumArtUrl = playerState.albumArt;
     final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
     final currentStation = playerState.currentStation;
+    
+    // Уникальный ключ для сброса кэша при смене трека/станции
+    final artKey = ValueKey('art-${currentStation?.id ?? playerState.currentTrackId}-${playerState.albumArt}');
 
     return Stack(
       clipBehavior: Clip.none,
@@ -627,6 +627,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                 ? _buildBufferingPlaceholder(theme, isDark)
                 : hasAlbumArt && isPlayingTrack
                 ? CachedNetworkImage(
+                    key: artKey,
                     imageUrl: albumArtUrl,
                     fit: BoxFit.cover,
                     fadeInDuration: const Duration(milliseconds: 150),
@@ -670,8 +671,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
 
   Widget _buildStationArt(Station? currentStation) {
     if (currentStation != null && currentStation.art.isNotEmpty) {
+      final logoUrl = _getStationLogoUrl(currentStation);
+      // Ключ для сброса кэша при переключении станции
       return CachedNetworkImage(
-        imageUrl: _getStationLogoUrl(currentStation),
+        key: ValueKey('station-${currentStation.id}'),
+        imageUrl: logoUrl ?? currentStation.art,
         fit: BoxFit.cover,
         fadeInDuration: const Duration(milliseconds: 150),
         fadeOutDuration: const Duration(milliseconds: 150),

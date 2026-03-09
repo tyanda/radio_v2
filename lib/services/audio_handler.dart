@@ -209,4 +209,11 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   // Getter for the player to allow direct control if needed,
   // but better to use AudioHandler methods.
   AudioPlayer get player => _player;
+
+  /// Очистка ресурсов для предотвращения утечки памяти
+  void dispose() {
+    _nextSubject.close();
+    _prevSubject.close();
+    _player.dispose();
+  }
 }

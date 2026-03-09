@@ -2,37 +2,27 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Run (Debug)",
+      "name": "SakhaLive (Debug)",
       "request": "launch",
-      "type": "dart",
-      "flutterMode": "debug",
-      "program": "${workspaceFolder}/lib/main.dart",
-      "args": ["-d", "emulator-5554"]
+      "type": "dart"
     },
     {
-      "name": "Flutter Run (Profile)",
+      "name": "SakhaLive (Profile)",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "profile",
-      "program": "${workspaceFolder}/lib/main.dart",
-      "args": ["-d", "emulator-5554"]
+      "flutterMode": "profile"
     },
     {
-      "name": "Flutter Run (Release)",
+      "name": "SakhaLive (Release)",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "release",
-      "program": "${workspaceFolder}/lib/main.dart",
-      "args": ["-d", "emulator-5554"]
+      "flutterMode": "release"
     },
     {
-      "name": "Flutter Test (Current File)",
-      "type": "dart",
+      "name": "SakhaLive Web (Chrome)",
       "request": "launch",
-      "program": "${file}",
-      "env": {
-        "FLUTTER_TEST": "true"
-      }
+      "type": "dart",
+      "args": ["-d", "chrome"]
     }
   ]
 }

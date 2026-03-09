@@ -89,13 +89,16 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   // Очередь треков для чарта
   List<ChartItem> _playlistTracks = [];
   int _currentPlaylistIndex = -1;
-  StreamSubscription? _playlistStateSubscription;
   bool _isSwitchingTrack =
       false; // Флаг для предотвращения рекурсивных переключений
-  
+
   // Throttle для обновлений состояния
   Timer? _stateUpdateTimer;
   PlayerState? _pendingState;
+
+  // Debounce для сохранения громкости в SharedPreferences
+  Timer? _volumeSaveTimer;
+  SharedPreferences? _cachedPrefs;
 
   /// Обновление состояния с throttle для предотвращения частых перерисовок
   void _updateState(PlayerState Function(PlayerState) update) {
@@ -170,11 +173,22 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       );
     }
 
-    // Listen to player state changes
+    // Listen to player state changes (объединённая подписка)
     _playerStateSubscription = _radioPlayer.playerStateStream.listen((
       playerState,
     ) {
+      // Обновляем состояние воспроизведения
       _updateState((s) => s.copyWith(isPlaying: playerState.playing));
+
+      // Если трек закончился и есть следующий в плейлисте
+      // Проверяем флаг _isSwitchingTrack для предотвращения рекурсивных вызовов
+      if (!_isSwitchingTrack &&
+          playerState.processingState == ProcessingState.completed &&
+          _currentPlaylistIndex >= 0 &&
+          _currentPlaylistIndex < _playlistTracks.length - 1) {
+        // Переключаем на следующий трек
+        _playNextPlaylistTrack();
+      }
     });
 
     // Listen to processing state changes (buffering)
@@ -200,38 +214,25 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
           }
         }
 
-        _updateState((s) => s.copyWith(
-          trackTitle: mediaItem.title,
-          trackArtist: mediaItem.artist,
-          albumArt: albumArt ?? s.albumArt,
-        ));
-      }
-    });
-
-    // Подписка на изменение состояния плеера для автопереключения треков в плейлисте
-    _playlistStateSubscription = _radioPlayer.playerStateStream.listen((
-      playerState,
-    ) {
-      // Если трек закончился и есть следующий в плейлисте
-      // Проверяем флаг _isSwitchingTrack для предотвращения рекурсивных вызовов
-      if (!_isSwitchingTrack &&
-          playerState.processingState == ProcessingState.completed &&
-          _currentPlaylistIndex >= 0 &&
-          _currentPlaylistIndex < _playlistTracks.length - 1) {
-        // Переключаем на следующий трек
-        _playNextPlaylistTrack();
+        _updateState(
+          (s) => s.copyWith(
+            trackTitle: mediaItem.title,
+            trackArtist: mediaItem.artist,
+            albumArt: albumArt ?? s.albumArt,
+          ),
+        );
       }
     });
 
     ref.onDispose(() {
       _stateUpdateTimer?.cancel();
+      _volumeSaveTimer?.cancel();
       _playerStateSubscription?.cancel();
       _processingStateSubscription?.cancel();
       _mediaItemSubscription?.cancel();
       _metadataSubscription?.cancel();
       _nextSubscription?.cancel();
       _prevSubscription?.cancel();
-      _playlistStateSubscription?.cancel();
       _metadataService.stopFetchingMetadata();
       _metadataService.dispose();
       _radioPlayer.dispose();
@@ -654,10 +655,20 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
   Future<void> setVolume(double volume) async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
+
     await _radioPlayer.setVolume(volume);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('volume', volume);
     state = AsyncData(currentState.copyWith(volume: volume));
+
+    // Сохраняем в SharedPreferences с debounce (500 мс)
+    _volumeSaveTimer?.cancel();
+    _volumeSaveTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        _cachedPrefs ??= await SharedPreferences.getInstance();
+        await _cachedPrefs!.setDouble('volume', volume);
+      } catch (e) {
+        Logger.error("Failed to save volume: $e", tag: 'Player');
+      }
+    });
   }
 
   Future<void> toggleVolumeSlider() async {
@@ -709,15 +720,13 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       if (artUrl != null && currentState != null) {
         // Обновляем обложку, даже если trackTitle изменился
         // Проверяем что это ещё та же станция или трек
-        final isSameTrack = currentState.trackTitle == title ||
+        final isSameTrack =
+            currentState.trackTitle == title ||
             currentState.currentStation == null; // Если не радио, а трек
-        
+
         if (isSameTrack) {
           state = AsyncData(currentState.copyWith(albumArt: artUrl));
-          Logger.log(
-            "🎨 AlbumArt: State updated with artUrl",
-            tag: 'Player',
-          );
+          Logger.log("🎨 AlbumArt: State updated with artUrl", tag: 'Player');
         } else {
           Logger.log(
             "🎨 AlbumArt: Skipped - track changed (was '$title', now '${currentState.trackTitle}')",
@@ -741,7 +750,7 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
 
     try {
       final mediaSession = WebMediaSessionService();
-      
+
       // Обновляем метаданные
       mediaSession.updateMetadata(
         title: title,

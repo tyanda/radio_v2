@@ -7,7 +7,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:home_widget/home_widget.dart';
+// Условный импорт для home_widget (не поддерживается на Web)
+import 'package:sakha_live/services/home_widget_service.dart'
+    if (dart.library.io) 'package:sakha_live/services/home_widget_service_stub.dart';
 
 import 'package:sakha_live/core/config.dart';
 import 'package:sakha_live/core/providers.dart';
@@ -49,7 +51,7 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      
+
       // На вебе инициализируем уведомления с осторожностью, так как это может блокировать поток
       if (kIsWeb) {
         // На вебе часто требуется VAPID ключ для FCM, поэтому инициализируем асинхронно без ожидания
@@ -59,21 +61,22 @@ Future<void> main() async {
       } else {
         await PushNotificationService.initialize();
       }
-      
+
       Logger.log("Firebase initialized", tag: 'Main');
     }
   } catch (e) {
     Logger.error("Firebase init error: $e", tag: 'Main');
   }
 
-  // 4. Инициализация Home Widget (только для Android/iOS, не работает на Web)
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    try {
-      await HomeWidget.setAppGroupId('group.com.sakhalive.shared');
+  // 4. Инициализация Home Widget (не работает на Web)
+  // Используем условный сервис вместо прямого импорта пакета
+  try {
+    await HomeWidgetService.setAppGroupId('group.com.sakhalive.shared');
+    if (!kIsWeb) {
       Logger.log("HomeWidget initialized", tag: 'Main');
-    } catch (e) {
-      Logger.error("HomeWidget init error: $e", tag: 'Main');
     }
+  } catch (e) {
+    Logger.error("HomeWidget init error: $e", tag: 'Main');
   }
 
   runApp(
@@ -116,39 +119,31 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Подписываемся на изменения темы для пересборки ShadTheme/MaterialApp
-    final themeState = ref.watch(themeProvider);
+    // Используем селектор для подписки только на isDarkTheme, чтобы избежать лишних пересборок
+    final isDarkTheme = ref.watch(
+      themeProvider.select((state) => state.value?.isDarkTheme ?? true),
+    );
 
-    return themeState.when(
-      data: (state) {
-        final themeNotifier = ref.read(themeProvider.notifier);
-        final themeData = themeNotifier.getThemeData();
+    final themeNotifier = ref.read(themeProvider.notifier);
+    final themeData = themeNotifier.getThemeData();
 
-        return ShadTheme(
-          data: themeNotifier.getShadcnTheme(),
-          child: MaterialApp(
-            title: 'SakhaLive',
-            debugShowCheckedModeBanner: false,
-            theme: themeData.lightTheme,
-            darkTheme: themeData.darkTheme,
-            themeMode: state.isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              AppLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('ru'), Locale('en')],
-            locale: const Locale('ru'),
-            home: _isInitialized ? const HomeScreen() : const SplashScreen(),
-          ),
-        );
-      },
-      loading: () => const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      ),
-      error: (_, _) => const MaterialApp(
-        home: Scaffold(body: Center(child: Text('Ошибка загрузки темы'))),
+    return ShadTheme(
+      data: themeNotifier.getShadcnTheme(),
+      child: MaterialApp(
+        title: 'SakhaLive',
+        debugShowCheckedModeBanner: false,
+        theme: themeData.lightTheme,
+        darkTheme: themeData.darkTheme,
+        themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          AppLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        locale: const Locale('ru'),
+        home: _isInitialized ? const HomeScreen() : const SplashScreen(),
       ),
     );
   }

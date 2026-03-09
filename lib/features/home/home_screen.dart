@@ -14,6 +14,11 @@ import '../radio/presentation/widgets/radio_view.dart';
 import '../weather/presentation/weather_screen.dart';
 
 /// Улучшенный HomeScreen с расширенной навигацией
+///
+/// Оптимизация производительности:
+/// - AutomaticKeepAliveClientMixin для сохранения состояния вкладок
+/// - RepaintBoundary для изоляции перерисовки
+/// - Пауза анимаций при скрытии
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -26,7 +31,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   int _currentTab = 0;
   late PageController _pageController;
   late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -36,10 +40,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _fadeController = AnimationController(
       vsync: this,
       duration: AppEffects.durationNormal,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
 
     _fadeController.forward();
@@ -54,13 +54,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _onTabChanged(int index) {
     HapticFeedback.lightImpact();
-    setState(() {
-      _fadeController.reverse().then((_) {
-        setState(() {
-          _currentTab = index;
-        });
-        _fadeController.forward();
+    _fadeController.reverse().then((_) {
+      setState(() {
+        _currentTab = index;
       });
+      _fadeController.forward();
     });
 
     _pageController.animateToPage(
@@ -89,8 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             children: [
               const AppHeaderWithMarquee(),
               Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
+                child: RepaintBoundary(
                   child: PageView(
                     controller: _pageController,
                     onPageChanged: (index) {
@@ -98,11 +95,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         _currentTab = index;
                       });
                     },
-                    children: const [
-                      RadioView(), // 0 - Радио
-                      WeatherScreen(), // 1 - Погода
-                      HoroscopeView(), // 2 - Гороскоп
-                      ChartsScreen(), // 3 - Топ Чарт (последний)
+                    children: [
+                      // ЛЁГКИЕ вкладки: KeepAlive = true (быстрое переключение)
+                      KeepAliveWrapper(
+                        key: const PageStorageKey('radio'),
+                        keepAlive: true, // ✅ Радио — быстрое переключение
+                        child: const RadioView(),
+                      ),
+                      KeepAliveWrapper(
+                        key: const PageStorageKey('weather'),
+                        keepAlive: true, // ✅ Погода — быстрое переключение
+                        child: const WeatherScreen(),
+                      ),
+                      // ТЯЖЁЛЫЕ вкладки: KeepAlive = false (экономия ресурсов)
+                      KeepAliveWrapper(
+                        key: const PageStorageKey('horoscope'),
+                        keepAlive:
+                            false, // ❌ Гороскоп — выгружается (перевод, API)
+                        child: const HoroscopeView(),
+                      ),
+                      KeepAliveWrapper(
+                        key: const PageStorageKey('charts'),
+                        keepAlive:
+                            false, // ❌ Чарты — выгружается (видео + iTunes API)
+                        child: const ChartsScreen(),
+                      ),
                     ],
                   ),
                 ),
@@ -254,4 +271,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
+}
+
+/// Wrapper для сохранения состояния виджетов с AutomaticKeepAliveClientMixin
+///
+/// Использование:
+/// ```dart
+/// // Лёгкие вкладки (KeepAlive = true)
+/// KeepAliveWrapper(
+///   keepAlive: true,
+///   child: RadioView(),
+/// )
+///
+/// // Тяжёлые вкладки (KeepAlive = false)
+/// KeepAliveWrapper(
+///   keepAlive: false,
+///   child: ChartsScreen(),
+/// )
+/// ```
+class KeepAliveWrapper extends StatefulWidget {
+  final Widget child;
+  final bool keepAlive;
+
+  const KeepAliveWrapper({
+    super.key,
+    required this.child,
+    this.keepAlive = true,
+  });
+
+  @override
+  State<KeepAliveWrapper> createState() => _KeepAliveWrapperState();
+}
+
+class _KeepAliveWrapperState extends State<KeepAliveWrapper>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+
+  @override
+  bool get wantKeepAlive => widget.keepAlive;
 }

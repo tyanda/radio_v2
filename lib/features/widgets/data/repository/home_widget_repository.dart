@@ -1,4 +1,6 @@
-import 'package:home_widget/home_widget.dart';
+// Условный импорт для home_widget (не поддерживается на Web)
+import 'package:sakha_live/services/home_widget_service.dart'
+    if (dart.library.io) 'package:sakha_live/services/home_widget_service_stub.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'package:sakha_live/core/utils/logger.dart';
@@ -21,23 +23,23 @@ class HomeWidgetRepository {
 
     try {
       // Сохраняем данные в SharedPreferences для виджета
-      await HomeWidget.saveWidgetData<String>('stationName', stationName);
-      await HomeWidget.saveWidgetData<String>(
+      await HomeWidgetService.saveWidgetData<String>('stationName', stationName);
+      await HomeWidgetService.saveWidgetData<String>(
         'currentTrack',
         currentTrack ?? '',
       );
-      await HomeWidget.saveWidgetData<String>('albumArt', albumArt ?? '');
-      await HomeWidget.saveWidgetData<String>(
+      await HomeWidgetService.saveWidgetData<String>('albumArt', albumArt ?? '');
+      await HomeWidgetService.saveWidgetData<String>(
         'isPlaying',
         isPlaying ? '1' : '0',
       );
-      await HomeWidget.saveWidgetData<String>(
+      await HomeWidgetService.saveWidgetData<String>(
         'lastUpdated',
         DateTime.now().millisecondsSinceEpoch.toString(),
       );
 
       // Обновляем виджет
-      await HomeWidget.updateWidget(
+      await HomeWidgetService.updateWidget(
         name: widgetName,
         androidName: androidId,
         iOSName: iOSId,
@@ -63,7 +65,7 @@ class HomeWidgetRepository {
     if (kIsWeb) return;
 
     try {
-      HomeWidget.widgetClicked.listen((uri) {
+      HomeWidgetService.widgetClicked.listen((uri) {
         // Обработка клика по виджету
         Logger.log('Widget clicked: $uri', tag: 'HomeWidget');
       });

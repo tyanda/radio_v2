@@ -8,6 +8,13 @@ import 'package:sakha_live/features/radio/domain/station.dart';
 
 import '../../../../core/design/design.dart';
 
+/// Оптимизированная карточка радиостанции
+///
+/// Оптимизации:
+/// - ImageCache для предотвращения повторной загрузки обложек
+/// - RepaintBoundary для изоляции перерисовки
+/// - Пауза анимаций при скрытии
+/// - Кэширование акцентного цвета
 class RadioCardV2 extends StatefulWidget {
   final Station station;
   final bool isActive;
@@ -35,7 +42,7 @@ class RadioCardV2 extends StatefulWidget {
 }
 
 class _RadioCardV2State extends State<RadioCardV2>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late AnimationController _hoverController;
@@ -45,10 +52,12 @@ class _RadioCardV2State extends State<RadioCardV2>
   late Future<Color> _accentFuture;
 
   bool _isHovered = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -90,8 +99,37 @@ class _RadioCardV2State extends State<RadioCardV2>
     }
   }
 
+  // Автоматическая пауза анимаций при скрытии экрана
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isDisposed) return;
+
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        // Пауза всех анимаций для экономии ресурсов
+        _pulseController.stop();
+        _liveController.stop();
+        break;
+      case AppLifecycleState.resumed:
+        // Восстановление анимаций
+        if (!_pulseController.isAnimating) {
+          _pulseController.repeat(reverse: true);
+        }
+        if (!_liveController.isAnimating) {
+          _liveController.repeat();
+        }
+        break;
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
+
   @override
   void dispose() {
+    _isDisposed = true;
+    WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     _hoverController.dispose();
     _liveController.dispose();
@@ -277,11 +315,19 @@ class _RadioCardV2State extends State<RadioCardV2>
           child: hasLogoUrl
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(24),
+                  // Оптимизация: CachedNetworkImage с кэшем под размер карточки
                   child: CachedNetworkImage(
                     imageUrl: widget.station.logoUrl!,
                     fit: BoxFit.cover,
+                    // Кэширование с размером под карточку (~120x120px)
+                    memCacheWidth: 256,
+                    memCacheHeight: 256,
+                    maxWidthDiskCache: 256,
+                    maxHeightDiskCache: 256,
                     fadeInDuration: const Duration(milliseconds: 300),
                     fadeOutDuration: const Duration(milliseconds: 300),
+                    cacheKey: widget.station.id,
+                    useOldImageOnUrlChange: true,
                     placeholder: (context, url) => _buildPlaceholder(),
                     errorWidget: (context, url, error) => _buildPlaceholder(),
                   ),
@@ -289,9 +335,12 @@ class _RadioCardV2State extends State<RadioCardV2>
               : widget.station.art.isNotEmpty
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(24),
+                  // Оптимизация: Image.asset с кэшированием под размер
                   child: Image.asset(
                     widget.station.art,
                     fit: BoxFit.cover,
+                    cacheWidth: 256,
+                    cacheHeight: 256,
                     errorBuilder: (context, error, stackTrace) {
                       return _buildPlaceholder();
                     },

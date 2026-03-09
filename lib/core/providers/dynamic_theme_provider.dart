@@ -24,10 +24,20 @@ final dynamicThemeManagerProvider = Provider<void>((ref) {
   });
 });
 
-// Храним последний обработанный путь, чтобы не делать лишних запросов
+/// Кэш для предотвращения повторной генерации палитры для одного и того же изображения
+final _colorCache = <String, Color>{};
 String? _lastProcessedPath;
 
 Future<void> _updateColorFromImage(Ref ref, String imagePath) async {
+  // Проверяем кэш сначала
+  if (_colorCache.containsKey(imagePath)) {
+    final cachedColor = _colorCache[imagePath]!;
+    if (ref.read(dynamicColorProvider) != cachedColor) {
+      ref.read(dynamicColorProvider.notifier).state = cachedColor;
+    }
+    return;
+  }
+
   if (_lastProcessedPath == imagePath) return;
   _lastProcessedPath = imagePath;
 
@@ -63,6 +73,9 @@ Future<void> _updateColorFromImage(Ref ref, String imagePath) async {
         .withSaturation(softenedSaturation)
         .withLightness(adjustedLightness)
         .toColor();
+
+    // Сохраняем в кэш
+    _colorCache[imagePath] = accentColor;
 
     // Безопасно обновляем состояние
     if (ref.read(dynamicColorProvider) != accentColor) {

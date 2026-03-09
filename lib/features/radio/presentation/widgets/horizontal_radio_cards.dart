@@ -273,6 +273,8 @@ class _ListRadioCardsState extends ConsumerState<ListRadioCards> {
                         child: Image.asset(
                           station.art,
                           fit: BoxFit.cover,
+                          // Оптимизация: кэшируем изображение (64x64 в UI -> 150px достаточно)
+                          cacheWidth: 150,
                           errorBuilder: (context, error, stackTrace) {
                             return Center(
                               child: Text(

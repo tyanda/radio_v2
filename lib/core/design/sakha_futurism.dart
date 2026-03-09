@@ -10,7 +10,8 @@ class SakhaFuturism {
   const SakhaFuturism._();
 
   static const double horizontalMargin = AppSpacing.lg;
-  static const double glassBlur = 18.0;
+  // Оптимизация: уменьшено с 18.0 до 12.0 для снижения нагрузки на GPU
+  static const double glassBlur = 12.0;
   static const double cardRadius = 28.0;
 
   static EdgeInsets get screenPadding =>

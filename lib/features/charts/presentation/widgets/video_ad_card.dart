@@ -14,6 +14,10 @@ import '../../../radio/presentation/providers/player_provider.dart';
 /// Виджет видео-рекламы с 30-секундным видео из Firebase Firestore
 /// Адаптация React-версии для Flutter
 ///
+/// Оптимизация:
+/// - Автоматическая пауза при скрытии экрана
+/// - Восстановление при возврате
+///
 /// Firebase Firestore:
 /// - artifacts/sakhalive-remote/videoUrl
 class VideoAdCard extends ConsumerStatefulWidget {
@@ -26,16 +30,20 @@ class VideoAdCard extends ConsumerStatefulWidget {
   ConsumerState<VideoAdCard> createState() => _VideoAdCardState();
 }
 
-class _VideoAdCardState extends ConsumerState<VideoAdCard> {
+class _VideoAdCardState extends ConsumerState<VideoAdCard>
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   // 1. ПЕРЕМЕННЫЕ СОСТОЯНИЯ (как в React)
   bool _videoLoaded = false; // Загрузилось ли видео?
   bool _isMuted = true; // Включен или выключен звук
   VideoPlayerController? _controller;
   StreamSubscription<DocumentSnapshot>? _videoSubscription;
+  bool _isDisposed = false;
+  bool _wasPlayingBeforePause = false; // Сохраняем состояние для восстановления
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initFirebaseListener();
     // Видео загружается из Firebase Firestore (artifacts/sakhalive-remote/videoUrl)
   }
@@ -51,7 +59,7 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard> {
     // эта функция сразу срабатывает и обновляет видео в приложении
     _videoSubscription = videoDocRef.snapshots().listen(
       (snap) {
-        if (snap.exists) {
+        if (snap.exists && !_isDisposed) {
           final data = snap.data();
           final videoUrl = data?['videoUrl'] as String?;
 
@@ -68,6 +76,8 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard> {
 
   // 3. ВИЗУАЛЬНЫЙ ПЛЕЕР (аналог <video> в React)
   void _initVideoPlayer(String url) async {
+    if (_isDisposed) return;
+
     // key={myVideoUrl} - заставляет плеер перезагрузиться при смене ссылки
     await _controller?.dispose();
 
@@ -84,33 +94,70 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard> {
     await _controller!
         .initialize()
         .then((_) async {
+          if (_isDisposed) return;
+
           // СНАЧАЛА устанавливаем громкость в 0 (чтобы не было звука при инициализации)
           await _controller!.setVolume(0.0);
 
-          setState(() {
-            _videoLoaded = true; // onLoadedData(() => setVideoLoaded(true))
-            _isMuted = true; // Синхронизируем состояние
-          });
+          if (!_isDisposed) {
+            setState(() {
+              _videoLoaded = true; // onLoadedData(() => setVideoLoaded(true))
+              _isMuted = true; // Синхронизируем состояние
+            });
 
-          // autoPlay
-          await _controller!.play();
-          // loop
-          _controller!.setLooping(true);
+            // autoPlay
+            await _controller!.play();
+            // loop
+            _controller!.setLooping(true);
+          }
         })
         .catchError((error) {
           debugPrint('❌ VideoAd: Ошибка: $error');
         });
   }
 
+  // 4. АВТОМАТИЧЕСКАЯ ПАУЗА ПРИ СКРЫТИИ ЭКРАНА
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_controller == null || _isDisposed) return;
+
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        // Сохраняем состояние и ставим на паузу
+        _wasPlayingBeforePause = _controller!.value.isPlaying;
+        if (_wasPlayingBeforePause) {
+          _controller!.pause();
+        }
+        break;
+      case AppLifecycleState.resumed:
+        // Восстанавливаем воспроизведение
+        if (_wasPlayingBeforePause && _videoLoaded) {
+          _controller!.play();
+          _wasPlayingBeforePause = false;
+        }
+        break;
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
+
   @override
   void dispose() {
-    _videoSubscription?.cancel(); // return () => unsubVideo()
+    _isDisposed = true;
+    _videoSubscription?.cancel();
     _controller?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context); // Вызываем для AutomaticKeepAliveClientMixin
     final theme = Theme.of(context);
 
     return Container(

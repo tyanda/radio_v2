@@ -36,7 +36,7 @@ class VerticalRadioCard extends StatefulWidget {
 }
 
 class _VerticalRadioCardState extends State<VerticalRadioCard>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late AnimationController _hoverController;
@@ -47,6 +47,7 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -68,7 +69,28 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        if (_pulseController.isAnimating) {
+          _pulseController.stop();
+        }
+        break;
+      case AppLifecycleState.resumed:
+        if (!_pulseController.isAnimating) {
+          _pulseController.repeat(reverse: true);
+        }
+        break;
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     _hoverController.dispose();
     super.dispose();
@@ -239,6 +261,8 @@ class _VerticalRadioCardState extends State<VerticalRadioCard>
                                             child: Image.asset(
                                               widget.station.art,
                                               fit: BoxFit.cover,
+                                              // Оптимизация: кэшируем изображение в разумном размере
+                                              cacheWidth: 400,
                                               errorBuilder:
                                                   (context, error, stackTrace) {
                                                     return const Center(

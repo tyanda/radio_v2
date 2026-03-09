@@ -162,12 +162,17 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         return Column(
           children: [
             // Верхняя панель с фильтрами и переключателем видов
-            _buildTopBar(),
+            // RepaintBoundary для изоляции перерисовки верхней панели
+            RepaintBoundary(child: _buildTopBar()),
             // Контент
             Expanded(
               child: stations.isEmpty
                   ? _buildEmptyState()
-                  : _buildContentView(stations, currentStation, favoriteNames),
+                  : _buildContentView(
+                      stations,
+                      currentStation,
+                      favoriteNames,
+                    ),
             ),
           ],
         );
@@ -266,7 +271,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       controller: _scrollController,
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.lg, // Верхний отступ 16px
+        AppSpacing.lg,
         AppSpacing.lg,
         bottomPlayerHeight,
       ),
@@ -279,6 +284,12 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       clipBehavior: Clip.antiAlias,
       primary: false,
       itemCount: stations.length,
+      // Оптимизация: отключаем keepAlives для экономии памяти
+      // Карточки всё равно кэшируются через RepaintBoundary
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: false, // Отключаем стандартные (создадим свои)
+      // Оптимизация: создаём только видимые элементы
+      cacheExtent: 300, // Кэшируем элементы на 300px вперёд
       itemBuilder: (context, index) {
         final station = stations[index];
         final bool isActive = currentStation?.id == station.id;
@@ -287,33 +298,36 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
         return _AnimatedCard(
           index: index,
           controller: _animationController,
-          child: RadioCardV2(
-            station: station,
-            isActive: isActive,
-            isFavorite: isFavorite,
-            viewType: ViewType.grid,
-            onTap: () {
-              Logger.log(
-                "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
-                tag: 'RadioUI',
-              );
-              ref.read(playerProvider.notifier).playStation(station);
-            },
-            onFavoriteTap: () {
-              ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
-            },
-            onLongPress: () {
-              StationContextMenu.show(
-                context: context,
-                station: station,
-                isFavorite: isFavorite,
-                onToggleFavorite: () {
-                  ref
-                      .read(favoritesProvider.notifier)
-                      .toggleFavorite(station.name);
-                },
-              );
-            },
+          // RepaintBoundary для каждой карточки
+          child: RepaintBoundary(
+            child: RadioCardV2(
+              station: station,
+              isActive: isActive,
+              isFavorite: isFavorite,
+              viewType: ViewType.grid,
+              onTap: () {
+                Logger.log(
+                  "RadioCardsView: onTap for station ${station.name}, isActive: $isActive",
+                  tag: 'RadioUI',
+                );
+                ref.read(playerProvider.notifier).playStation(station);
+              },
+              onFavoriteTap: () {
+                ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+              },
+              onLongPress: () {
+                StationContextMenu.show(
+                  context: context,
+                  station: station,
+                  isFavorite: isFavorite,
+                  onToggleFavorite: () {
+                    ref
+                        .read(favoritesProvider.notifier)
+                        .toggleFavorite(station.name);
+                  },
+                );
+              },
+            ),
           ),
         );
       },
@@ -330,7 +344,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.lg, // Верхний отступ 16px
+        AppSpacing.lg,
         AppSpacing.lg,
         bottomPlayerHeight,
       ),
@@ -350,7 +364,10 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
             padding: EdgeInsets.only(bottom: AppSpacing.md),
             child: KeyedSubtree(
               key: _cardKeys[index],
-              child: _buildListCard(station, isActive, isFavorite),
+              // RepaintBoundary для каждой карточки в списке
+              child: RepaintBoundary(
+                child: _buildListCard(station, isActive, isFavorite),
+              ),
             ),
           );
         }).toList(),

@@ -14,8 +14,7 @@ import '../../../../widgets/shimmer_widget.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../domain/station.dart';
-import '../providers/player_provider.dart'
-    show PlayerNotifier, PlayerState, playerProvider;
+import '../providers/player_provider.dart' show PlayerState, playerProvider;
 import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import '../../../../core/providers.dart';
 import '../../../player/full_player_screen.dart';
@@ -39,7 +38,7 @@ class MiniPlayer extends ConsumerStatefulWidget {
 }
 
 class _MiniPlayerState extends ConsumerState<MiniPlayer>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   bool _isHovered = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -54,12 +53,10 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   // Флаг: играет ли сейчас трек из чарта (не радио)
   bool _isPlayingTrack = false;
 
-  // Для отслеживания переключения станции
-  String? _lastStationId;
-
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     // Пульсация для обложки
     _pulseController = AnimationController(
@@ -115,7 +112,28 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        if (_pulseController.isAnimating) {
+          _pulseController.stop();
+        }
+        break;
+      case AppLifecycleState.resumed:
+        if (!_pulseController.isAnimating) {
+          _pulseController.repeat(reverse: true);
+        }
+        break;
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     _bounceController.dispose();
     _sequenceStateSubscription?.cancel();
@@ -131,28 +149,25 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   @override
   Widget build(BuildContext context) {
     // Слушаем изменения в playerProvider для детектирования переключения станции
-    ref.listen<riverpod.AsyncValue<PlayerState>>(
-      playerProvider,
-      (previous, next) {
-        if (previous == null || next == null) return;
+    ref.listen<riverpod.AsyncValue<PlayerState>>(playerProvider, (
+      previous,
+      next,
+    ) {
+      final prevValue = previous?.value;
+      final currValue = next.value;
+      if (prevValue == null || currValue == null) return;
 
-        final prevStation = previous.value?.currentStation;
-        final currStation = next.value?.currentStation;
+      final prevStation = prevValue.currentStation;
+      final currStation = currValue.currentStation;
 
-        // Если станция изменилась
-        if (prevStation?.id != currStation?.id) {
-          Logger.log(
-            'MiniPlayer: Station switched from ${prevStation?.name} to ${currStation?.name}',
-            tag: 'MiniPlayer',
-          );
-
-          // Сбрасываем последнюю станцию для триггера обновления UI
-          setState(() {
-            _lastStationId = currStation?.id;
-          });
-        }
-      },
-    );
+      // Если станция изменилась
+      if (prevStation?.id != currStation?.id) {
+        Logger.log(
+          'MiniPlayer: Station switched from ${prevStation?.name} to ${currStation?.name}',
+          tag: 'MiniPlayer',
+        );
+      }
+    });
 
     final playerAsync = ref.watch(playerProvider);
 
@@ -452,7 +467,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                                                 letterSpacing: 0.5,
                                                 height: 1.0,
                                               ),
-                                              velocity: 30,
+                                              velocity:
+                                                  15, // Уменьшено с 30 для оптимизации производительности
                                               blankSpace: 50,
                                               startPadding: 0,
                                               accelerationDuration:
@@ -611,9 +627,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     final albumArtUrl = playerState.albumArt;
     final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
     final currentStation = playerState.currentStation;
-    
+
     // Уникальный ключ для сброса кэша при смене трека/станции
-    final artKey = ValueKey('art-${currentStation?.id ?? playerState.currentTrackId}-${playerState.albumArt}');
+    final artKey = ValueKey(
+      'art-${currentStation?.id ?? playerState.currentTrackId}-${playerState.albumArt}',
+    );
 
     return Stack(
       clipBehavior: Clip.none,
@@ -630,6 +648,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
                     key: artKey,
                     imageUrl: albumArtUrl,
                     fit: BoxFit.cover,
+                    // Оптимизация памяти для мини-плеера
+                    memCacheWidth: 150,
+                    memCacheHeight: 150,
+                    maxWidthDiskCache: 150,
+                    maxHeightDiskCache: 150,
                     fadeInDuration: const Duration(milliseconds: 150),
                     fadeOutDuration: const Duration(milliseconds: 150),
                     placeholder: (context, url) => _buildLoadingPlaceholder(),
@@ -677,6 +700,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
         key: ValueKey('station-${currentStation.id}'),
         imageUrl: logoUrl ?? currentStation.art,
         fit: BoxFit.cover,
+        // Оптимизация памяти
+        memCacheWidth: 150,
+        memCacheHeight: 150,
+        maxWidthDiskCache: 150,
+        maxHeightDiskCache: 150,
         fadeInDuration: const Duration(milliseconds: 150),
         fadeOutDuration: const Duration(milliseconds: 150),
         placeholder: (context, url) => _buildLoadingPlaceholder(),
@@ -707,9 +735,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
           height: 16,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              AppColors.primary,
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
         ),
       ),

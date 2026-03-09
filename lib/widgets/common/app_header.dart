@@ -13,10 +13,12 @@ import '../../features/settings/settings_screen.dart';
 
 /// Общий хедер приложения с логотипом, приветствием и кнопкой настроек
 /// Используется на всех основных экранах
+/// Оптимизация: добавлены const конструкторы и вынесены повторяющиеся элементы
 class AppHeader extends ConsumerWidget {
   const AppHeader({super.key});
 
-  Widget _buildGreetingSvg(bool isDarkMode) {
+  // Вынесенный const виджет для SVG иконки
+  static Widget _buildGreetingSvg(bool isDarkMode) {
     final hour = DateTime.now().hour;
     String assetName;
     if (hour >= 6 && hour < 12) {
@@ -125,36 +127,8 @@ class AppHeader extends ConsumerWidget {
                 ),
               ],
             ),
-            IconButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              },
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withValues(
-                    alpha: isDark ? 0.06 : 0.05,
-                  ),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(
-                      alpha: isDark ? 0.10 : 0.55,
-                    ),
-                  ),
-                ),
-                child: Icon(
-                  isDark ? Icons.tune_rounded : Icons.tune_outlined,
-                  color: isDark
-                      ? AppColors.textPrimary
-                      : AppColors.textName,
-                ),
-              ),
-            ),
+            // Кнопка настроек - вынесена в отдельный виджет
+            const _SettingsButton(),
           ],
         ),
       ),
@@ -162,7 +136,49 @@ class AppHeader extends ConsumerWidget {
   }
 }
 
+/// Кнопка настроек - вынесена в отдельный const виджет для оптимизации
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return IconButton(
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const SettingsScreen(),
+          ),
+        );
+      },
+      icon: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: (isDark ? Colors.white : Colors.black).withValues(
+            alpha: isDark ? 0.06 : 0.05,
+          ),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(
+              alpha: isDark ? 0.10 : 0.55,
+            ),
+          ),
+        ),
+        child: Icon(
+          isDark ? Icons.tune_rounded : Icons.tune_outlined,
+          color: isDark
+              ? AppColors.textPrimary
+              : AppColors.textName,
+        ),
+      ),
+    );
+  }
+}
+
 /// Бегущая строка с новостями/информацией
+/// Оптимизировано с RepaintBoundary для предотвращения лишних перерисовок
 class AppMarquee extends ConsumerWidget {
   const AppMarquee({super.key});
 
@@ -180,91 +196,108 @@ class AppMarquee extends ConsumerWidget {
         SakhaFuturism.horizontalMargin,
         AppSpacing.sm,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            height: 42,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(
-                    0xFF0B0D12,
-                  ).withValues(alpha: isDark ? 0.90 : 0.80),
-                  Theme.of(context).primaryColor.withValues(alpha: 0.30),
-                  const Color(
-                    0xFF090B10,
-                  ).withValues(alpha: isDark ? 0.92 : 0.80),
+      // RepaintBoundary: изолирует перерисовку бегущей строки
+      child: RepaintBoundary(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(
+                      0xFF0B0D12,
+                    ).withValues(alpha: isDark ? 0.90 : 0.80),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.30),
+                    const Color(
+                      0xFF090B10,
+                    ).withValues(alpha: isDark ? 0.92 : 0.80),
+                  ],
+                ),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+                ),
+                boxShadow: [
+                  ...SakhaFuturism.shadow(
+                    isDark,
+                    accent: Theme.of(context).primaryColor,
+                  ),
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.18),
+                    blurRadius: 28,
+                    spreadRadius: -4,
+                  ),
                 ],
               ),
-              border: Border.all(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
-              ),
-              boxShadow: [
-                ...SakhaFuturism.shadow(
-                  isDark,
-                  accent: Theme.of(context).primaryColor,
-                ),
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.18),
-                  blurRadius: 28,
-                  spreadRadius: -4,
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Row(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.8),
-                        blurRadius: 10,
-                        spreadRadius: 1,
+              alignment: Alignment.center,
+              child: Row(
+                children: [
+                  // Статичный индикатор - вынесен в const где возможно
+                  _StaticIndicatorDot(primaryColor: Theme.of(context).primaryColor),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.white,
+                          Colors.white,
+                          Colors.transparent,
+                        ],
+                        stops: [0, 0.08, 0.92, 1],
+                      ).createShader(bounds),
+                      blendMode: BlendMode.dstIn,
+                      // RepaintBoundary для Marquee (анимированный виджет)
+                      child: RepaintBoundary(
+                        child: Marquee(
+                          text:
+                              "SAKHALIVE  //  ${marqueeText.toUpperCase()}  //  НОВОСТИ И ЭФИР БЕЗ ПАУЗ  ",
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                            letterSpacing: 1.5,
+                            color: Colors.white,
+                          ),
+                          velocity: 24,
+                          blankSpace: 80,
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        Colors.white,
-                        Colors.white,
-                        Colors.transparent,
-                      ],
-                      stops: [0, 0.08, 0.92, 1],
-                    ).createShader(bounds),
-                    blendMode: BlendMode.dstIn,
-                    child: Marquee(
-                      text:
-                          "SAKHALIVE  //  ${marqueeText.toUpperCase()}  //  НОВОСТИ И ЭФИР БЕЗ ПАУЗ  ",
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                        letterSpacing: 1.5,
-                        color: Colors.white,
-                      ),
-                      velocity: 24,
-                      blankSpace: 80,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Статичный индикатор (точка) - вынесен в отдельный const виджет
+class _StaticIndicatorDot extends StatelessWidget {
+  final Color primaryColor;
+
+  const _StaticIndicatorDot({required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: primaryColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.8),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
       ),
     );
   }

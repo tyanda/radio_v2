@@ -46,8 +46,9 @@ dependencies:
   
   # --- ФУНКЦИОНАЛ РАДИО ---
   just_audio: ^0.10.5
-  audio_service: ^0.18.18
+  just_audio_windows: ^0.2.2
   just_audio_background: ^0.0.1-beta.17
+  audio_service: ^0.18.18
   
   marquee: ^2.2.3
   flutter_localizations:
@@ -75,12 +76,16 @@ dependencies:
   web: ^1.1.0
   flutter_svg: ^2.2.0
   share_plus: ^10.1.2
+  rxdart: ^0.28.0
 
   # --- ШРИФТЫ ---
   google_fonts: ^6.2.1
   palette_generator: ^0.3.3+7
   firebase_messaging: ^16.1.1
   flutter_local_notifications: ^20.1.0
+
+  # --- ИКОНКИ ---
+  lucide_icons_flutter: ^3.1.10
 
   # --- ВИДЕО ДЛЯ РЕКЛАМЫ ---
   video_player: ^2.9.5
@@ -97,7 +102,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.3
   build_runner: ^2.4.15
 
   # Testing
@@ -113,26 +117,17 @@ flutter_native_splash:
   android: true
   ios: true
   web: false
-  
+
   # Для тёмной темы
   color_dark: "#0A0A0A"
   image_dark: assets/images/icon.png
-  
+
   # Платформы
   android_12:
     image: assets/images/icon.png
     color: "#0A0A0A"
     image_dark: assets/images/icon.png
     color_dark: "#0A0A0A"
-
-flutter_launcher_icons:
-  image_path: "assets/images/icon.png"
-  android: true
-  ios: true
-  web:
-    generate: true
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/images/icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -165,6 +160,7 @@ flutter:
     - assets/images/images.png
     - assets/images/record-russian-hits.png
     - assets/images/stv.jpeg
+    - assets/images/icon.png
     - assets/icon/Icon - Heart.svg
     - assets/icons/morning.svg
     - assets/icons/day.svg

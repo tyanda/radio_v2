@@ -23,12 +23,18 @@ class HomeWidgetRepository {
 
     try {
       // Сохраняем данные в SharedPreferences для виджета
-      await HomeWidgetService.saveWidgetData<String>('stationName', stationName);
+      await HomeWidgetService.saveWidgetData<String>(
+        'stationName',
+        stationName,
+      );
       await HomeWidgetService.saveWidgetData<String>(
         'currentTrack',
         currentTrack ?? '',
       );
-      await HomeWidgetService.saveWidgetData<String>('albumArt', albumArt ?? '');
+      await HomeWidgetService.saveWidgetData<String>(
+        'albumArt',
+        albumArt ?? '',
+      );
       await HomeWidgetService.saveWidgetData<String>(
         'isPlaying',
         isPlaying ? '1' : '0',

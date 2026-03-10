@@ -1,10 +1,12 @@
-import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:sakha_live/core/utils/logger.dart';
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 
-class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
+/// Класс для управления воспроизведением и фоновой работой
+class RadioAudioHandler extends BaseAudioHandler {
   final AudioPlayer _player = AudioPlayer();
 
   // StreamControllers to notify the PlayerNotifier when skip actions are triggered from the notification
@@ -14,6 +16,17 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   Stream<void> get onNext => _nextSubject.stream;
   Stream<void> get onPrev => _prevSubject.stream;
 
+  // Playback state stream
+  @override
+  BehaviorSubject<PlaybackState> get playbackState =>
+      _playbackStateSubject;
+  final _playbackStateSubject = BehaviorSubject<PlaybackState>();
+
+  // Media item stream
+  @override
+  BehaviorSubject<MediaItem?> get mediaItem => _mediaItemSubject;
+  final _mediaItemSubject = BehaviorSubject<MediaItem?>();
+
   // Состояние для восстановления после звонка
   bool _wasPlayingBeforeInterruption = false;
   double _volumeBeforeInterruption = 0.65;
@@ -21,13 +34,13 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
 
   RadioAudioHandler() {
     // Forward playback events to the state stream
-    _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
+    _player.playbackEventStream.map(_transformEvent).listen(_playbackStateSubject.add);
 
     // Listen to media item changes and update notification metadata
-    mediaItem.listen((item) {
+    _mediaItemSubject.listen((item) {
       if (item != null) {
         Logger.log(
-          "🎵 AudioHandler: MediaItem updated: ${item.title}",
+          "🎵 AudioHandler: MediaItem updated: ${item.title} - ${item.artist}",
           tag: 'AudioHandler',
         );
       }
@@ -142,8 +155,8 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> stop() async {
     await _player.stop();
-    playbackState.add(
-      playbackState.value.copyWith(
+    _playbackStateSubject.add(
+      PlaybackState(
         playing: false,
         processingState: AudioProcessingState.idle,
       ),
@@ -206,14 +219,12 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  // Getter for the player to allow direct control if needed,
-  // but better to use AudioHandler methods.
-  AudioPlayer get player => _player;
-
   /// Очистка ресурсов для предотвращения утечки памяти
   void dispose() {
     _nextSubject.close();
     _prevSubject.close();
+    _playbackStateSubject.close();
+    _mediaItemSubject.close();
     _player.dispose();
   }
 }

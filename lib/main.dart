@@ -27,42 +27,66 @@ Future<void> main() async {
   // 1. Загрузка конфигурации (должна быть перед Firebase!)
   await AppConfig.initialize();
 
-  // 2. Инициализация обработчика аудио (только для Android/iOS, не работает на Web)
-  dynamic audioHandler;
+  // 2. Инициализация AudioService (только для Android/iOS, не работает на Web)
+  RadioAudioHandler? audioHandler;
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    audioHandler = await AudioService.init(
-      builder: () => RadioAudioHandler(),
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.sakhalive.player',
-        androidNotificationChannelName: 'SakhaLive Playback',
-        androidStopForegroundOnPause: true,
-        androidNotificationIcon: 'mipmap/ic_launcher',
-        androidShowNotificationBadge: true,
-      ),
-    );
-    Logger.log("AudioService initialized", tag: 'Main');
+    try {
+      audioHandler = await AudioService.init(
+        builder: () => RadioAudioHandler(),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.sakhalive.radio.audio',
+          androidNotificationChannelName: 'SakhaLive Radio Playback',
+          androidNotificationOngoing: true,
+          androidStopForegroundOnPause: true,
+          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidShowNotificationBadge: true,
+          androidNotificationClickStartsActivity: true,
+          androidResumeOnClick: true,
+        ),
+      );
+      Logger.log("AudioService initialized", tag: 'Main');
+    } catch (e) {
+      Logger.error("AudioService init error: $e", tag: 'Main');
+    }
   } else {
-    Logger.log("AudioService skipped for Web/Desktop", tag: 'Main');
+    // Для Web/Desktop создаем handler напрямую без обертки AudioService
+    audioHandler = RadioAudioHandler();
+    Logger.log("RadioAudioHandler created directly for Web/Desktop", tag: 'Main');
   }
 
   // 3. Инициализация Firebase
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-
-      // На вебе инициализируем уведомления с осторожностью, так как это может блокировать поток
       if (kIsWeb) {
-        // На вебе часто требуется VAPID ключ для FCM, поэтому инициализируем асинхронно без ожидания
-        PushNotificationService.initialize().catchError((e) {
-          Logger.error("Web Push init error: $e", tag: 'Main');
+        // На вебе инициализируем асинхронно, чтобы не блокировать отрисовку Splash Screen
+        Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        ).then((_) {
+          PushNotificationService.initialize().catchError((e) {
+            Logger.error("Web Push init error: $e", tag: 'Main');
+          });
+          Logger.log("Firebase initialized (Async Web)", tag: 'Main');
+        }).catchError((e) {
+          Logger.error("Firebase init error: $e", tag: 'Main');
         });
       } else {
-        await PushNotificationService.initialize();
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        
+        // Push-уведомления не поддерживаются на Windows/Linux через стандартный FirebaseMessaging
+        if (!kIsWeb && !Platform.isWindows && !Platform.isLinux) {
+          try {
+            await PushNotificationService.initialize();
+            Logger.log("PushNotificationService initialized", tag: 'Main');
+          } catch (e) {
+            Logger.error("PushNotificationService init error: $e", tag: 'Main');
+          }
+        } else {
+          Logger.log("PushNotificationService skipped for this platform", tag: 'Main');
+        }
+        Logger.log("Firebase initialized", tag: 'Main');
       }
-
-      Logger.log("Firebase initialized", tag: 'Main');
     }
   } catch (e) {
     Logger.error("Firebase init error: $e", tag: 'Main');
@@ -83,7 +107,6 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         // Переопределяем audioHandlerProvider для всех платформ
-        // На вебе будет null, на Android/iOS - реальный AudioHandler
         audioHandlerProvider.overrideWithValue(audioHandler),
       ],
       child: const MyApp(),
@@ -108,8 +131,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _initApp() async {
-    // Ждем 2 секунды для красоты сплэша (как в исходной логике)
-    await Future.delayed(const Duration(seconds: 2));
+    // Минимальная задержка для плавного перехода (100мс вместо 2с)
+    await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) {
       setState(() {
         _isInitialized = true;

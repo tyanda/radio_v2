@@ -39,6 +39,7 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard>
   StreamSubscription<DocumentSnapshot>? _videoSubscription;
   bool _isDisposed = false;
   bool _wasPlayingBeforePause = false; // Сохраняем состояние для восстановления
+  bool _pausedForTrack = false; // Видео на паузе из-за трека
 
   @override
   void initState() {
@@ -159,6 +160,23 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard>
   Widget build(BuildContext context) {
     super.build(context); // Вызываем для AutomaticKeepAliveClientMixin
     final theme = Theme.of(context);
+    
+    // Следим за состоянием плеера - если играет трек, ставим видео на паузу
+    final playerState = ref.watch(playerProvider).value;
+    final isPlayingTrack = playerState?.currentStation == null &&
+        playerState?.currentTrackId != null &&
+        playerState?.isPlaying == true;
+
+    // Если играет трек и видео ещё не на паузе
+    if (isPlayingTrack && _controller != null && !_isDisposed && !_pausedForTrack) {
+      _pausedForTrack = true;
+      _wasPlayingBeforePause = _controller!.value.isPlaying;
+      _controller!.pause();
+    } else if (!isPlayingTrack && _pausedForTrack && _wasPlayingBeforePause) {
+      // Если трек больше не играет, восстанавливаем видео
+      _pausedForTrack = false;
+      _controller!.play();
+    }
 
     return Container(
       height: 250,
@@ -299,15 +317,16 @@ class _VideoAdCardState extends ConsumerState<VideoAdCard>
                     _isMuted = newMuted;
                   });
 
-                  // Если включаем звук (было muted, стало unmuted) - ставим радио на паузу
                   if (!newMuted) {
                     // Включаем звук видео
                     await _controller?.setVolume(1.0);
-                    // Ставим радио на паузу
-                    ref.read(playerProvider.notifier).stop();
+                    // Ставим радио на паузу (если играет)
+                    ref.read(playerProvider.notifier).pause();
                   } else {
-                    // Если выключаем звук - возвращаем громкость видео в 0
+                    // Выключаем звук видео
                     await _controller?.setVolume(0.0);
+                    // Восстанавливаем воспроизведение радио
+                    ref.read(playerProvider.notifier).play();
                   }
                 },
                 child: Container(

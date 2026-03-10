@@ -1,49 +1,29 @@
 {
     "name": "SakhaLive Radio",
     "short_name": "SakhaLive",
-    "start_url": "/",
+    "start_url": ".",
     "display": "standalone",
     "background_color": "#0A0A0A",
     "theme_color": "#0A0A0A",
     "description": "SakhaLive Radio - онлайн радио Якутии",
-    "orientation": "any",
+    "orientation": "portrait-primary",
     "prefer_related_applications": false,
-    "scope": "/",
-    "lang": "ru",
-    "categories": ["music", "entertainment", "lifestyle"],
     "icons": [
         {
-            "src": "icons/Icon-192.png",
+            "src": "favicon.png",
             "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any"
+            "type": "image/png"
         },
         {
-            "src": "icons/Icon-512.png",
+            "src": "favicon.png",
             "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any"
+            "type": "image/png"
         },
         {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ],
-    "shortcuts": [
-        {
-            "name": "Радио",
-            "short_name": "Радио",
-            "description": "Открыть радио",
-            "url": "/#/radio",
-            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+          "src": "favicon.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "maskable"
         }
     ]
 }

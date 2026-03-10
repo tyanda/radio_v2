@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,10 +29,14 @@ class ChartItemTile extends ConsumerWidget {
     final playerState = ref.watch(playerProvider).value;
 
     // Определяем, играет ли текущий трек по ID
+    // Для веб-версии: проверяем также trackTitle если currentTrackId не установлен
     final isCurrentPlaying =
         playerState != null &&
         playerState.currentStation == null && // Не радио
-        playerState.currentTrackId == item.id &&
+        ((playerState.currentTrackId == item.id) ||
+            (kIsWeb &&
+                playerState.trackTitle == item.title &&
+                playerState.trackArtist == item.artist)) &&
         playerState.isPlaying;
 
     final isBuffering =
@@ -40,37 +45,47 @@ class ChartItemTile extends ConsumerWidget {
         playerState.currentTrackId == item.id &&
         playerState.isBuffering;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () async {
-          HapticFeedback.lightImpact();
-          if (item.isVideoAd) {
-            _handleAdTap(context);
-          } else if (item.previewUrl != null) {
-            // Получаем список всех треков из виджета списка
-            final chartsState = ref.read(chartsProvider);
-            final chartsAsync = chartsState.value;
+    // Отладочная информация (удалить после тестирования)
+    if (kIsWeb) {
+      Logger.debug(
+        'ChartTile: ${item.title} | currentTrackId: ${playerState?.currentTrackId} | isCurrentPlaying: $isCurrentPlaying',
+        tag: 'Charts',
+      );
+    }
 
-            if (chartsAsync != null) {
-              // Фильтруем только треки (не рекламу)
-              final tracks = chartsAsync.where((i) => i.isSong).toList();
-              final trackIndex = tracks.indexWhere((t) => t.id == item.id);
+    // Используем Inkwell вместо MouseRegion для лучшей поддержки touch
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        HapticFeedback.lightImpact();
+        if (item.isVideoAd) {
+          _handleAdTap(context);
+        } else if (item.previewUrl != null) {
+          // Получаем список всех треков из виджета списка
+          final chartsState = ref.read(chartsProvider);
+          final chartsAsync = chartsState.value;
 
-              if (trackIndex >= 0) {
-                // Воспроизводим плейлист с очередью
-                ref
-                    .read(playerProvider.notifier)
-                    .playPlaylist(tracks, trackIndex);
-              } else {
-                // Fallback: играем только трек
-                ref.read(playerProvider.notifier).playTrack(item);
-              }
+          if (chartsAsync != null) {
+            // Фильтруем только треки (не рекламу)
+            final tracks = chartsAsync.where((i) => i.isSong).toList();
+            final trackIndex = tracks.indexWhere((t) => t.id == item.id);
+
+            if (trackIndex >= 0) {
+              // Воспроизводим плейлист с очередью
+              ref
+                  .read(playerProvider.notifier)
+                  .playPlaylist(tracks, trackIndex);
             } else {
+              // Fallback: играем только трек
               ref.read(playerProvider.notifier).playTrack(item);
             }
+          } else {
+            ref.read(playerProvider.notifier).playTrack(item);
           }
-        },
+        }
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
         child: Container(
           padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -129,19 +144,60 @@ class ChartItemTile extends ConsumerWidget {
                 ),
               ),
               SizedBox(width: AppSpacing.md),
-              // Обложка
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-                child: item.coverUrl != null && item.coverUrl!.isNotEmpty
-                    ? Image.network(
-                        item.coverUrl!,
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildPlaceholderCover(),
-                      )
-                    : _buildPlaceholderCover(),
+              // Обложка с индикатором воспроизведения
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppEffects.radiusMd),
+                    child: item.coverUrl != null && item.coverUrl!.isNotEmpty
+                        ? Image.network(
+                            item.coverUrl!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildPlaceholderCover(),
+                          )
+                        : _buildPlaceholderCover(),
+                  ),
+                  // Индикатор "ИГРАЕТ" на обложке
+                  if (isCurrentPlaying)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              theme.primaryColor.withValues(alpha: 0.9),
+                            ],
+                          ),
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(3, (index) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              width: 2,
+                              height: 8 - (index * 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(1),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               SizedBox(width: AppSpacing.md),
               // Информация о треке или Рекламный текст
@@ -184,6 +240,45 @@ class ChartItemTile extends ConsumerWidget {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Индикатор "СЕЙЧАС ИГРАЕТ" для активного трека
+                          if (isCurrentPlaying) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.primaryColor,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              margin: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    width: 8,
+                                    height: 8,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'ИГРАЕТ',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.black,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           Text(
                             item.title,
                             style: GoogleFonts.inter(
@@ -234,38 +329,51 @@ class ChartItemTile extends ConsumerWidget {
                         ),
                       ),
                     )
-                  : MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isCurrentPlaying
-                              ? theme.primaryColor
-                              : theme.primaryColor.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: isBuffering
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    isCurrentPlaying
-                                        ? Colors.black
-                                        : theme.primaryColor,
+                  : GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () async {
+                        HapticFeedback.lightImpact();
+                        // Пауза/воспроизведение при нажатии на кнопку
+                        final playerState = ref.read(playerProvider).value;
+                        if (playerState != null && playerState.isPlaying) {
+                          await ref.read(playerProvider.notifier).stop();
+                        } else {
+                          await ref.read(playerProvider.notifier).resume();
+                        }
+                      },
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isCurrentPlaying
+                                ? theme.primaryColor
+                                : theme.primaryColor.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: isBuffering
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      isCurrentPlaying
+                                          ? Colors.black
+                                          : theme.primaryColor,
+                                    ),
                                   ),
+                                )
+                              : Icon(
+                                  isCurrentPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  size: 18,
+                                  color: isCurrentPlaying
+                                      ? Colors.black
+                                      : theme.primaryColor,
                                 ),
-                              )
-                            : Icon(
-                                isCurrentPlaying
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                size: 18,
-                                color: isCurrentPlaying
-                                    ? Colors.black
-                                    : theme.primaryColor,
-                              ),
+                        ),
                       ),
                     ),
             ],

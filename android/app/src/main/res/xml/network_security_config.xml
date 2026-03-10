@@ -1,24 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Глобальное разрешение на HTTP (cleartext) для радио-потоков -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Специфические настройки для localhost -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
-        <!-- Добавляем домены радиостанций -->
-        <domain includeSubdomains="true">sakhafm.ru</domain>
-        <domain includeSubdomains="true">cdnvideo.ru</domain>
-        <domain includeSubdomains="true">icecast-saha.cdnvideo.ru</domain>
-        <domain includeSubdomains="true">5.129.229.244.nip.io</domain>
-        <domain includeSubdomains="true">ep256.hostingradio.ru</domain>
-        <domain includeSubdomains="true">radiorecord.hostingradio.ru</domain>
-        <domain includeSubdomains="true">russianradio.eu</domain>
-        <domain includeSubdomains="true">stv-radio.ru</domain>
-        <!-- RSS лента новостей -->
-        <domain includeSubdomains="true">ysia.ru</domain>
-        <domain includeSubdomains="true">api.rss2json.com</domain>
-        <!-- Radio Browser API -->
-        <domain includeSubdomains="true">api.radio-browser.info</domain>
-        <domain includeSubdomains="true">de1.api.radio-browser.info</domain>
-        <!-- CORS Proxy -->
-        <domain includeSubdomains="true">cors-anywhere.wcx.cloud</domain>
     </domain-config>
 </network-security-config>

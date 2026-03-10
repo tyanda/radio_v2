@@ -2,27 +2,28 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "SakhaLive Web (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "args": ["--web-renderer", "html"]
+    },
+    {
+      "name": "SakhaLive Windows (Debug)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "windows"
+    },
+    {
       "name": "SakhaLive (Debug)",
       "request": "launch",
       "type": "dart"
-    },
-    {
-      "name": "SakhaLive (Profile)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "profile"
     },
     {
       "name": "SakhaLive (Release)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release"
-    },
-    {
-      "name": "SakhaLive Web (Chrome)",
-      "request": "launch",
-      "type": "dart",
-      "args": ["-d", "chrome"]
     }
   ]
 }

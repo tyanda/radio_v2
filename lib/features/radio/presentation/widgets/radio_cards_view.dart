@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -168,11 +169,7 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
             Expanded(
               child: stations.isEmpty
                   ? _buildEmptyState()
-                  : _buildContentView(
-                      stations,
-                      currentStation,
-                      favoriteNames,
-                    ),
+                  : _buildContentView(stations, currentStation, favoriteNames),
             ),
           ],
         );
@@ -225,10 +222,11 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 width: 1,
                 height: 20,
                 margin: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                color: (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black)
-                    .withValues(alpha: 0.2),
+                color:
+                    (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black)
+                        .withValues(alpha: 0.2),
               ),
               // Переключатель видов
               ViewTypeSelector(
@@ -288,8 +286,8 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
       // Карточки всё равно кэшируются через RepaintBoundary
       addAutomaticKeepAlives: false,
       addRepaintBoundaries: false, // Отключаем стандартные (создадим свои)
-      // Оптимизация: создаём только видимые элементы
-      cacheExtent: 300, // Кэшируем элементы на 300px вперёд
+      // Оптимизация: увеличиваем кэш для веба
+      cacheExtent: kIsWeb ? 800 : 300, // Кэшируем элементы на 800px вперёд для веба
       itemBuilder: (context, index) {
         final station = stations[index];
         final bool isActive = currentStation?.id == station.id;
@@ -313,7 +311,9 @@ class _RadioCardsViewState extends ConsumerState<RadioCardsView>
                 ref.read(playerProvider.notifier).playStation(station);
               },
               onFavoriteTap: () {
-                ref.read(favoritesProvider.notifier).toggleFavorite(station.name);
+                ref
+                    .read(favoritesProvider.notifier)
+                    .toggleFavorite(station.name);
               },
               onLongPress: () {
                 StationContextMenu.show(

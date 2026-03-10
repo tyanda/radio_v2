@@ -40,8 +40,7 @@ class WebPushNotificationService {
     String? badge,
     String? tag,
     bool requireInteraction = false,
-  }) async =>
-      false;
+  }) async => false;
 
   /// Текущее состояние разрешения
   static String get permissionState => 'denied';

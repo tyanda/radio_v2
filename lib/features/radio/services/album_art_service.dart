@@ -45,7 +45,10 @@ class AlbumArtService {
         await _loadPersistentCache();
         Logger.log('🎨 AlbumArt: Persistent cache loaded', tag: 'AlbumArt');
       } catch (e) {
-        Logger.warn('AlbumArt: Failed to load persistent cache: $e', tag: 'AlbumArt');
+        Logger.warn(
+          'AlbumArt: Failed to load persistent cache: $e',
+          tag: 'AlbumArt',
+        );
       }
     }
   }
@@ -60,13 +63,17 @@ class AlbumArtService {
     try {
       final Map<String, dynamic> data = json.decode(cachedData);
       _persistentCache = {};
-      
+
       data.forEach((key, value) {
-        final timestamp = DateTime.fromMillisecondsSinceEpoch(value['timestamp'] as int);
-        final expirationMs = value['expiration'] as int? ?? _cacheExpiration.inMilliseconds;
-        
+        final timestamp = DateTime.fromMillisecondsSinceEpoch(
+          value['timestamp'] as int,
+        );
+        final expirationMs =
+            value['expiration'] as int? ?? _cacheExpiration.inMilliseconds;
+
         // Проверяем, не истёк ли кэш
-        if (DateTime.now().difference(timestamp).inMilliseconds < expirationMs) {
+        if (DateTime.now().difference(timestamp).inMilliseconds <
+            expirationMs) {
           _persistentCache![key] = _CacheEntry(
             artUrl: value['artUrl'] as String?,
             timestamp: timestamp,
@@ -74,10 +81,16 @@ class AlbumArtService {
           );
         }
       });
-      
-      Logger.log('🎨 AlbumArt: Loaded ${_persistentCache!.length} entries from persistent cache', tag: 'AlbumArt');
+
+      Logger.log(
+        '🎨 AlbumArt: Loaded ${_persistentCache!.length} entries from persistent cache',
+        tag: 'AlbumArt',
+      );
     } catch (e) {
-      Logger.warn('AlbumArt: Failed to parse persistent cache: $e', tag: 'AlbumArt');
+      Logger.warn(
+        'AlbumArt: Failed to parse persistent cache: $e',
+        tag: 'AlbumArt',
+      );
       _persistentCache = {};
     }
   }
@@ -88,10 +101,11 @@ class AlbumArtService {
 
     try {
       final data = <String, Map<String, dynamic>>{};
-      
+
       _persistentCache!.forEach((key, entry) {
         // Сохраняем только валидные записи
-        if (DateTime.now().difference(entry.timestamp).inMilliseconds < entry.expiration.inMilliseconds) {
+        if (DateTime.now().difference(entry.timestamp).inMilliseconds <
+            entry.expiration.inMilliseconds) {
           data[key] = {
             'artUrl': entry.artUrl,
             'timestamp': entry.timestamp.millisecondsSinceEpoch,
@@ -99,10 +113,13 @@ class AlbumArtService {
           };
         }
       });
-      
+
       await _prefs!.setString(_persistentCacheKey, json.encode(data));
     } catch (e) {
-      Logger.warn('AlbumArt: Failed to save persistent cache: $e', tag: 'AlbumArt');
+      Logger.warn(
+        'AlbumArt: Failed to save persistent cache: $e',
+        tag: 'AlbumArt',
+      );
     }
   }
 
@@ -135,7 +152,10 @@ class AlbumArtService {
     if (_persistentCache != null && _persistentCache!.containsKey(cacheKey)) {
       final entry = _persistentCache![cacheKey]!;
       if (DateTime.now().difference(entry.timestamp) < entry.expiration) {
-        Logger.log('🎨 AlbumArt: L2 Persistent Cache hit: $cacheKey', tag: 'AlbumArt');
+        Logger.log(
+          '🎨 AlbumArt: L2 Persistent Cache hit: $cacheKey',
+          tag: 'AlbumArt',
+        );
         // Копируем в L1 для быстрого доступа
         _cache[cacheKey] = entry;
         return entry.artUrl;

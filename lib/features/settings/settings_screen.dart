@@ -247,8 +247,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         title: Row(
           children: [
-            Icon(Icons.notifications_rounded, 
-                color: isDark ? AppColors.primary : AppColors.primaryDark),
+            Icon(
+              Icons.notifications_rounded,
+              color: isDark ? AppColors.primary : AppColors.primaryDark,
+            ),
             SizedBox(width: 8),
             Text(
               'Уведомления',
@@ -286,7 +288,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     .toggleNewsNotifications(value);
               },
             ),
-            
+
             // Web Push Notifications (только для веба)
             if (kIsWeb) ...[
               Divider(color: isDark ? Colors.white12 : Colors.black12),
@@ -317,12 +319,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return ListTile(
           contentPadding: EdgeInsets.zero,
           leading: Icon(
-            isSubscribed ? Icons.cloud_done_rounded : Icons.cloud_upload_rounded,
+            isSubscribed
+                ? Icons.cloud_done_rounded
+                : Icons.cloud_upload_rounded,
             color: isSubscribed
                 ? AppColors.success
                 : isDark
-                    ? AppColors.primary
-                    : AppColors.primaryDark,
+                ? AppColors.primary
+                : AppColors.primaryDark,
           ),
           title: Text(
             isSubscribed ? 'Push включены' : 'Web Push',
@@ -336,8 +340,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             isSubscribed
                 ? 'Вы подписаны на уведомления'
                 : isSupported
-                    ? 'Подпишитесь на push-уведомления'
-                    : 'Не поддерживается в этом браузере',
+                ? 'Подпишитесь на push-уведомления'
+                : 'Не поддерживается в этом браузере',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: isDark ? Colors.white60 : Colors.black54,
@@ -354,7 +358,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         if (success && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('✅ Вы подписаны на push-уведомления'),
+                              content: Text(
+                                '✅ Вы подписаны на push-уведомления',
+                              ),
                               backgroundColor: AppColors.success,
                               duration: Duration(seconds: 2),
                             ),
@@ -367,7 +373,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         if (success && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('❌ Вы отписались от push-уведомлений'),
+                              content: Text(
+                                '❌ Вы отписались от push-уведомлений',
+                              ),
                               backgroundColor: AppColors.error,
                               duration: Duration(seconds: 2),
                             ),

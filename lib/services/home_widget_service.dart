@@ -10,7 +10,10 @@ class HomeWidgetService {
 
   static Future<void> setAppGroupId(String groupId) async {
     // Not supported on web
-    Logger.log('HomeWidget.setAppGroupId: Not supported on web', tag: 'HomeWidget');
+    Logger.log(
+      'HomeWidget.setAppGroupId: Not supported on web',
+      tag: 'HomeWidget',
+    );
     return;
   }
 
@@ -18,9 +21,15 @@ class HomeWidgetService {
     // Not supported on web - optionally store in localStorage
     try {
       web.window.localStorage.setItem('home_widget_$key', value.toString());
-      Logger.log('HomeWidget data saved to localStorage: $key=$value', tag: 'HomeWidget');
+      Logger.log(
+        'HomeWidget data saved to localStorage: $key=$value',
+        tag: 'HomeWidget',
+      );
     } catch (e) {
-      Logger.warn('HomeWidget.saveWidgetData: localStorage not available: $e', tag: 'HomeWidget');
+      Logger.warn(
+        'HomeWidget.saveWidgetData: localStorage not available: $e',
+        tag: 'HomeWidget',
+      );
     }
     return;
   }
@@ -31,7 +40,10 @@ class HomeWidgetService {
     String? iOSName,
   }) async {
     // Not supported on web
-    Logger.log('HomeWidget.updateWidget: Not supported on web', tag: 'HomeWidget');
+    Logger.log(
+      'HomeWidget.updateWidget: Not supported on web',
+      tag: 'HomeWidget',
+    );
     return;
   }
 

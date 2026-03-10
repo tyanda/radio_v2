@@ -4,7 +4,10 @@ import 'package:web/web.dart' as web;
 import 'radio_player_interface.dart';
 
 /// Реализация для Web с использованием HTML5 Audio API
-/// Оптимизированная версия для PWA
+/// 
+/// Поддерживает:
+/// - Воспроизведение потоков и треков
+/// - Событие ended для автоматического переключения треков
 class WebRadioPlayer implements RadioPlayerInterface {
   web.HTMLAudioElement? _audio;
   bool _isPlaying = false;
@@ -23,6 +26,11 @@ class WebRadioPlayer implements RadioPlayerInterface {
   final _errorController = StreamController<String>.broadcast();
   @override
   Stream<String> get errorStream => _errorController.stream;
+
+  // Событие завершения трека (для плейлистов)
+  final _endedController = StreamController<void>.broadcast();
+  @override
+  Stream<void> get endedStream => _endedController.stream;
 
   Completer<void>? _loadCompleter;
 
@@ -116,6 +124,14 @@ class WebRadioPlayer implements RadioPlayerInterface {
       'loadeddata',
       (web.Event event) {
         _isLoaded = true;
+      }.toJS,
+    );
+
+    // Обработчик завершения трека (для плейлистов)
+    _audio!.addEventListener(
+      'ended',
+      (web.Event event) {
+        _endedController.add(null);
       }.toJS,
     );
   }

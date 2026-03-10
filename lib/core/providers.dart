@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/audio_handler.dart';
 
@@ -12,12 +11,7 @@ export 'providers/view_mode_provider.dart';
 export 'providers/dynamic_theme_provider.dart';
 
 // Провайдер для AudioHandler (инициализируется в main)
-// На вебе возвращаем null, так как AudioService не поддерживается
-final audioHandlerProvider = Provider<RadioAudioHandler?>((ref) {
-  if (kIsWeb) return null;
-  throw UnimplementedError(
-    'audioHandlerProvider должен быть переопределён в main.dart при инициализации',
-  );
-});
+// На вебе и при сбое инициализации возвращаем null
+final audioHandlerProvider = Provider<RadioAudioHandler?>((ref) => null);
 
 // Провайдер для ThemeProvider экспортируется из core/theme_provider.dart

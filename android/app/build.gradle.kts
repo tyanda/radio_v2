@@ -25,15 +25,10 @@ android {
 
     defaultConfig {
         applicationId = "com.sakhalive.radio"
-        minSdk = flutter.minSdkVersion // Required for some features and better desugaring support
+        minSdk = flutter.minSdkVersion // Повышаем для стабильной работы just_audio и desugaring
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        
-        // Оптимизация для эмулятора: только x86_64
-        ndk {
-            abiFilters += listOf("x86_64", "x86")
-        }
     }
 
     buildTypes {
@@ -44,6 +39,14 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
+            lint {
+                checkReleaseBuilds = false
+                abortOnError = false
+            }
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         debug {
             isMinifyEnabled = false

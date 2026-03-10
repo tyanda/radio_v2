@@ -11,25 +11,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/design/design.dart';
 import '../../../../widgets/equalizer_animation.dart';
 import '../../../../widgets/shimmer_widget.dart';
-import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../domain/station.dart';
-import '../providers/player_provider.dart' show PlayerState, playerProvider;
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import '../providers/player_provider.dart' show playerProvider;
 import '../../../../core/providers.dart';
 import '../../../player/full_player_screen.dart';
-import '../../../../core/utils/logger.dart';
 
-/// Улучшенный MiniPlayer с жестами и расширенными анимациями
-///
-/// Особенности:
-/// - Свайп вверх для открытия слайдера громкости
-/// - Свайп вправо/влево для переключения треков
-/// - Двойное тап для паузы/воспроизведения
-/// - Haptic feedback для всех взаимодействий
-/// - Пульсирующая анимация обложки при воспроизведении
-/// - Градиентные эффекты
-/// - Автоматическая синхронизация метаданных из sequenceStateStream
+/// Оптимизированный MiniPlayer с изолированными анимациями и точечными подписками
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key});
 
@@ -46,11 +34,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   late Animation<double> _bounceAnimation;
 
   double _dragOffsetX = 0;
-
-  // Подписка на mediaItem для синхронизации метаданных
   StreamSubscription<as_service.MediaItem?>? _sequenceStateSubscription;
-
-  // Флаг: играет ли сейчас трек из чарта (не радио)
   bool _isPlayingTrack = false;
 
   @override
@@ -58,27 +42,24 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Пульсация для обложки
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.06).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Bounce анимация для тапов
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
 
-    _bounceAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
+    _bounceAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
     );
 
-    // Подписываемся на sequenceStateStream для обновления метаданных
     _subscribeToMediaItem();
   }
 
@@ -86,12 +67,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     final audioHandler = ref.read(audioHandlerProvider);
     if (audioHandler == null) return;
 
-    // Подписываемся на mediaItemStream для синхронизации метаданных
     _sequenceStateSubscription = audioHandler.mediaItem.listen((mediaItem) {
       if (!mounted) return;
-
       if (mediaItem != null) {
-        // Проверяем тип контента по URL
         final uriString = mediaItem.artUri.toString();
         final isStream =
             mediaItem.id.contains('stream://') ||
@@ -99,35 +77,21 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
             uriString.contains('.m3u') ||
             uriString.contains('.pls');
 
-        setState(() {
-          _isPlayingTrack = !isStream;
-        });
-
-        Logger.log(
-          'MiniPlayer: mediaItem updated, isPlayingTrack=$_isPlayingTrack, title=${mediaItem.title}, artUri=$uriString',
-          tag: 'MiniPlayer',
-        );
+        if (_isPlayingTrack != !isStream) {
+          setState(() {
+            _isPlayingTrack = !isStream;
+          });
+        }
       }
     });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.hidden:
-        if (_pulseController.isAnimating) {
-          _pulseController.stop();
-        }
-        break;
-      case AppLifecycleState.resumed:
-        if (!_pulseController.isAnimating) {
-          _pulseController.repeat(reverse: true);
-        }
-        break;
-      case AppLifecycleState.detached:
-        break;
+    if (state == AppLifecycleState.resumed) {
+      if (!_pulseController.isAnimating) _pulseController.repeat(reverse: true);
+    } else {
+      if (_pulseController.isAnimating) _pulseController.stop();
     }
   }
 
@@ -141,471 +105,165 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
   }
 
   void _triggerBounce() {
-    _bounceController.forward().then((_) {
-      _bounceController.reverse();
-    });
+    _bounceController.forward().then((_) => _bounceController.reverse());
   }
 
   @override
   Widget build(BuildContext context) {
-    // Слушаем изменения в playerProvider для детектирования переключения станции
-    ref.listen<riverpod.AsyncValue<PlayerState>>(playerProvider, (
-      previous,
-      next,
-    ) {
-      final prevValue = previous?.value;
-      final currValue = next.value;
-      if (prevValue == null || currValue == null) return;
+    // ОПТИМИЗАЦИЯ: подписываемся только на необходимые поля состояния
+    final isPlaying = ref.watch(playerProvider.select((s) => s.value?.isPlaying ?? false));
+    final isBuffering = ref.watch(playerProvider.select((s) => s.value?.isBuffering ?? false));
+    final trackTitle = ref.watch(playerProvider.select((s) => s.value?.trackTitle));
+    final trackArtist = ref.watch(playerProvider.select((s) => s.value?.trackArtist));
+    final albumArt = ref.watch(playerProvider.select((s) => s.value?.albumArt));
+    final currentStation = ref.watch(playerProvider.select((s) => s.value?.currentStation));
+    final currentTrackId = ref.watch(playerProvider.select((s) => s.value?.currentTrackId));
 
-      final prevStation = prevValue.currentStation;
-      final currStation = currValue.currentStation;
+    // Логика видимости
+    final hasActiveStation = currentStation != null;
+    final hasActiveTrack = currentStation == null && currentTrackId != null;
+    final isVisible = hasActiveStation || hasActiveTrack || isBuffering;
 
-      // Если станция изменилась
-      if (prevStation?.id != currStation?.id) {
-        Logger.log(
-          'MiniPlayer: Station switched from ${prevStation?.name} to ${currStation?.name}',
-          tag: 'MiniPlayer',
-        );
-      }
-    });
+    if (!isVisible) return const SizedBox.shrink();
 
-    final playerAsync = ref.watch(playerProvider);
-
-    return playerAsync.when(
-      data: (playerState) {
-        // Определяем тип контента: радио или трек
-        // Приоритет: sequenceStateStream > playerState
-        final isPlayingTrack =
-            _isPlayingTrack ||
-            (playerState.currentStation == null &&
-                playerState.trackTitle != null &&
-                playerState.trackTitle != playerState.currentStation?.name);
-
-        // Плеер виден если:
-        // 1. Есть активная станция (радио)
-        // 2. Или есть активный трек (не радио)
-        // 3. Или идет буферизация
-        // Пауза НЕ скрывает плеер!
-        final hasActiveStation = playerState.currentStation != null;
-        final hasActiveTrack =
-            playerState.currentStation == null &&
-            playerState.currentTrackId != null;
-        final isVisible =
-            hasActiveStation || hasActiveTrack || playerState.isBuffering;
-
-        return AnimatedOpacity(
-          duration: AppEffects.durationSlow,
-          curve: AppEffects.curve,
-          opacity: isVisible ? 1.0 : 0.0,
-          child: isVisible
-              ? _buildPlayerUI(context, ref, playerState, isPlayingTrack)
-              : const SizedBox.shrink(),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+    return AnimatedOpacity(
+      duration: AppEffects.durationSlow,
+      curve: AppEffects.curve,
+      opacity: 1.0,
+      child: _buildPlayerUI(
+        context, 
+        isPlaying: isPlaying,
+        isBuffering: isBuffering,
+        trackTitle: trackTitle,
+        trackArtist: trackArtist,
+        albumArt: albumArt,
+        currentStation: currentStation,
+        currentTrackId: currentTrackId,
+      ),
     );
   }
 
-  void _handleDragStart(DragStartDetails details) {
-    setState(() {
-      _dragOffsetX = 0;
-    });
-  }
-
-  void _handleDragUpdate(DragUpdateDetails details) {
-    setState(() {
-      _dragOffsetX += details.delta.dx;
-    });
-  }
-
   void _handleDragEnd(DragEndDetails details) {
-    final playerNotifier = ref.read(playerProvider.notifier);
     final playerState = ref.read(playerProvider).value;
+    if (playerState == null || playerState.currentStation == null) return;
 
-    if (playerState == null) return;
-
-    // Свайп влево/вправо для переключения станций (только для радио)
-    final isPlayingTrack =
-        playerState.currentStation == null && playerState.trackTitle != null;
-
-    if (!isPlayingTrack && _dragOffsetX.abs() > 80) {
+    if (_dragOffsetX.abs() > 80) {
       final stations = ref.read(stationListProvider);
-      final currentIndex = stations.indexWhere(
-        (s) => s.id == playerState.currentStation?.id,
-      );
+      final currentIndex = stations.indexWhere((s) => s.id == playerState.currentStation?.id);
 
       if (currentIndex >= 0) {
         if (_dragOffsetX > 0 && currentIndex > 0) {
-          // Свайп вправо - предыдущая станция
           if (!kIsWeb) HapticFeedback.mediumImpact();
-          playerNotifier.playStation(stations[currentIndex - 1]);
+          ref.read(playerProvider.notifier).playStation(stations[currentIndex - 1]);
         } else if (_dragOffsetX < 0 && currentIndex < stations.length - 1) {
-          // Свайп влево - следующая станция
           if (!kIsWeb) HapticFeedback.mediumImpact();
-          playerNotifier.playStation(stations[currentIndex + 1]);
+          ref.read(playerProvider.notifier).playStation(stations[currentIndex + 1]);
         }
       }
     }
-
-    setState(() {
-      _dragOffsetX = 0;
-    });
+    setState(() => _dragOffsetX = 0);
   }
 
   Widget _buildPlayerUI(
-    BuildContext context,
-    WidgetRef ref,
-    PlayerState playerState,
-    bool isPlayingTrack,
-  ) {
+    BuildContext context, {
+    required bool isPlaying,
+    required bool isBuffering,
+    String? trackTitle,
+    String? trackArtist,
+    String? albumArt,
+    Station? currentStation,
+    String? currentTrackId,
+  }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isBuffering = playerState.isBuffering;
 
-    // Определяем отображаемые данные на основе типа контента
-    // Для трека (iTunes/Chart): показываем название песни и артиста
-    // Для радио: показываем название станции и "ПРЯМОЙ ЭФИР" или метаданные трека
-    final displayTitle = isPlayingTrack
-        ? (playerState.trackTitle ?? 'SakhaLive')
-        : (playerState.currentStation?.name ?? 'SakhaLive');
-
-    final currentStation = playerState.currentStation;
-
-    // Вторая строка: артист (для трека) или статус (для радио)
+    final isActuallyPlayingTrack = _isPlayingTrack || (currentStation == null && trackTitle != null);
+    final displayTitle = isActuallyPlayingTrack ? (trackTitle ?? 'SakhaLive') : (currentStation?.name ?? 'SakhaLive');
+    
     String? displaySubtitle;
-    if (isPlayingTrack) {
-      // Трек из чарта: показываем артиста
-      displaySubtitle = playerState.trackArtist;
-    } else {
-      // Радио: показываем метаданные трека (если есть) или "ПРЯМОЙ ЭФИР"
-      final hasRadioMetadata =
-          playerState.trackTitle != null &&
-          playerState.trackTitle != currentStation?.name;
-      if (hasRadioMetadata) {
-        displaySubtitle = playerState.trackTitle;
-      }
-      // Если нет метаданных, displaySubtitle останется null — покажем "ПРЯМОЙ ЭФИР"
+    if (isActuallyPlayingTrack) {
+      displaySubtitle = trackArtist;
+    } else if (trackTitle != null && trackTitle != currentStation?.name) {
+      displaySubtitle = trackTitle;
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Основной контейнер мини-плеера
         GestureDetector(
           onTap: () {
             _triggerBounce();
             if (!kIsWeb) HapticFeedback.lightImpact();
-            // Открыть полный плеер
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const FullPlayerScreen()),
-            );
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const FullPlayerScreen()));
           },
           onDoubleTap: () {
             _triggerBounce();
             if (!kIsWeb) HapticFeedback.mediumImpact();
-            if (playerState.isPlaying) {
+            if (isPlaying) {
               ref.read(playerProvider.notifier).stop();
-            } else {
-              // Если играет трек из чарта - показываем сообщение
-              if (isPlayingTrack) {
-                SnackbarHelper.showError(
-                  context: context,
-                  message: 'Нажмите на трек в списке для воспроизведения',
-                );
-              } else if (currentStation != null) {
-                ref.read(playerProvider.notifier).playStation(currentStation);
-              }
+            } else if (currentStation != null) {
+              ref.read(playerProvider.notifier).playStation(currentStation);
             }
           },
-          onPanStart: _handleDragStart,
-          onPanUpdate: _handleDragUpdate,
+          onPanUpdate: (d) => setState(() => _dragOffsetX += d.delta.dx),
           onPanEnd: _handleDragEnd,
           child: MouseRegion(
             cursor: SystemMouseCursors.click,
             onEnter: (_) => setState(() => _isHovered = true),
             onExit: (_) => setState(() => _isHovered = false),
-            child: AnimatedBuilder(
-              animation: _bounceAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _bounceAnimation.value,
-                  child: AnimatedContainer(
-                    duration: AppEffects.durationNormal,
-                    curve: AppEffects.curve,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          SakhaFuturism.glassFill(
-                            isDark,
-                            opacity: _isHovered ? 0.84 : 0.76,
-                          ),
-                          SakhaFuturism.glassFill(
-                            isDark,
-                            opacity: _isHovered ? 0.62 : 0.54,
-                          ),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        AppEffects.radiusFull,
-                      ),
-                      border: Border.all(
-                        color: SakhaFuturism.glassBorder(
-                          isDark,
-                          accent: theme.primaryColor,
-                        ),
-                      ),
-                      boxShadow: SakhaFuturism.shadow(
-                        isDark,
-                        accent: theme.primaryColor,
-                        lift: _isHovered ? 1.15 : 1.05,
-                      ),
-                    ),
-                    constraints: const BoxConstraints(maxWidth: 280),
-                    height: 64.0,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Анимированная обложка
-                        AnimatedBuilder(
-                          animation: _pulseAnimation,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: playerState.isPlaying && !isBuffering
-                                  ? _pulseAnimation.value
-                                  : 1.0,
-                              child: _buildAlbumArt(
-                                context,
-                                ref,
-                                playerState,
-                                isPlayingTrack,
-                                isDark,
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        // Информация о треке/станции
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Название (трека или станции)
-                              isBuffering
-                                  ? ShimmerWidget.text(
-                                      width: 120,
-                                      height: 14,
-                                      textStyle: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 13.0,
-                                        letterSpacing: -0.5,
-                                      ),
-                                    )
-                                  : Text(
-                                      displayTitle,
-                                      style: GoogleFonts.inter(
-                                        color: theme.colorScheme.onSurface,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 13.0,
-                                        letterSpacing: -0.5,
-                                        height: 1.0,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                              SizedBox(height: AppSpacing.xs),
-                              // Вторая строка: артист (для трека) ИЛИ "ПРЯМОЙ ЭФИР"/метаданные (для радио)
-                              isBuffering
-                                  ? ShimmerWidget.text(
-                                      width: 80,
-                                      height: 10,
-                                      textStyle: GoogleFonts.inter(
-                                        color: isDark
-                                            ? theme.primaryColor
-                                            : AppColors.primaryDark,
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    )
-                                  : displaySubtitle != null &&
-                                        displaySubtitle.isNotEmpty
-                                  ? isPlayingTrack
-                                        ? // Трек: показываем артиста
-                                          Text(
-                                            displaySubtitle,
-                                            style: GoogleFonts.inter(
-                                              color: isDark
-                                                  ? theme.primaryColor
-                                                  : AppColors.primaryDark,
-                                              fontSize: 8.5,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.5,
-                                              height: 1.0,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          )
-                                        : // Радио: показываем метаданные трека (бегущая строка)
-                                          SizedBox(
-                                            height: 14,
-                                            child: Marquee(
-                                              text: displaySubtitle,
-                                              style: GoogleFonts.inter(
-                                                color: isDark
-                                                    ? theme.primaryColor
-                                                    : AppColors.primaryDark,
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 0.5,
-                                                height: 1.0,
-                                              ),
-                                              velocity:
-                                                  15, // Уменьшено с 30 для оптимизации производительности
-                                              blankSpace: 50,
-                                              startPadding: 0,
-                                              accelerationDuration:
-                                                  const Duration(
-                                                    milliseconds: 500,
-                                                  ),
-                                              accelerationCurve:
-                                                  Curves.easeInOut,
-                                              decelerationDuration:
-                                                  const Duration(
-                                                    milliseconds: 500,
-                                                  ),
-                                              decelerationCurve:
-                                                  Curves.easeInOut,
-                                            ),
-                                          )
-                                  : // "ПРЯМОЙ ЭФИР" если нет метаданных
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 5,
-                                          height: 5,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? theme.primaryColor
-                                                : AppColors.primaryDark,
-                                          ),
-                                        ),
-                                        SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          AppLocalizations.of(
-                                            context,
-                                          ).live_broadcast,
-                                          style: GoogleFonts.inter(
-                                            color: isDark
-                                                ? theme.primaryColor
-                                                : AppColors.primaryDark,
-                                            fontSize: 8.5,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 1.2,
-                                            height: 1.0,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        // Кнопка Play/Pause с анимацией
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () async {
-                              _triggerBounce();
-                              if (!kIsWeb) HapticFeedback.lightImpact();
-
-                              final playerNotifier = ref.read(
-                                playerProvider.notifier,
-                              );
-
-                              if (playerState.isPlaying) {
-                                // Пауза - не скрывает плеер!
-                                await playerNotifier.stop();
-                              } else {
-                                // Возобновление воспроизведения
-                                try {
-                                  // Если играет трек из чарта - возобновляем его
-                                  if (isPlayingTrack &&
-                                      playerState.currentTrackId != null) {
-                                    // Получаем текущее состояние и возобновляем
-                                    await playerNotifier.resume();
-                                  } else if (currentStation != null) {
-                                    // Радио - просто запускаем снова
-                                    await playerNotifier.playStation(
-                                      currentStation,
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    SnackbarHelper.showError(
-                                      context: context,
-                                      message: e.toString(),
-                                    );
-                                  }
-                                }
-                              }
-                            },
-                            child: AnimatedContainer(
-                              duration: AppEffects.durationFast,
-                              curve: AppEffects.curve,
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.primaryColor,
-                                    theme.primaryColor.withValues(alpha: 0.8),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: _isHovered
-                                    ? AppEffects.glowPrimary
-                                    : AppEffects.shadowPrimary,
-                              ),
-                              child: isBuffering
-                                  ? SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              isDark
-                                                  ? Colors.white
-                                                  : Colors.black,
-                                            ),
-                                      ),
-                                    )
-                                  : Icon(
-                                      playerState.isPlaying
-                                          ? Icons.pause_rounded
-                                          : Icons.play_arrow_rounded,
-                                      color: Colors.black,
-                                      size: 22,
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+            child: ScaleTransition(
+              scale: _bounceAnimation,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 280),
+                height: 64.0,
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      SakhaFuturism.glassFill(isDark, opacity: _isHovered ? 0.84 : 0.76),
+                      SakhaFuturism.glassFill(isDark, opacity: _isHovered ? 0.62 : 0.54),
+                    ],
                   ),
-                );
-              },
+                  borderRadius: BorderRadius.circular(AppEffects.radiusFull),
+                  border: Border.all(color: SakhaFuturism.glassBorder(isDark, accent: theme.primaryColor)),
+                  boxShadow: SakhaFuturism.shadow(isDark, accent: theme.primaryColor, lift: _isHovered ? 1.15 : 1.05),
+                ),
+                child: Row(
+                  children: [
+                    // ИЗОЛИРОВАННАЯ АНИМАЦИЯ ОБЛОЖКИ
+                    RepaintBoundary(
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) => Transform.scale(
+                          scale: isPlaying && !isBuffering ? _pulseAnimation.value : 1.0,
+                          child: _buildAlbumArt(context, isPlaying, isBuffering, albumArt, currentStation, currentTrackId, isActuallyPlayingTrack, isDark),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          isBuffering
+                              ? ShimmerWidget.text(width: 120, height: 14)
+                              : Text(
+                                  displayTitle,
+                                  style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 13.0, letterSpacing: -0.5, height: 1.0),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                          SizedBox(height: AppSpacing.xs),
+                          _buildSubtitle(context, isBuffering, isActuallyPlayingTrack, displaySubtitle, isDark),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: AppSpacing.sm),
+                    _buildPlayButton(context, isPlaying, isBuffering, currentStation, isActuallyPlayingTrack, currentTrackId),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -613,25 +271,81 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
     );
   }
 
-  Widget _buildAlbumArt(
-    BuildContext context,
-    WidgetRef ref,
-    PlayerState playerState,
-    bool isPlayingTrack,
-    bool isDark,
-  ) {
+  Widget _buildSubtitle(BuildContext context, bool isBuffering, bool isTrack, String? subtitle, bool isDark) {
     final theme = Theme.of(context);
-    final isBuffering = playerState.isBuffering;
-
-    // Используем обложку из метаданных или картинку станции
-    final albumArtUrl = playerState.albumArt;
-    final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
-    final currentStation = playerState.currentStation;
-
-    // Уникальный ключ для сброса кэша при смене трека/станции
-    final artKey = ValueKey(
-      'art-${currentStation?.id ?? playerState.currentTrackId}-${playerState.albumArt}',
+    final style = GoogleFonts.inter(
+      color: isDark ? theme.primaryColor : AppColors.primaryDark,
+      fontSize: 8.5,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+      height: 1.0,
     );
+
+    if (isBuffering) return ShimmerWidget.text(width: 80, height: 10);
+    if (subtitle == null || subtitle.isEmpty) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 5, height: 5, color: isDark ? theme.primaryColor : AppColors.primaryDark),
+          SizedBox(width: AppSpacing.xs),
+          Text(AppLocalizations.of(context).live_broadcast, style: style.copyWith(letterSpacing: 1.2)),
+        ],
+      );
+    }
+
+    if (isTrack) {
+      return Text(subtitle, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+
+    // Оптимизированная бегущая строка
+    return SizedBox(
+      height: 14,
+      child: Marquee(
+        text: subtitle,
+        style: style,
+        velocity: 15,
+        blankSpace: 50,
+        pauseAfterRound: const Duration(seconds: 2),
+        accelerationDuration: const Duration(milliseconds: 500),
+        decelerationDuration: const Duration(milliseconds: 500),
+      ),
+    );
+  }
+
+  Widget _buildPlayButton(BuildContext context, bool isPlaying, bool isBuffering, Station? station, bool isTrack, String? trackId) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: () async {
+        _triggerBounce();
+        if (!kIsWeb) HapticFeedback.lightImpact();
+        final notifier = ref.read(playerProvider.notifier);
+        if (isPlaying) {
+          await notifier.stop();
+        } else {
+          if (isTrack && trackId != null) {
+            await notifier.resume();
+          } else if (station != null) {
+            await notifier.playStation(station);
+          }
+        }
+      },
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(colors: [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.8)]),
+          boxShadow: _isHovered ? AppEffects.glowPrimary : AppEffects.shadowPrimary,
+        ),
+        child: isBuffering
+            ? Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation(theme.brightness == Brightness.dark ? Colors.white : Colors.black))))
+            : Icon(isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded, color: Colors.black, size: 22),
+      ),
+    );
+  }
+
+  Widget _buildAlbumArt(BuildContext context, bool isPlaying, bool isBuffering, String? albumArtUrl, Station? station, String? trackId, bool isTrack, bool isDark) {
+    final hasAlbumArt = albumArtUrl != null && albumArtUrl.isNotEmpty;
+    final artKey = ValueKey('art-${station?.id ?? trackId}-$albumArtUrl');
 
     return Stack(
       clipBehavior: Clip.none,
@@ -639,138 +353,40 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer>
         ClipRRect(
           borderRadius: BorderRadius.circular(AppEffects.radiusMd),
           child: SizedBox(
-            width: 44,
-            height: 44,
+            width: 44, height: 44,
             child: isBuffering
-                ? _buildBufferingPlaceholder(theme, isDark)
-                : hasAlbumArt && isPlayingTrack
-                ? CachedNetworkImage(
-                    key: artKey,
-                    imageUrl: albumArtUrl,
-                    fit: BoxFit.cover,
-                    // Оптимизация памяти для мини-плеера
-                    memCacheWidth: 150,
-                    memCacheHeight: 150,
-                    maxWidthDiskCache: 150,
-                    maxHeightDiskCache: 150,
-                    fadeInDuration: const Duration(milliseconds: 150),
-                    fadeOutDuration: const Duration(milliseconds: 150),
-                    placeholder: (context, url) => _buildLoadingPlaceholder(),
-                    errorWidget: (context, error, stackTrace) =>
-                        _buildPlaceholderArt(),
-                  )
-                : _buildStationArt(currentStation),
+                ? _buildBufferingPlaceholder(isDark)
+                : hasAlbumArt && isTrack
+                    ? CachedNetworkImage(
+                        key: artKey, imageUrl: albumArtUrl, fit: BoxFit.cover,
+                        memCacheWidth: 100, memCacheHeight: 100,
+                        placeholder: (c, u) => _buildLoadingPlaceholder(),
+                        errorWidget: (c, e, s) => _buildPlaceholderArt(),
+                      )
+                    : _buildStationArt(station),
           ),
         ),
-        if (playerState.isPlaying && !isBuffering) ...[
-          // Пульсирующее кольцо вокруг обложки
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-                border: Border.all(
-                  color: theme.primaryColor.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-              ),
-            ),
-          ),
-          // Индикатор воспроизведения
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-                color: Colors.black.withValues(alpha: 0.40),
-              ),
-              child: Center(
-                child: EqualizerAnimation(isActive: true, size: 20),
-              ),
-            ),
-          ),
+        if (isPlaying && !isBuffering) ...[
+          Positioned.fill(child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppEffects.radiusMd), border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3), width: 2)))),
+          Positioned.fill(child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppEffects.radiusMd), color: Colors.black45), child: Center(child: EqualizerAnimation(isActive: true, size: 20)))),
         ],
       ],
     );
   }
 
-  Widget _buildStationArt(Station? currentStation) {
-    if (currentStation != null && currentStation.art.isNotEmpty) {
-      final logoUrl = _getStationLogoUrl(currentStation);
-      // Ключ для сброса кэша при переключении станции
+  Widget _buildStationArt(Station? station) {
+    if (station != null && station.art.isNotEmpty) {
       return CachedNetworkImage(
-        key: ValueKey('station-${currentStation.id}'),
-        imageUrl: logoUrl ?? currentStation.art,
-        fit: BoxFit.cover,
-        // Оптимизация памяти
-        memCacheWidth: 150,
-        memCacheHeight: 150,
-        maxWidthDiskCache: 150,
-        maxHeightDiskCache: 150,
-        fadeInDuration: const Duration(milliseconds: 150),
-        fadeOutDuration: const Duration(milliseconds: 150),
-        placeholder: (context, url) => _buildLoadingPlaceholder(),
-        errorWidget: (context, error, stackTrace) => _buildPlaceholderArt(),
+        key: ValueKey('station-${station.id}'), imageUrl: station.art, fit: BoxFit.cover,
+        memCacheWidth: 100, memCacheHeight: 100,
+        placeholder: (c, u) => _buildLoadingPlaceholder(),
+        errorWidget: (c, e, s) => _buildPlaceholderArt(),
       );
     }
-    // Для треков из чарта показываем заглушку
     return _buildPlaceholderArt();
   }
 
-  /// Возвращает URL логотипа станции или null для использования asset
-  String? _getStationLogoUrl(Station station) {
-    // Возвращаем null для использования локальных assets
-    // В будущем можно добавить logoUrl в Station
-    return null;
-  }
-
-  /// Заглушка во время загрузки обложки
-  Widget _buildLoadingPlaceholder() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-      ),
-      child: Center(
-        child: SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Заглушка при буферизации
-  Widget _buildBufferingPlaceholder(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardBackground : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-      ),
-      child: Center(
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderArt() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(AppEffects.radiusMd),
-      ),
-      child: const Icon(Icons.music_note, color: Colors.white, size: 20),
-    );
-  }
+  Widget _buildLoadingPlaceholder() => Container(decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(AppEffects.radiusMd)), child: const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AppColors.primary)))));
+  Widget _buildBufferingPlaceholder(bool isDark) => Container(decoration: BoxDecoration(color: isDark ? AppColors.cardBackground : Colors.grey.shade200, borderRadius: BorderRadius.circular(AppEffects.radiusMd)), child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))))));
+  Widget _buildPlaceholderArt() => Container(decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(AppEffects.radiusMd)), child: const Icon(Icons.music_note, color: Colors.white, size: 20));
 }

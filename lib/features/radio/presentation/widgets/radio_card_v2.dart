@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +10,8 @@ import 'package:sakha_live/features/radio/domain/station.dart';
 import '../../../../core/design/design.dart';
 
 /// Оптимизированная карточка радиостанции
+/// Для веба: упрощённая версия
+/// Для мобильных: полная версия с эффектами
 ///
 /// Оптимизации:
 /// - ImageCache для предотвращения повторной загрузки обложек
@@ -59,14 +62,25 @@ class _RadioCardV2State extends State<RadioCardV2>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    )..repeat(reverse: true);
+    // Для веба не запускаем анимации и не вычисляем акцентный цвет
+    if (!kIsWeb) {
+      _pulseController = AnimationController(
+        duration: const Duration(milliseconds: 1200),
+        vsync: this,
+      )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+      _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+        CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+      );
+    } else {
+      _pulseController = AnimationController(
+        duration: const Duration(milliseconds: 1200),
+        vsync: this,
+      );
+      _pulseAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
+        CurvedAnimation(parent: _pulseController, curve: Curves.linear),
+      );
+    }
 
     _hoverController = AnimationController(
       duration: AppEffects.durationNormal,
@@ -77,16 +91,30 @@ class _RadioCardV2State extends State<RadioCardV2>
       CurvedAnimation(parent: _hoverController, curve: Curves.easeInOut),
     );
 
-    _liveController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
+    // Для веба не запускаем анимации
+    if (!kIsWeb) {
+      _liveController = AnimationController(
+        duration: const Duration(milliseconds: 1500),
+        vsync: this,
+      )..repeat();
 
-    _liveAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _liveController, curve: Curves.easeInOut),
-    );
+      _liveAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+        CurvedAnimation(parent: _liveController, curve: Curves.easeInOut),
+      );
+    } else {
+      _liveController = AnimationController(
+        duration: const Duration(milliseconds: 1500),
+        vsync: this,
+      );
+      _liveAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
+        CurvedAnimation(parent: _liveController, curve: Curves.linear),
+      );
+    }
 
-    _accentFuture = _resolveAccentColor();
+    // Для веба не вычисляем акцентный цвет (используем primary)
+    _accentFuture = kIsWeb
+        ? Future.value(AppColors.primary)
+        : _resolveAccentColor();
   }
 
   @override
@@ -151,6 +179,33 @@ class _RadioCardV2State extends State<RadioCardV2>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Для веба: упрощённая версия без 3D эффектов
+    if (kIsWeb) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => _onHoverEnter(),
+        onExit: (_) => _onHoverExit(),
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            widget.onTap?.call();
+          },
+          onLongPress: () {
+            HapticFeedback.mediumImpact();
+            widget.onLongPress?.call();
+          },
+          child: FutureBuilder<Color>(
+            future: _accentFuture,
+            builder: (context, snapshot) {
+              final accentColor = snapshot.data ?? theme.colorScheme.primary;
+              return _buildCardWeb(theme, isDark, accentColor);
+            },
+          ),
+        ),
+      );
+    }
+
+    // Для мобильных: полная версия с 3D эффектами
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => _onHoverEnter(),
@@ -194,6 +249,51 @@ class _RadioCardV2State extends State<RadioCardV2>
     );
   }
 
+  /// Упрощённая версия для веба (без сложных градиентов и теней)
+  Widget _buildCardWeb(ThemeData theme, bool isDark, Color accentColor) {
+    return Container(
+      clipBehavior: Clip.none,
+      decoration: BoxDecoration(
+        color: widget.isActive
+            ? accentColor.withValues(alpha: 0.95)
+            : isDark
+                ? const Color(0xFF1A1A1A)
+                : const Color(0xFFF5F5F7),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: widget.isActive
+              ? accentColor.withValues(alpha: 0.95)
+              : isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.1),
+          width: widget.isActive ? 1.4 : (_isHovered ? 1.2 : 1),
+        ),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              top: 10,
+              left: 12,
+              right: 12,
+              bottom: 12,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildImageSectionWeb(accentColor)),
+                const SizedBox(height: 12),
+                _buildTextSection(theme, accentColor),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Полная версия для мобильных (с градиентами и тенями)
   Widget _buildCard(ThemeData theme, bool isDark, Color accentColor) {
     return AnimatedContainer(
       duration: AppEffects.durationSlow,
@@ -250,7 +350,8 @@ class _RadioCardV2State extends State<RadioCardV2>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          if (widget.isActive)
+          // Lottie анимация только для мобильных
+          if (widget.isActive && !kIsWeb)
             Positioned(
               right: -5,
               bottom: -5,
@@ -285,6 +386,105 @@ class _RadioCardV2State extends State<RadioCardV2>
           ),
         ],
       ),
+    );
+  }
+
+  /// Упрощённая версия для веба (без градиентов и Lottie)
+  Widget _buildImageSectionWeb(Color accentColor) {
+    final hasLogoUrl =
+        widget.station.logoUrl != null && widget.station.logoUrl!.isNotEmpty;
+
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withValues(
+                alpha: widget.isActive ? 0.18 : 0.08,
+              ),
+            ),
+          ),
+          child: hasLogoUrl
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.station.logoUrl!,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 256,
+                    memCacheHeight: 256,
+                    maxWidthDiskCache: 256,
+                    maxHeightDiskCache: 256,
+                    fadeInDuration: const Duration(milliseconds: 300),
+                    fadeOutDuration: const Duration(milliseconds: 300),
+                    cacheKey: widget.station.id,
+                    useOldImageOnUrlChange: true,
+                    placeholder: (context, url) => _buildPlaceholder(),
+                    errorWidget: (context, url, error) => _buildPlaceholder(),
+                  ),
+                )
+              : widget.station.art.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    widget.station.art,
+                    fit: BoxFit.cover,
+                    cacheWidth: 256,
+                    cacheHeight: 256,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildPlaceholder();
+                    },
+                  ),
+                )
+              : _buildPlaceholder(),
+        ),
+        // Упрощённый LIVE бейдж для веба (без анимации)
+        if (widget.isActive)
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: 6, height: 6, child: DecoratedBox(decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle))),
+                  SizedBox(width: 4),
+                  Text('LIVE', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: Colors.white, letterSpacing: 0.5)),
+                ],
+              ),
+            ),
+          ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              widget.onFavoriteTap?.call();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.44),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              ),
+              child: Icon(
+                widget.isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                color: widget.isFavorite ? const Color(0xFFFF4B5C) : Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

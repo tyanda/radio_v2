@@ -43,8 +43,7 @@ class WebPushNotificationService {
     String? badge,
     String? tag,
     bool requireInteraction = false,
-  }) async =>
-      false;
+  }) async => false;
 
   /// Получение уведомлений (пустая реализация)
   static Future<List> getNotifications() async => [];

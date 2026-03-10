@@ -8,7 +8,7 @@ import 'web_radio_player.dart';
 import '../../../services/audio_handler.dart';
 
 /// Класс для управления воспроизведением радио-потока
-/// На Web используется HTML5 Audio API, на других платформах - just_audio через audio_service
+/// На Web используется HTML5 Audio API, на других платформах - just_audio
 class RadioPlayer {
   final AudioPlayer? player;
   final RadioPlayerInterface? webPlayer;
@@ -22,7 +22,7 @@ class RadioPlayer {
 
   RadioPlayer({this.audioHandler})
     : isWeb = kIsWeb,
-      player = kIsWeb ? null : (audioHandler?.player ?? AudioPlayer()),
+      player = kIsWeb ? null : AudioPlayer(),
       webPlayer = kIsWeb ? createRadioPlayer() : null;
 
   /// Поток метаданных текущего трека
@@ -70,53 +70,52 @@ class RadioPlayer {
     if (isWeb || player == null) return;
 
     _icyMetadataSubscription?.cancel();
-    _icyMetadataSubscription = player!.icyMetadataStream.listen((icyMetadata) {
-      try {
-        if (icyMetadata != null && icyMetadata.info != null) {
-          final rawTitle = icyMetadata.info!.title;
-          Logger.log(
-            "🎵 ICY Raw: $rawTitle",
-            tag: 'RadioPlayer',
-          );
+    _icyMetadataSubscription = player!.icyMetadataStream.listen(
+      (icyMetadata) {
+        try {
+          if (icyMetadata != null && icyMetadata.info != null) {
+            final rawTitle = icyMetadata.info!.title;
+            Logger.log("🎵 ICY Raw: $rawTitle", tag: 'RadioPlayer');
 
-          if (rawTitle != null &&
-              rawTitle.isNotEmpty &&
-              rawTitle != _lastMetadataTitle) {
-            _lastMetadataTitle = rawTitle;
+            if (rawTitle != null &&
+                rawTitle.isNotEmpty &&
+                rawTitle != _lastMetadataTitle) {
+              _lastMetadataTitle = rawTitle;
 
-            // Парсим "Artist - Title" формат
-            final parsed = _parseMetadata(rawTitle);
-            final artist = parsed['artist'];
-            final trackTitle = parsed['title'];
+              // Парсим "Artist - Title" формат
+              final parsed = _parseMetadata(rawTitle);
+              final artist = parsed['artist'];
+              final trackTitle = parsed['title'];
 
-            Logger.log(
-              "🎵 ICY Parsed: ${artist ?? 'N/A'} - ${trackTitle ?? 'N/A'}",
-              tag: 'RadioPlayer',
-            );
+              Logger.log(
+                "🎵 ICY Parsed: ${artist ?? 'N/A'} - ${trackTitle ?? 'N/A'}",
+                tag: 'RadioPlayer',
+              );
 
-            _updateMediaItem(
-              MediaItem(
-                id: 'icy_${DateTime.now().millisecondsSinceEpoch}',
-                title: trackTitle ?? rawTitle,
-                artist: artist,
-                album: 'SakhaLive',
-                artUri: _mediaItemController.stream.value?.artUri,
-              ),
-            );
+              _updateMediaItem(
+                MediaItem(
+                  id: 'icy_${DateTime.now().millisecondsSinceEpoch}',
+                  title: trackTitle ?? rawTitle,
+                  artist: artist ?? 'SakhaLive',
+                  album: 'SakhaLive',
+                  displayTitle: trackTitle ?? rawTitle,
+                  displaySubtitle: artist,
+                  artUri: _mediaItemController.stream.value?.artUri,
+                ),
+              );
+            }
           }
+        } catch (e) {
+          Logger.error("🎵 ICY Metadata parse error: $e", tag: 'RadioPlayer');
         }
-      } catch (e) {
+      },
+      onError: (error) {
         Logger.error(
-          "🎵 ICY Metadata parse error: $e",
+          "🎵 ICY Metadata stream error: $error",
           tag: 'RadioPlayer',
         );
-      }
-    }, onError: (error) {
-      Logger.error(
-        "🎵 ICY Metadata stream error: $error",
-        tag: 'RadioPlayer',
-      );
-    });
+      },
+    );
   }
 
   /// Подключение к потоку радио с метаданными
@@ -237,6 +236,17 @@ class RadioPlayer {
       );
     }
     return player!.processingStateStream;
+  }
+
+  /// Поток завершения трека (для плейлистов)
+  Stream<void> get endedStream {
+    if (isWeb) {
+      return webPlayer!.endedStream;
+    }
+    // Для мобильных: используем playerStateStream и проверяем completed
+    return player!.playerStateStream
+        .where((state) => state.processingState == ProcessingState.completed)
+        .asyncMap((_) => null);
   }
 
   /// Очистка ресурсов

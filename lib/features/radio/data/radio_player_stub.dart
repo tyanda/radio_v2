@@ -16,6 +16,10 @@ class StubRadioPlayer implements RadioPlayerInterface {
   @override
   Stream<String> get errorStream => _errorController.stream;
 
+  final _endedController = StreamController<void>.broadcast();
+  @override
+  Stream<void> get endedStream => _endedController.stream;
+
   @override
   bool get isPlaying => false;
 
@@ -72,6 +76,7 @@ class StubRadioPlayer implements RadioPlayerInterface {
     await _playerStateController.close();
     await _bufferingController.close();
     await _errorController.close();
+    await _endedController.close();
   }
 }
 

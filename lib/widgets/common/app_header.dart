@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,8 +13,7 @@ import '../../core/providers.dart';
 import '../../features/settings/settings_screen.dart';
 
 /// Общий хедер приложения с логотипом, приветствием и кнопкой настроек
-/// Используется на всех основных экранах
-/// Оптимизация: добавлены const конструкторы и вынесены повторяющиеся элементы
+/// Оптимизированная версия для веба (без BackdropFilter)
 class AppHeader extends ConsumerWidget {
   const AppHeader({super.key});
 
@@ -50,6 +50,21 @@ class AppHeader extends ConsumerWidget {
     }
   }
 
+  // Кэшированный стиль для заголовка
+  static final _titleStyle = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -1.4,
+    fontFamily: 'Inter',
+  );
+
+  // Кэшированный стиль для приветствия
+  static final _greetingStyle = GoogleFonts.inter(
+    fontWeight: FontWeight.w600,
+    fontSize: 10,
+    letterSpacing: 0.5,
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final greetingAsync = ref.watch(greetingProvider);
@@ -57,6 +72,7 @@ class AppHeader extends ConsumerWidget {
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
     final topPadding = MediaQuery.of(context).padding.top + AppSpacing.xs;
+    final primaryColor = Theme.of(context).primaryColor;
 
     final greeting = greetingAsync.when(
       data: (data) => data.toUpperCase(),
@@ -64,6 +80,77 @@ class AppHeader extends ConsumerWidget {
       error: (_, _) => "ДОБРО ПОЖАЛОВАТЬ",
     );
 
+    // Для веба: упрощённая версия без BackdropFilter
+    if (kIsWeb) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          SakhaFuturism.horizontalMargin,
+          topPadding,
+          SakhaFuturism.horizontalMargin,
+          AppSpacing.xs,
+        ),
+        child: RepaintBoundary(
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F5F7),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: primaryColor.withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: _titleStyle.copyWith(
+                            color: isDark ? AppColors.textPrimary : AppColors.textName,
+                          ),
+                          children: [
+                            const TextSpan(text: "Sakha"),
+                            TextSpan(text: "Live", style: TextStyle(color: primaryColor)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              greeting,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: _greetingStyle.copyWith(
+                                color: isDark ? AppColors.textTertiary : AppColors.textName,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          _buildGreetingSvg(isDark),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                const _SettingsButton(),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Для мобильных: полная версия с SakhaFuturism.glass
     return Padding(
       padding: EdgeInsets.fromLTRB(
         SakhaFuturism.horizontalMargin,
@@ -71,65 +158,57 @@ class AppHeader extends ConsumerWidget {
         SakhaFuturism.horizontalMargin,
         AppSpacing.xs,
       ),
-      child: SakhaFuturism.glass(
-        context,
-        accent: Theme.of(context).primaryColor,
-        radius: 30,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.textPrimary
-                          : AppColors.textName,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.4,
-                      fontFamily: 'Inter',
-                    ),
-                    children: [
-                      const TextSpan(text: "Sakha"),
-                      TextSpan(
-                        text: "Live",
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
+      child: RepaintBoundary(
+        child: SakhaFuturism.glass(
+          context,
+          accent: primaryColor,
+          radius: 30,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      greeting,
-                      style: GoogleFonts.inter(
-                        color: isDark
-                            ? AppColors.textTertiary
-                            : AppColors.textName,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                        letterSpacing: 0.5,
+                    RichText(
+                      text: TextSpan(
+                        style: _titleStyle.copyWith(
+                          color: isDark ? AppColors.textPrimary : AppColors.textName,
+                        ),
+                        children: [
+                          const TextSpan(text: "Sakha"),
+                          TextSpan(text: "Live", style: TextStyle(color: primaryColor)),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    _buildGreetingSvg(isDark),
+                    const SizedBox(height: 2),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            greeting,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _greetingStyle.copyWith(
+                              color: isDark ? AppColors.textTertiary : AppColors.textName,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _buildGreetingSvg(isDark),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-            // Кнопка настроек - вынесена в отдельный виджет
-            const _SettingsButton(),
-          ],
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              const _SettingsButton(),
+            ],
+          ),
         ),
       ),
     );
@@ -147,11 +226,9 @@ class _SettingsButton extends StatelessWidget {
     return IconButton(
       onPressed: () {
         HapticFeedback.lightImpact();
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const SettingsScreen(),
-          ),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
       },
       icon: Container(
         padding: const EdgeInsets.all(8),
@@ -161,16 +238,12 @@ class _SettingsButton extends StatelessWidget {
           ),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withValues(
-              alpha: isDark ? 0.10 : 0.55,
-            ),
+            color: Colors.white.withValues(alpha: isDark ? 0.10 : 0.55),
           ),
         ),
         child: Icon(
           isDark ? Icons.tune_rounded : Icons.tune_outlined,
-          color: isDark
-              ? AppColors.textPrimary
-              : AppColors.textName,
+          color: isDark ? AppColors.textPrimary : AppColors.textName,
         ),
       ),
     );
@@ -178,9 +251,17 @@ class _SettingsButton extends StatelessWidget {
 }
 
 /// Бегущая строка с новостями/информацией
-/// Оптимизировано с RepaintBoundary для предотвращения лишних перерисовок
+/// Оптимизированная версия для веба (без BackdropFilter и ShaderMask)
 class AppMarquee extends ConsumerWidget {
   const AppMarquee({super.key});
+
+  // Кэшированный TextStyle для бегущей строки
+  static final _marqueeStyle = GoogleFonts.inter(
+    fontWeight: FontWeight.w800,
+    fontSize: 12,
+    letterSpacing: 1.5,
+    height: 1.0,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -188,7 +269,54 @@ class AppMarquee extends ConsumerWidget {
     final isDark = ref.watch(
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
+    final primaryColor = Theme.of(context).primaryColor;
 
+    // Для веба: упрощённая версия без BackdropFilter и ShaderMask
+    if (kIsWeb) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          SakhaFuturism.horizontalMargin,
+          0,
+          SakhaFuturism.horizontalMargin,
+          AppSpacing.sm,
+        ),
+        child: RepaintBoundary(
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F5F7),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: primaryColor.withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              children: [
+                _StaticIndicatorDot(primaryColor: primaryColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: RepaintBoundary(
+                    child: Marquee(
+                      text:
+                          "SAKHALIVE  //  ${marqueeText.toUpperCase()}  //  НОВОСТИ И ЭФИР БЕЗ ПАУЗ  ",
+                      style: _marqueeStyle.copyWith(color: Colors.white),
+                      velocity: 24,
+                      blankSpace: 80,
+                      startPadding: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Для мобильных: полная версия с эффектами
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         SakhaFuturism.horizontalMargin,
@@ -196,7 +324,6 @@ class AppMarquee extends ConsumerWidget {
         SakhaFuturism.horizontalMargin,
         AppSpacing.sm,
       ),
-      // RepaintBoundary: изолирует перерисовку бегущей строки
       child: RepaintBoundary(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
@@ -208,25 +335,18 @@ class AppMarquee extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(
-                      0xFF0B0D12,
-                    ).withValues(alpha: isDark ? 0.90 : 0.80),
-                    Theme.of(context).primaryColor.withValues(alpha: 0.30),
-                    const Color(
-                      0xFF090B10,
-                    ).withValues(alpha: isDark ? 0.92 : 0.80),
+                    const Color(0xFF0B0D12).withValues(alpha: isDark ? 0.90 : 0.80),
+                    primaryColor.withValues(alpha: 0.30),
+                    const Color(0xFF090B10).withValues(alpha: isDark ? 0.92 : 0.80),
                   ],
                 ),
                 border: Border.all(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+                  color: primaryColor.withValues(alpha: 0.35),
                 ),
                 boxShadow: [
-                  ...SakhaFuturism.shadow(
-                    isDark,
-                    accent: Theme.of(context).primaryColor,
-                  ),
+                  ...SakhaFuturism.shadow(isDark, accent: primaryColor),
                   BoxShadow(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.18),
+                    color: primaryColor.withValues(alpha: 0.18),
                     blurRadius: 28,
                     spreadRadius: -4,
                   ),
@@ -235,8 +355,7 @@ class AppMarquee extends ConsumerWidget {
               alignment: Alignment.center,
               child: Row(
                 children: [
-                  // Статичный индикатор - вынесен в const где возможно
-                  _StaticIndicatorDot(primaryColor: Theme.of(context).primaryColor),
+                  _StaticIndicatorDot(primaryColor: primaryColor),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ShaderMask(
@@ -250,19 +369,14 @@ class AppMarquee extends ConsumerWidget {
                         stops: [0, 0.08, 0.92, 1],
                       ).createShader(bounds),
                       blendMode: BlendMode.dstIn,
-                      // RepaintBoundary для Marquee (анимированный виджет)
                       child: RepaintBoundary(
                         child: Marquee(
                           text:
                               "SAKHALIVE  //  ${marqueeText.toUpperCase()}  //  НОВОСТИ И ЭФИР БЕЗ ПАУЗ  ",
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                            letterSpacing: 1.5,
-                            color: Colors.white,
-                          ),
+                          style: _marqueeStyle.copyWith(color: Colors.white),
                           velocity: 24,
                           blankSpace: 80,
+                          startPadding: 0,
                         ),
                       ),
                     ),

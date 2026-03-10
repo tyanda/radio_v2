@@ -5,6 +5,7 @@ abstract class RadioPlayerInterface {
   Stream<bool> get playerStateStream;
   Stream<bool> get bufferingStateStream;
   Stream<String> get errorStream;
+  Stream<void> get endedStream; // Событие завершения трека
 
   Future<void> loadStream(String url);
   Future<void> play();

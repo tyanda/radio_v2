@@ -46,11 +46,17 @@ class NewsService {
             options: Options(
               followRedirects: true,
               validateStatus: (status) => status! < 500,
-              responseType: ResponseType.json,
+              responseType: ResponseType.json, // Мы ожидаем JSON
               receiveTimeout: const Duration(seconds: 15),
             ),
           )
           .timeout(const Duration(seconds: 20));
+
+      // Если ответ пришел не в формате JSON (например, HTML из-за 404 или ошибки прокси)
+      if (response.data is String && (response.data as String).trim().startsWith('<!DOCTYPE')) {
+        Logger.error('Received HTML instead of JSON from RSS2JSON', tag: 'NewsService');
+        return _getCachedTitles(limit);
+      }
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -131,12 +137,17 @@ class NewsService {
         return [];
       }
 
-      final titles = (jsonDecode(cachedJson) as List).cast<String>();
-      Logger.log(
-        'Returning ${titles.length} cached titles',
-        tag: 'NewsService',
-      );
-      return titles.take(limit).toList();
+      try {
+        final titles = (jsonDecode(cachedJson) as List).cast<String>();
+        Logger.log(
+          'Returning ${titles.length} cached titles',
+          tag: 'NewsService',
+        );
+        return titles.take(limit).toList();
+      } catch (e) {
+        Logger.warn('Error decoding cached news: $e', tag: 'NewsService');
+        return [];
+      }
     } catch (e) {
       Logger.warn('Cache read error: $e', tag: 'NewsService');
       return [];

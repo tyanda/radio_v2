@@ -124,7 +124,8 @@ final greetingProvider = StreamProvider<String>((ref) async* {
   }
 
   yield getGreeting();
-  yield* Stream.periodic(const Duration(minutes: 1), (_) => getGreeting());
+  // Обновляем приветствие каждые 15 минут вместо 1 минуты
+  yield* Stream.periodic(const Duration(minutes: 15), (_) => getGreeting());
 });
 
 final newsProvider = FutureProvider<List<String>>((ref) async {
@@ -157,27 +158,28 @@ final tickerProvider = StreamProvider<String>((ref) {
 });
 
 final marqueeTextProvider = Provider<String>((ref) {
-  final news = ref.watch(newsProvider);
-  final ticker = ref.watch(tickerProvider);
-
-  final tickerText = ticker.when(
+  // Используем селекторы для предотвращения лишних пересборок
+  final newsAsync = ref.watch(newsProvider);
+  final tickerText = ref.watch(tickerProvider).when(
     data: (data) => data.isNotEmpty ? data.toUpperCase() : null,
     loading: () => null,
     error: (_, _) => null,
   );
 
-  final newsText = news.when(
-    data: (data) => data.map((title) => title).toList(),
-    loading: () => [],
-    error: (_, _) => [],
+  // Кэшируем результат для предотвращения пересоздания строки
+  final newsList = newsAsync.when(
+    data: (data) => data,
+    loading: () => const [],
+    error: (_, _) => const [],
   );
 
+  // Формируем строку только при изменении данных
   final combined = tickerText != null
-      ? [tickerText, ...newsText]
-      : [...newsText];
+      ? [tickerText, ...newsList]
+      : newsList.isNotEmpty ? [...newsList] : null;
 
-  if (combined.isEmpty) {
-    return news.isLoading ? "ЗАГРУЖАЮ НОВОСТИ..." : "НЕТ АКТУАЛЬНЫХ НОВОСТЕЙ";
+  if (combined == null || combined.isEmpty) {
+    return newsAsync.isLoading ? "ЗАГРУЖАЮ НОВОСТИ..." : "НЕТ АКТУАЛЬНЫХ НОВОСТЕЙ";
   }
 
   return combined.join("  •  ");

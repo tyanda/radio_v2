@@ -6,7 +6,6 @@ import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sakha_live/widgets/scroll_scale_card.dart';
 import 'package:sakha_live/core/utils/responsive_utils.dart';
-import 'package:sakha_live/core/utils/snackbar_helper.dart';
 import 'package:sakha_live/core/design/design.dart';
 import 'package:sakha_live/core/design/app_constants.dart';
 import 'package:sakha_live/core/providers.dart';
@@ -618,16 +617,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
 
   Widget _buildErrorView(String error, bool isDark) {
     final theme = Theme.of(context);
-
-    // Показываем snackbar с ошибкой
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        SnackbarHelper.showError(
-          context: context,
-          message: error.split(': ').last,
-        );
-      }
-    });
 
     return Center(
       child: Column(

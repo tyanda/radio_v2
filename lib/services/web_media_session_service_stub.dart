@@ -22,7 +22,7 @@ class WebMediaSessionService {
   void updateMetadata({
     required String title,
     required String artist,
-    required String? artwork,
+    String? artwork,
     String? album,
   }) {
     // Nothing to do on mobile - uses audio_service

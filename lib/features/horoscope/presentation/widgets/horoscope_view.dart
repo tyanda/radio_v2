@@ -21,6 +21,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
   late AnimationController _animationController;
   int _selectedIndex = 0;
   String? _lastHoroscopeText;
+  int? _lastSelectedIndex; // Для предотвращения перезапуска анимации
 
   final List<ZodiacSign> zodiacSigns = ZodiacSign.all;
 
@@ -52,11 +53,22 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
 
-    // Перезапуск анимации при изменении текста гороскопа
+    // Адаптивная сетка: 4 колонки на больших экранах, 3 на малых
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth < 360 ? 3 : 4;
+    // Увеличенный childAspectRatio для более крупных тапов (минимум 48x48)
+    final childAspectRatio = screenWidth < 360 ? 1.1 : 1.0;
+
+    // Перезапуск анимации только при смене знака зодиака ИЛИ нового текста
     final currentHoroscopeText = horoscopeState.horoscopeData?.text;
-    if (currentHoroscopeText != null &&
-        currentHoroscopeText != _lastHoroscopeText) {
+    final hasNewText =
+        currentHoroscopeText != null &&
+        currentHoroscopeText != _lastHoroscopeText;
+    final hasNewSign = _selectedIndex != _lastSelectedIndex;
+
+    if (hasNewText || hasNewSign) {
       _lastHoroscopeText = currentHoroscopeText;
+      _lastSelectedIndex = _selectedIndex;
       _animationController.forward(from: 0);
     }
 
@@ -91,9 +103,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
-              color: isDark
-                  ? AppColors.textTertiary
-                  : AppColors.textSecondary,
+              color: isDark ? AppColors.textTertiary : AppColors.textSecondary,
             ),
           ),
           SizedBox(height: AppSpacing.lg),
@@ -101,11 +111,11 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 8.0,
-              crossAxisSpacing: 8.0,
-              childAspectRatio: 1.0,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: AppSpacing.md,
+              crossAxisSpacing: AppSpacing.md,
+              childAspectRatio: childAspectRatio,
             ),
             itemCount: zodiacSigns.length,
             itemBuilder: (context, index) {
@@ -120,10 +130,15 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                   });
                   ref.read(horoscopeProvider.notifier).selectSign(zodiac);
                 },
-                child: _AnimatedCard(
-                  index: index,
-                  controller: _animationController,
-                  child: _buildZodiacMiniCard(zodiac, isSelected),
+                child: Semantics(
+                  label: 'Знак зодиака ${zodiac.name}',
+                  hint: 'Нажмите для просмотра гороскопа',
+                  selected: isSelected,
+                  child: _AnimatedCard(
+                    index: index,
+                    controller: _animationController,
+                    child: _buildZodiacMiniCard(zodiac, isSelected),
+                  ),
                 ),
               );
             },
@@ -198,6 +213,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
       themeProvider.select((s) => s.value?.isDarkTheme ?? true),
     );
     final theme = Theme.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
 
     return Container(
       width: double.infinity,
@@ -227,12 +243,17 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
               Expanded(
                 child: Text(
                   '${zodiacSigns.elementAtOrNull(_selectedIndex)?.name ?? ''} на сегодня',
-                  style: GoogleFonts.inter(
-                    color: isDark ? AppColors.textPrimary : AppColors.textName,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
+                  style:
+                      GoogleFonts.inter(
+                        color: isDark
+                            ? AppColors.textPrimary
+                            : AppColors.textName,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ).apply(
+                        fontSizeFactor: textScaler.scale(1.0).clamp(0.8, 1.2),
+                      ),
                 ),
               ),
               if (horoscopeState.isLoading)
@@ -255,10 +276,15 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 padding: EdgeInsets.all(AppSpacing.md),
                 child: Text(
                   AppLocalizations.of(context).loading_horoscope,
-                  style: GoogleFonts.inter(
-                    color: isDark ? AppColors.textPrimary : AppColors.textName,
-                    fontSize: 16,
-                  ),
+                  style:
+                      GoogleFonts.inter(
+                        color: isDark
+                            ? AppColors.textPrimary
+                            : AppColors.textName,
+                        fontSize: 16,
+                      ).apply(
+                        fontSizeFactor: textScaler.scale(1.0).clamp(0.8, 1.2),
+                      ),
                 ),
               ),
             )
@@ -272,7 +298,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 style: GoogleFonts.inter(
                   color: theme.colorScheme.error,
                   fontSize: 16,
-                ),
+                ).apply(fontSizeFactor: textScaler.scale(1.0).clamp(0.8, 1.2)),
               ),
             )
           else if (horoscopeState.horoscopeData != null)
@@ -281,24 +307,34 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                     padding: EdgeInsets.all(AppSpacing.md),
                     child: Text(
                       AppLocalizations.of(context).horoscope_not_found,
-                      style: GoogleFonts.inter(
-                        color: isDark
-                            ? AppColors.textTertiary
-                            : AppColors.textSecondary,
-                        fontSize: 16,
-                      ),
+                      style:
+                          GoogleFonts.inter(
+                            color: isDark
+                                ? AppColors.textTertiary
+                                : AppColors.textSecondary,
+                            fontSize: 16,
+                          ).apply(
+                            fontSizeFactor: textScaler
+                                .scale(1.0)
+                                .clamp(0.8, 1.2),
+                          ),
                     ),
                   )
                 : Text(
                     horoscopeState.horoscopeData!.text,
-                    style: GoogleFonts.inter(
-                      color: isDark
-                          ? AppColors.textPrimary
-                          : AppColors.textName,
-                      fontSize: 16,
-                      height: 1.6,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style:
+                        GoogleFonts.inter(
+                          color: isDark
+                              ? AppColors.textPrimary
+                              : AppColors.textName,
+                          fontSize: 16,
+                          height: 1.6,
+                          fontWeight: FontWeight.w500,
+                        ).apply(
+                          fontSizeFactor: textScaler.scale(1.0).clamp(0.8, 1.2),
+                        ),
+                    maxLines: 12,
+                    overflow: TextOverflow.ellipsis,
                   )
           else
             Padding(
@@ -308,7 +344,7 @@ class _HoroscopeViewState extends ConsumerState<HoroscopeView>
                 style: GoogleFonts.inter(
                   color: isDark ? AppColors.textPrimary : AppColors.textName,
                   fontSize: 16,
-                ),
+                ).apply(fontSizeFactor: textScaler.scale(1.0).clamp(0.8, 1.2)),
               ),
             ),
           SizedBox(height: AppSpacing.lg),

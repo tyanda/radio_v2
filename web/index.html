@@ -8,14 +8,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="SakhaLive Radio - онлайн радио Якутии">
-  <meta name="theme-color" content="#0A0A0A">
-  <meta name="color-scheme" content="dark light">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-  <!-- Preload критических ресурсов для быстрой загрузки -->
-  <link rel="preload" href="main.dart.js" as="script">
-  <link rel="preload" href="flutter_bootstrap.js" as="script">
-  <link rel="preload" href="flutter.js" as="script">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://firebaseio.com">
@@ -30,33 +23,19 @@
     font-src 'self' data: https://*.googleapis.com https://fonts.gstatic.com;
     img-src 'self' data: blob: https:;
     media-src 'self' blob: https: http:;
-    connect-src 'self' blob: https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://api.openweathermap.org https://api.api-ninjas.com https://api.apiverve.com https://itunes.apple.com https://api.deezer.com https://*.deezer.com https://lottie.host https://www.gstatic.com https://*.hostingradio.ru https://*.cdnvideo.ru https://stream2.sakhafm.ru https://icecast-saha.cdnvideo.ru https://i.sakhafm.ru https://nvsakh.ru https://irrADIO.ru https://europaplus.ru https://radiorecord.ru https://stream2.radiotoday.ru http://stream2.radiotoday.ru:8000 https://api.rss2json.com;
+    connect-src 'self' blob: https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://api.openweathermap.org https://api.api-ninjas.com https://api.apiverve.com https://itunes.apple.com https://api.deezer.com https://*.deezer.com https://lottie.host https://www.gstatic.com https://*.hostingradio.ru https://*.cdnvideo.ru https://stream2.sakhafm.ru https://icecast-saha.cdnvideo.ru https://i.sakhafm.ru https://nvsakh.ru https://irrADIO.ru https://europaplus.ru https://radiorecord.ru https://stream2.radiotoday.ru http://stream2.radiotoday.ru:8000 https://api.rss2json.com http://localhost:* ws://localhost:*;
     worker-src 'self' blob:;
     object-src 'none';
     base-uri 'self';
   ">
 
-  <!-- PWA Meta Tags -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="SakhaLive">
-  <meta name="apple-mobile-web-app-orientation" content="any">
-  <meta name="apple-touch-fullscreen" content="yes">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="application-name" content="SakhaLive Radio">
-
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="icons/Icon-512.png">
-
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
   <link rel="shortcut icon" href="favicon.png"/>
+  <link rel="manifest" href="manifest.json">
 
   <title>SakhaLive Radio</title>
-  <link rel="manifest" href="manifest.json">
   <style>
     body {
       background-color: #0A0A0A;
@@ -70,6 +49,7 @@
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
+      overscroll-behavior: none;
     }
 
     /* Адаптация под ориентацию устройства */
@@ -78,13 +58,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-    }
-
-    /* Safe area для iPhone X и новее */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      body {
-        padding-bottom: env(safe-area-inset-bottom);
       }
     }
 
@@ -107,195 +80,33 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
-
-    /* Install Prompt Banner */
-    #install-prompt {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
-      border: 1px solid rgba(242, 201, 76, 0.3);
-      border-radius: 16px;
-      padding: 16px 24px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      z-index: 9999;
-      max-width: 90%;
-      width: 400px;
-      backdrop-filter: blur(10px);
-    }
-    #install-prompt.show {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      animation: slideUp 0.3s ease-out;
-    }
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-    #install-prompt .icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #F2C94C 0%, #C9A53A 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    #install-prompt .content {
-      flex: 1;
-      min-width: 0;
-    }
-    #install-prompt .title {
-      color: #F2C94C;
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-    #install-prompt .description {
-      color: #A3A3A3;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    #install-prompt .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    #install-prompt .btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-    }
-    #install-prompt .btn-install {
-      background: linear-gradient(135deg, #F2C94C 0%, #C9A53A 100%);
-      color: #000;
-    }
-    #install-prompt .btn-install:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(242, 201, 76, 0.4);
-    }
-    #install-prompt .btn-later {
-      background: transparent;
-      color: #A3A3A3;
-      border: 1px solid #404040;
-    }
-    #install-prompt .btn-later:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-    }
-    #install-prompt .btn-close {
-      background: transparent;
-      color: #666;
-      border: none;
-      padding: 4px;
-      cursor: pointer;
-      font-size: 20px;
-      line-height: 1;
-    }
-    #install-prompt .btn-close:hover {
-      color: #fff;
-    }
   </style>
 
   <!-- PWA Script -->
   <script>
-    // Отключаем зум на iOS
+    // iOS audio context fix - разрешаем воспроизведение после взаимодействия пользователя
+    let audioContext = null;
+
+    function initAudioContext() {
+      if (!audioContext) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioContext = new AudioContext();
+          // Resume audio context после первого взаимодействия
+          if (audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+        }
+      }
+    }
+
+    // Инициализация аудио при первом взаимодействии (требуется для iOS)
+    document.addEventListener('touchstart', initAudioContext, { once: true });
+    document.addEventListener('click', initAudioContext, { once: true });
     document.addEventListener('gesturestart', function(e) {
       e.preventDefault();
     });
 
-    // PWA Install Prompt
-    let deferredPrompt = null;
-    const INSTALL_DISMISSED_KEY = 'pwa_install_dismissed';
-
-    // Проверяем, не отклонял ли пользователь уже установку
-    function shouldShowInstallPrompt() {
-      const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY);
-      if (dismissed) {
-        const dismissedTime = new Date(parseInt(dismissed));
-        const now = new Date();
-        const hoursSinceDismissed = (now - dismissedTime) / (1000 * 60 * 60);
-        // Показываем снова через 24 часа после отклонения
-        return hoursSinceDismissed > 24;
-      }
-      return true;
-    }
-
-    // Показываем баннер установки
-    function showInstallBanner() {
-      if (!shouldShowInstallPrompt()) return;
-
-      const banner = document.getElementById('install-prompt');
-      if (banner && deferredPrompt) {
-        banner.classList.add('show');
-      }
-    }
-
-    // Скрываем баннер
-    function hideInstallBanner() {
-      const banner = document.getElementById('install-prompt');
-      if (banner) {
-        banner.classList.remove('show');
-      }
-    }
-
-    // Установка PWA
-    async function installPWA() {
-      if (!deferredPrompt) return;
-
-      try {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        if (outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-          localStorage.setItem(INSTALL_DISMISSED_KEY, Date.now().toString());
-        }
-        
-        deferredPrompt = null;
-        hideInstallBanner();
-      } catch (e) {
-        console.error('Install prompt error:', e);
-      }
-    }
-
-    // Отложить установку
-    function dismissInstallPrompt() {
-      localStorage.setItem(INSTALL_DISMISSED_KEY, Date.now().toString());
-      hideInstallBanner();
-    }
-
-    // Слушаем событие beforeinstallprompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      
-      // Показываем баннер через 5 секунд после загрузки приложения
-      setTimeout(showInstallBanner, 5000);
-    });
-
-    // Слушаем событие appinstalled
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA installed successfully');
-      deferredPrompt = null;
-      localStorage.setItem(INSTALL_DISMISSED_KEY, Date.now().toString());
-      hideInstallBanner();
-    });
   </script>
 </head>
 <body>
@@ -304,42 +115,7 @@
     <div class="splash-text">SakhaLive Radio</div>
   </div>
 
-  <!-- Install Prompt Banner -->
-  <div id="install-prompt">
-    <div class="icon">📻</div>
-    <div class="content">
-      <div class="title">Установите SakhaLive</div>
-      <div class="description">Быстрый доступ к радио прямо с домашнего экрана</div>
-      <div class="actions">
-        <button class="btn btn-install" onclick="installPWA()">Установить</button>
-        <button class="btn btn-later" onclick="dismissInstallPrompt()">Позже</button>
-      </div>
-    </div>
-    <button class="btn-close" onclick="dismissInstallPrompt()">×</button>
-  </div>
-
   <!-- Загрузка Flutter -->
   <script src="flutter_bootstrap.js" async></script>
-  
-  <!-- Регистрация Service Worker -->
-  <script>
-    // Регистрируем Service Worker после загрузки страницы
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/flutter_service_worker.js', {
-          scope: '/'
-        }).then((registration) => {
-          console.log('[SW] Service Worker registered:', registration.scope);
-          
-          // Проверяем обновления SW при каждой загрузке
-          registration.update().then(() => {
-            console.log('[SW] Checking for SW updates...');
-          });
-        }).catch((error) => {
-          console.error('[SW] Service Worker registration failed:', error);
-        });
-      });
-    }
-  </script>
 </body>
 </html>

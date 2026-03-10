@@ -32,157 +32,147 @@ class HoroscopeService {
     'pisces': 'Рыбы',
   };
 
-  // Запасные короткие гороскопы (если API недоступны)
+  // Запасные гороскопы (используются при ошибках API)
   static const Map<String, String> _sampleHoroscopes = {
     'aries':
-        'Сегодня Овнам стоит проявить инициативу. Возможны успехи в профессиональной сфере.',
+        'Сегодня Овнам стоит проявить инициативу. Ваши идеи встретят поддержку у коллег и руководства. Вечер благоприятен для физической активности.',
     'taurus':
-        'Благоприятный день для финансовых вопросов. Сохраняйте спокойствие.',
-    'gemini': 'Коммуникации на высоте. Отличное время для встреч и знакомств.',
-    'cancer': 'Эмоциональный день. Обратите внимание на семью и уют.',
-    'leo': 'Возможности для самореализации. Ваша харизма на пике.',
-    'virgo': 'Внимание к деталям принесёт пользу. Рационализируйте планы.',
-    'libra': 'Баланс во всём. Хороший день для соглашений и контактов.',
-    'scorpio': 'Интенсивный день. Интуиция поможет принять решения.',
-    'sagittarius': 'Приключения и новые горизонты в центре внимания.',
-    'capricorn': 'Практичность будет вознаграждена. Сосредоточьтесь на целях.',
-    'aquarius': 'Необычные идеи принесут успех. Будьте открыты новому.',
-    'pisces': 'Творчество и духовность на первом плане.',
+        'Благоприятный день для финансовых планирований. Ваше упорство поможет довести начатое до конца. В личных отношениях возможен приятный сюрприз.',
+    'gemini':
+        'Отличный день для общения и получения новых знаний. Возможны неожиданные новости, которые изменят ваши планы на неделю в лучшую сторону.',
+    'cancer':
+        'Сегодня интуиция подскажет верный путь в сложных вопросах. Уделите время дому и близким — это поможет восстановить душевное равновесие.',
+    'leo':
+        'Ваша энергия и харизма сегодня на пике. Прекрасное время для выступлений и презентаций. Не бойтесь брать на себя ответственность за важные проекты.',
+    'virgo':
+        'Внимание к деталям сегодня станет вашим главным преимуществом. День подходит для наведения порядка в делах и планирования долгосрочных целей.',
+    'libra':
+        'Гармоничный день для переговоров и примирения. Ваша способность находить компромиссы поможет избежать конфликтов в коллективе.',
+    'scorpio':
+        'Энергичный день, когда любые преграды будут по плечу. Интуиция поможет разоблачить тайных недоброжелателей. Будьте смелее в своих желаниях.',
+    'sagittarius':
+        'Сегодня открываются новые горизонты. Возможны предложения о поездках или начале обучения. Оптимизм поможет преодолеть любые мелкие неурядицы.',
+    'capricorn':
+        'Ваша практичность и дисциплина принесут долгожданные плоды. Хороший день для завершения старых дел и укрепления профессиональной репутации.',
+    'aquarius':
+        'День полон творческих идей и необычных озарений. Друзья или единомышленники помогут воплотить ваши самые смелые задумки в жизнь.',
+    'pisces':
+        'Творческий потенциал сегодня не знает границ. Уделите время искусству или медитации. Вечер обещает быть спокойным и вдохновляющим.',
   };
 
   final GoogleTranslator _translator = GoogleTranslator();
 
   /// Основной метод: возвращает гороскоп на сегодня (переведённый на русский)
   Future<_HoroscopeResult> _fetchHoroscopeWithSource(String zodiacId) async {
-    Logger.log('=== Fetching horoscope for: $zodiacId ===');
+    Logger.log('=== Fetching horoscope for: $zodiacId ===', tag: 'Horoscope');
 
-    // Шаг 1: кэш (самый быстрый путь)
+    // Шаг 1: кэш
     final cached = await _getCached(zodiacId);
-    if (cached != null) {
-      Logger.log('✓ From cache');
+    if (cached != null && cached.length > 10) {
+      Logger.log('✓ Found valid cache for $zodiacId', tag: 'Horoscope');
       return _HoroscopeResult(cached, 'Кэш');
     }
 
-    Logger.log('Cache miss, trying APIs...');
-
-    // Шаг 2: APIVerve API (только для нативных платформ)
-    // На вебе CORS блокирует запросы к APIVerve
+    // Шаг 2: APIVerve API (Native only)
     if (!kIsWeb) {
       final apiVerveEnglish = await _fetchApiVerve(zodiacId);
-      if (apiVerveEnglish != null && apiVerveEnglish.isNotEmpty) {
-        Logger.log('APIVerve returned English text, translating...');
+      if (apiVerveEnglish != null && apiVerveEnglish.length > 5) {
         final apiVerveRussian = await _translate(apiVerveEnglish);
-        await _saveCache(zodiacId, apiVerveRussian);
-        return _HoroscopeResult(apiVerveRussian, 'APIVerve');
+        if (apiVerveRussian.length > 5) {
+          await _saveCache(zodiacId, apiVerveRussian);
+          return _HoroscopeResult(apiVerveRussian, 'APIVerve');
+        }
       }
-      Logger.log('APIVerve failed, trying API Ninjas...');
-    } else {
-      Logger.log('Web platform: skipping APIVerve (CORS restriction)');
     }
 
-    // Шаг 3: API Ninjas → английский текст
+    // Шаг 3: API Ninjas
     final english = await _fetchApiNinjas(zodiacId);
-    if (english == null || english.isEmpty) {
-      Logger.log('API Ninjas failed, using sample horoscope');
-      // Используем запасной гороскоп
-      final sample = _sampleHoroscopes[zodiacId] ?? 'Сегодня благоприятный день.';
-      await _saveCache(zodiacId, sample);
-      return _HoroscopeResult(sample, 'Прогноз');
+    if (english != null && english.length > 5) {
+      final russian = await _translate(english);
+      if (russian.length > 5) {
+        await _saveCache(zodiacId, russian);
+        return _HoroscopeResult(russian, 'API Ninjas');
+      }
     }
 
-    // Шаг 4: перевод на русский
-    Logger.log('API Ninjas returned English text, translating...');
-    final russian = await _translate(english);
-
-    // Шаг 5: сохранение в кэш
-    await _saveCache(zodiacId, russian);
-
-    return _HoroscopeResult(russian, 'API Ninjas (переведено)');
+    // Шаг 4: Fallback (Samples)
+    Logger.warn(
+      'All APIs failed for $zodiacId, using sample',
+      tag: 'Horoscope',
+    );
+    final sample =
+        _sampleHoroscopes[zodiacId] ??
+        'Сегодня вас ждет удачный день. Доверяйте своей интуиции и не бойтесь новых начинаний.';
+    return _HoroscopeResult(sample, 'Прогноз');
   }
 
-  /// Основной метод: возвращает гороскоп на сегодня (переведённый на русский)
+  /// Основной метод: возвращает гороскоп на сегодня
   Future<String> fetchHoroscope(String zodiacId) async {
     final result = await _fetchHoroscopeWithSource(zodiacId);
     return result.text;
   }
 
   Future<String?> _getCached(String zodiacId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'horoscope_$zodiacId';
-    return prefs.getString(key);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'horoscope_$zodiacId';
+      final timestampKey = 'horoscope_${zodiacId}_timestamp';
+
+      final cachedText = prefs.getString(key);
+      final timestamp = prefs.getInt(timestampKey);
+
+      if (cachedText == null || timestamp == null || cachedText.isEmpty) {
+        return null;
+      }
+
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final age = now - timestamp;
+      final maxAge = 24 * 60 * 60; // 24 часа
+
+      if (age > maxAge) {
+        return null; // Просрочен
+      }
+
+      return cachedText;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> _saveCache(String zodiacId, String text) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'horoscope_$zodiacId';
-    await prefs.setString(key, text);
-    Logger.log('Cached: $key');
+    if (text.isEmpty || text.length < 10) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('horoscope_$zodiacId', text);
+      await prefs.setInt(
+        'horoscope_${zodiacId}_timestamp',
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      );
+    } catch (e) {
+      Logger.error('Error saving cache: $e', tag: 'Horoscope');
+    }
   }
 
   Future<String?> _fetchApiVerve(String zodiacId) async {
     try {
       final key = AppConfig.apiVerveKey.trim();
-      Logger.log('APIVerve key length: ${key.length}, empty: ${key.isEmpty}');
+      if (key.isEmpty) return null;
 
-      if (key.isEmpty) {
-        Logger.warn('APIVerve key not configured');
-        return null;
-      }
-
-      final apiUri = 'https://api.apiverve.com/v1/horoscope?sign=$zodiacId';
-      final uri = Uri.parse(apiUri);
-
-      Logger.log('APIVerve request URL: $uri');
-
-      // Заголовки
-      final headers = {
-        'x-api-key': key,
-        'Accept': 'application/json',
-      };
-
+      final uri = Uri.parse(
+        'https://api.apiverve.com/v1/horoscope?sign=$zodiacId',
+      );
       final res = await http
-          .get(uri, headers: headers)
-          .timeout(const Duration(seconds: 10));
+          .get(uri, headers: {'x-api-key': key})
+          .timeout(const Duration(seconds: 8));
 
-      Logger.log('APIVerve response status: ${res.statusCode}');
-      Logger.log('APIVerve response body: ${res.body}');
-
-      if (res.statusCode != 200) {
-        Logger.warn('APIVerve error ${res.statusCode}: ${res.body}');
-        return null;
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body);
+        if (json['status'] == 'ok') {
+          return json['data']['horoscope']?.toString();
+        }
       }
-
-      final json = jsonDecode(res.body) as Map<String, dynamic>;
-
-      // Проверяем статус ответа
-      final status = json['status'] as String?;
-      Logger.log('APIVerve status: $status');
-
-      if (status != 'ok') {
-        final error = json['error'] as String?;
-        Logger.warn('APIVerve API error: $error');
-        return null;
-      }
-
-      // Извлекаем данные
-      final data = json['data'] as Map<String, dynamic>?;
-      if (data == null) {
-        Logger.warn('APIVerve: no data field');
-        return null;
-      }
-
-      final text = data['horoscope'] as String?;
-      Logger.log('APIVerve horoscope length: ${text?.length}');
-
-      if (text == null || text.isEmpty) {
-        Logger.warn('APIVerve: empty horoscope');
-        return null;
-      }
-
-      Logger.log('✓ APIVerve: horoscope received (${text.length} chars)');
-      return text;
+      return null;
     } catch (e) {
-      Logger.error('APIVerve exception: $e');
       return null;
     }
   }
@@ -190,48 +180,33 @@ class HoroscopeService {
   Future<String?> _fetchApiNinjas(String zodiacId) async {
     try {
       final key = AppConfig.apiNinjasKey.trim();
-      if (key.isEmpty) {
-        Logger.warn('No API key in AppConfig');
-        return null;
-      }
+      if (key.isEmpty) return null;
 
       final uri = Uri.parse(
         'https://api.api-ninjas.com/v1/horoscope?zodiac=$zodiacId',
       );
-
       final res = await http
-          .get(uri, headers: {'X-Api-Key': key, 'Accept': 'application/json'})
-          .timeout(const Duration(seconds: 10));
+          .get(uri, headers: {'X-Api-Key': key})
+          .timeout(const Duration(seconds: 8));
 
-      if (res.statusCode != 200) {
-        Logger.warn('API error ${res.statusCode}: ${res.body}');
-        return null;
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body);
+        // API Ninjas может возвращать массив или объект
+        if (json is List && json.isNotEmpty) {
+          return json[0]['horoscope']?.toString();
+        } else if (json is Map) {
+          return json['horoscope']?.toString();
+        }
       }
-
-      final json = jsonDecode(res.body) as Map<String, dynamic>;
-      
-      // Проверяем на ошибку API
-      if (json.containsKey('error')) {
-        Logger.warn('API error: ${json['error']}');
-        return null;
-      }
-      
-      final text = json['horoscope'] as String?;
-      if (text == null || text.isEmpty) {
-        Logger.warn('Empty horoscope field');
-        return null;
-      }
-
-      Logger.log('English text received');
-      return text;
+      Logger.warn('API Ninjas error: ${res.statusCode}', tag: 'Horoscope');
+      return null;
     } catch (e) {
-      Logger.warn('API exception: $e');
       return null;
     }
   }
 
   Future<String> _translate(String english) async {
-    Logger.log('Translating (${english.length} chars)...');
+    Logger.log('Translating (${english.length} chars)...', tag: 'Horoscope');
     try {
       final trans = await _translator.translate(english, from: 'en', to: 'ru');
       var result = trans.text.trim();
@@ -245,16 +220,16 @@ class HoroscopeService {
             .replaceAll(' ;', ';')
             .replaceAll(' :', ':')
             .replaceAll(RegExp(r'\s+'), ' ');
-        Logger.log('✓ Translated (${result.length} chars)');
+        Logger.log('✓ Translated (${result.length} chars)', tag: 'Horoscope');
         return result;
       } else {
-        Logger.warn('Translate returned empty result');
+        Logger.warn('Translate returned empty result', tag: 'Horoscope');
       }
     } catch (e) {
-      Logger.error('Translate exception: $e');
+      Logger.error('Translate exception: $e', tag: 'Horoscope');
     }
 
-    Logger.warn('Translation failed → return English');
+    Logger.warn('Translation failed → return English', tag: 'Horoscope');
     return english;
   }
 
@@ -279,12 +254,10 @@ class HoroscopeService {
   /// Очистка кэша гороскопов
   static Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => 
-      k.startsWith('horoscope_')
-    );
+    final keys = prefs.getKeys().where((k) => k.startsWith('horoscope_'));
     for (final key in keys) {
       await prefs.remove(key);
     }
-    Logger.log('Cache cleared');
+    Logger.log('Cache cleared', tag: 'Horoscope');
   }
 }

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Глобальное разрешение на HTTP (cleartext) для радио-потоков -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Специфические настройки для localhost -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
-        <!-- Добавляем домены радиостанций -->
-        <domain includeSubdomains="true">sakhafm.ru</domain>
-        <domain includeSubdomains="true">cdnvideo.ru</domain>
-        <domain includeSubdomains="true">icecast-saha.cdnvideo.ru</domain>
-        <domain includeSubdomains="true">5.129.229.244.nip.io</domain>
-        <domain includeSubdomains="true">ep256.hostingradio.ru</domain>
-        <!-- Разрешаем весь незашифрованный трафик (рекомендуется ограничить конкретными доменами для продакшена) -->
-        <!-- Android не поддерживает маску "*" в доменных именах -->
     </domain-config>
 </network-security-config>

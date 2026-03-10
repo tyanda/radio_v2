@@ -1,5 +1,0 @@
-package com.example.radio_v2
-
-import com.ryanheise.audioservice.AudioServiceActivity
-
-class MainActivity : AudioServiceActivity()

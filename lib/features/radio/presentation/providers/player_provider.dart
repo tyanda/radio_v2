@@ -6,97 +6,302 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
-import 'package:radio_v2/features/radio/domain/station.dart';
+import 'package:sakha_live/features/radio/domain/station.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:radio_v2/features/radio/presentation/providers/radio_providers.dart';
+import 'package:sakha_live/features/radio/data/radio_player.dart';
+import 'package:sakha_live/features/radio/services/radio_browser_metadata_service.dart';
+import 'package:sakha_live/features/radio/services/album_art_service.dart';
+import 'package:sakha_live/core/providers.dart';
+import 'package:sakha_live/features/widgets/widgets.dart';
 import '../../../../../core/utils/logger.dart';
+import '../../../charts/data/models/chart_item.dart';
+
+// Импортируем Web Media Session только для веба
+import 'package:sakha_live/services/web_media_session_service.dart'
+    if (dart.library.io) 'package:sakha_live/services/web_media_session_service_stub.dart';
+
+// Throttle для предотвращения частых обновлений состояния (мс)
+const _stateUpdateThrottleMs = 100;
 
 @immutable
 class PlayerState {
   final bool isPlaying;
   final Station? currentStation;
+  final String? trackTitle; // Название текущего трека
+  final String? trackArtist; // Артист трека
+  final String? albumArt; // Обложка альбома из метаданных
+  final String? currentTrackId; // ID текущего трека (для чарта)
   final double volume;
   final bool showVolumeSlider;
+  final bool isBuffering;
 
   const PlayerState({
     this.isPlaying = false,
     this.currentStation,
+    this.trackTitle,
+    this.trackArtist,
+    this.albumArt,
+    this.currentTrackId,
     this.volume = 0.65,
     this.showVolumeSlider = false,
+    this.isBuffering = false,
   });
 
   PlayerState copyWith({
     bool? isPlaying,
     Station? currentStation,
+    String? trackTitle,
+    String? trackArtist,
+    String? albumArt,
+    String? currentTrackId,
     double? volume,
     bool? showVolumeSlider,
+    bool? isBuffering,
   }) {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
       currentStation: currentStation ?? this.currentStation,
+      trackTitle: trackTitle ?? this.trackTitle,
+      trackArtist: trackArtist ?? this.trackArtist,
+      albumArt: albumArt ?? this.albumArt,
+      currentTrackId: currentTrackId ?? this.currentTrackId,
       volume: volume ?? this.volume,
       showVolumeSlider: showVolumeSlider ?? this.showVolumeSlider,
+      isBuffering: isBuffering ?? this.isBuffering,
     );
   }
 }
 
 class PlayerNotifier extends AsyncNotifier<PlayerState> {
-  late final AudioPlayer _player;
+  late final RadioPlayer _radioPlayer;
+  final RadioBrowserMetadataService _metadataService =
+      RadioBrowserMetadataService();
+  final AlbumArtService _albumArtService = AlbumArtService();
   StreamSubscription? _playerStateSubscription;
+  StreamSubscription? _processingStateSubscription;
+  StreamSubscription? _mediaItemSubscription;
+  StreamSubscription? _metadataSubscription;
+  StreamSubscription? _endedSubscription; // Для завершения трека (веб)
+  StreamSubscription? _nextSubscription;
+  StreamSubscription? _prevSubscription;
+  String? _lastSearchKey; // Для кэширования последнего поиска обложки
+
+  // Очередь треков для чарта
+  List<ChartItem> _playlistTracks = [];
+  int _currentPlaylistIndex = -1;
+  bool _isSwitchingTrack =
+      false; // Флаг для предотвращения рекурсивных переключений
+
+  // Throttle для обновлений состояния
+  Timer? _stateUpdateTimer;
+  PlayerState? _pendingState;
+
+  // Debounce для сохранения громкости в SharedPreferences
+  Timer? _volumeSaveTimer;
+  SharedPreferences? _cachedPrefs;
+
+  /// Централизованное обновление состояния и уведомление внешних сервисов
+  void _applyState(PlayerState newState) {
+    final oldState = state.asData?.value;
+    state = AsyncData(newState);
+
+    // Уведомляем внешние сервисы только если метаданные или статус игры изменились
+    if (oldState?.isPlaying != newState.isPlaying ||
+        oldState?.trackTitle != newState.trackTitle ||
+        oldState?.currentStation?.id != newState.currentStation?.id) {
+      
+      _updateExternalServices(newState);
+    }
+  }
+
+  /// Обновление состояния с throttle для предотвращения частых перерисовок
+  void _updateState(PlayerState Function(PlayerState) update) {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    _pendingState = update(currentState);
+
+    _stateUpdateTimer?.cancel();
+    _stateUpdateTimer = Timer(
+      const Duration(milliseconds: _stateUpdateThrottleMs),
+      () {
+        if (_pendingState != null) {
+          _applyState(_pendingState!);
+          _pendingState = null;
+        }
+      },
+    );
+  }
+
+  /// Уведомление HomeWidget и WebMediaSession
+  void _updateExternalServices(PlayerState s) {
+    final title = s.trackTitle ?? s.currentStation?.name ?? 'SakhaLive';
+    final artist = s.trackArtist ?? s.currentStation?.desc ?? '';
+    final art = s.albumArt;
+
+    // Home Widget
+    ref.read(homeWidgetStateProvider.notifier).updateFromPlayerState(
+          stationName: title,
+          currentTrack: artist,
+          albumArt: art,
+          isPlaying: s.isPlaying,
+        );
+
+    // Web Media Session
+    if (kIsWeb && WebMediaSessionService.isSupported) {
+      _updateWebMediaSession(
+        title: title,
+        artist: artist,
+        artwork: art,
+        isPlaying: s.isPlaying,
+      );
+    }
+  }
 
   Future<Uri?> _getAssetUri(String assetPath) async {
     if (kIsWeb) return null;
     try {
-      // Load the asset as bytes
-      final byteData = await rootBundle.load(assetPath);
-      final bytes = byteData.buffer.asUint8List();
-
-      // Get temporary directory
       final tempDir = await getTemporaryDirectory();
       final fileName = Uri.parse(assetPath).pathSegments.last;
       final file = File('${tempDir.path}/$fileName');
 
-      // Write bytes to temporary file if it doesn't exist or just overwrite checks?
-      // Overwriting is safer for updates.
-      await file.writeAsBytes(bytes);
+      // Оптимизация: не копируем, если файл уже существует
+      if (await file.exists()) {
+        return file.uri;
+      }
 
-      // Return file URI
+      final byteData = await rootBundle.load(assetPath);
+      await file.writeAsBytes(byteData.buffer.asUint8List());
       return file.uri;
     } catch (e) {
-      Logger.error('Error loading asset $assetPath: $e');
+      Logger.error('Error loading asset $assetPath: $e', tag: 'Player');
       return null;
     }
   }
 
   @override
   Future<PlayerState> build() async {
-    _player = AudioPlayer();
+    // Инициализация AlbumArtService (для persistent кэша на вебе)
+    await _albumArtService.initialize();
 
-    // Listen to player state changes
-    _playerStateSubscription = _player.playerStateStream.listen((playerState) {
-      final currentState = state.asData?.value;
-      if (currentState != null) {
-        // Update isPlaying state based on actual player status
-        if (currentState.isPlaying != playerState.playing) {
-          state = AsyncData(
-            currentState.copyWith(isPlaying: playerState.playing),
-          );
+    final audioHandler = ref.read(audioHandlerProvider);
+
+    // Инициализация RadioPlayer
+    _radioPlayer = RadioPlayer(audioHandler: audioHandler);
+
+    if (kIsWeb) {
+      // Инициализируем Web Media Session API
+      if (WebMediaSessionService.isSupported) {
+        WebMediaSessionService().init();
+        Logger.log('Web Media Session API initialized', tag: 'Player');
+      }
+    } else {
+      // На нативных платформах AudioHandler обязателен, кроме случая тестирования
+      final isTest = Platform.environment.containsKey('FLUTTER_TEST');
+      if (audioHandler == null && !isTest) {
+        throw Exception('AudioHandler не доступен на этой платформе');
+      }
+      if (audioHandler == null) {
+        Logger.log('AudioHandler is null (likely in tests)', tag: 'Player');
+      }
+    }
+    // Listen to skip actions from the notification (только для нативных платформ)
+    if (!kIsWeb && audioHandler != null) {
+      _nextSubscription = audioHandler.onNext.listen((_) => playNextStation());
+      _prevSubscription = audioHandler.onPrev.listen(
+        (_) => playPreviousStation(),
+      );
+    }
+
+    // Подписка на завершение трека (для плейлистов на вебе)
+    if (kIsWeb) {
+      _endedSubscription = _radioPlayer.endedStream.listen((_) {
+        // Если трек закончился и есть следующий в плейлисте
+        if (!_isSwitchingTrack &&
+            _currentPlaylistIndex >= 0 &&
+            _currentPlaylistIndex < _playlistTracks.length - 1) {
+          _playNextPlaylistTrack();
         }
+      });
+    }
+
+    // Listen to player state changes (объединённая подписка)
+    _playerStateSubscription = _radioPlayer.playerStateStream.listen((
+      playerState,
+    ) {
+      // Обновляем состояние воспроизведения
+      _updateState((s) => s.copyWith(isPlaying: playerState.playing));
+
+      // Для мобильных: если трек закончился и есть следующий в плейлисте
+      if (!kIsWeb &&
+          !_isSwitchingTrack &&
+          playerState.processingState == ProcessingState.completed &&
+          _currentPlaylistIndex >= 0 &&
+          _currentPlaylistIndex < _playlistTracks.length - 1) {
+        // Переключаем на следующий трек
+        _playNextPlaylistTrack();
+      }
+    });
+
+    // Listen to processing state changes (buffering)
+    _processingStateSubscription = _radioPlayer.processingStateStream.listen((
+      processingState,
+    ) {
+      final isBuffering =
+          processingState == ProcessingState.buffering ||
+          processingState == ProcessingState.loading;
+      
+      // Мгновенное обновление состояния без throttle для буферизации
+      final currentState = state.asData?.value;
+      if (currentState != null && currentState.isBuffering != isBuffering) {
+        state = AsyncData(currentState.copyWith(isBuffering: isBuffering));
+      }
+    });
+
+    // Listen to media item changes (track metadata from ICY)
+    _mediaItemSubscription = _radioPlayer.mediaItemStream.listen((mediaItem) {
+      if (mediaItem != null) {
+        String? albumArt = mediaItem.artUri?.toString();
+
+        if (albumArt == null) {
+          final searchKey = '${mediaItem.artist}-${mediaItem.title}';
+          if (_lastSearchKey != searchKey) {
+            _lastSearchKey = searchKey;
+            _fetchAlbumArt(mediaItem.artist, mediaItem.title);
+          }
+        }
+
+        _updateState(
+          (s) => s.copyWith(
+            trackTitle: mediaItem.title,
+            trackArtist: mediaItem.artist,
+            albumArt: albumArt ?? s.albumArt,
+          ),
+        );
       }
     });
 
     ref.onDispose(() {
+      _stateUpdateTimer?.cancel();
+      _volumeSaveTimer?.cancel();
       _playerStateSubscription?.cancel();
-      _player.dispose();
+      _processingStateSubscription?.cancel();
+      _mediaItemSubscription?.cancel();
+      _metadataSubscription?.cancel();
+      _endedSubscription?.cancel();
+      _nextSubscription?.cancel();
+      _prevSubscription?.cancel();
+      _metadataService.stopFetchingMetadata();
+      _metadataService.dispose();
+      _radioPlayer.dispose();
     });
 
     final prefs = await SharedPreferences.getInstance();
     final volume = prefs.getDouble('volume') ?? 0.65;
     final showVolume = prefs.getBool('showVolume') ?? false;
 
-    await _player.setVolume(volume);
+    await _radioPlayer.setVolume(volume);
 
     // Auto-play logic
     Station? initialStation;
@@ -108,47 +313,43 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
       try {
         final station = stations.firstWhere(
           (s) => s.name == favoriteName,
-          orElse: () => stations
-              .first, // Fallback not needed if we check null, but firstWhere throws
+          orElse: () => stations.first,
         );
 
-        // Check if we actually found it (orElse handles missing, but let's be safe)
         if (stations.contains(station)) {
-          // Simple check
           initialStation = station;
 
-          // Prepare audio source
-          final artUri = station.art.isNotEmpty
-              ? await _getAssetUri(station.art)
-              : null;
-
-          await _player.setAudioSource(
-            AudioSource.uri(
-              Uri.parse(station.url),
-              tag: MediaItem(
-                id: station.url,
-                album: 'Sakha Radio',
-                title: station.name,
-                artist: station.desc,
-                artUri: artUri,
-              ),
-            ),
-          );
-
-          // Attempt to play
           if (!kIsWeb) {
-            await _player.play();
-            initialPlaying = true;
-            Logger.log("Auto-playing favorite: ${station.name}");
+            final artUri = station.art.isNotEmpty
+                ? await _getAssetUri(station.art)
+                : null;
+
+            await _radioPlayer.playStream(
+              url: station.url,
+              title: station.name,
+              artist: station.desc,
+              album: 'SakhaLive',
+              artUri: artUri?.toString(),
+            );
+
+            Future.microtask(() async {
+              try {
+                await _radioPlayer.play();
+              } catch (e) {
+                Logger.error("Auto-play failed: $e", tag: 'Player');
+              }
+            });
           } else {
-            Logger.log("Auto-play skipped on web to prevent NotAllowedError");
-            // Station is set as current, but not playing. User must tap play manually.
+            // На Web только устанавливаем текущую станцию без загрузки потока
+            // Загрузка начнется когда пользователь нажмет Play
+            Logger.log(
+              "Web: Auto-play skipped in build(), station set to ${station.name}",
+              tag: 'Player',
+            );
           }
         }
       } catch (e) {
-        Logger.error("Auto-play failed: $e");
-        // If play failed, we might still want to show the station as selected but paused?
-        // If initialStation was set before error, it acts as selected.
+        Logger.error("Auto-play error: $e", tag: 'Player');
       }
     }
 
@@ -160,93 +361,375 @@ class PlayerNotifier extends AsyncNotifier<PlayerState> {
     );
   }
 
+  /// Унифицированный метод для запуска любого потока (радио или трека)
+  Future<void> _startPlayback({
+    required String url,
+    required String title,
+    String? artist,
+    String? albumArt,
+    String? trackId,
+    Station? station,
+    String album = 'SakhaLive',
+  }) async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    try {
+      // 1. Предварительное обновление UI (показываем загрузку)
+      _applyState(
+        currentState.copyWith(
+          currentStation: station,
+          currentTrackId: trackId,
+          trackTitle: title,
+          trackArtist: artist,
+          albumArt: albumArt,
+          isPlaying: false,
+          isBuffering: true,
+        ),
+      );
+
+      // 2. Остановка текущего потока и подготовка нового
+      await _radioPlayer.stop();
+
+      // 3. Загрузка потока
+      await _radioPlayer.playStream(
+        url: url,
+        title: title,
+        artist: artist ?? 'SakhaLive',
+        album: album,
+        artUri: albumArt,
+      );
+
+      // 4. Запуск
+      await _radioPlayer.play();
+
+      // 5. Финальное обновление состояния
+      final updatedState = state.asData?.value;
+      if (updatedState != null) {
+        _applyState(updatedState.copyWith(isPlaying: true));
+      }
+    } catch (e) {
+      Logger.error("Playback error: $e", tag: 'Player');
+      _applyState(currentState.copyWith(isPlaying: false, isBuffering: false));
+      rethrow;
+    }
+  }
+
+  Future<void> playTrack(dynamic track) async {
+    final currentState = state.asData?.value;
+    if (currentState == null || track.previewUrl == null) return;
+
+    if (currentState.currentTrackId == track.id && currentState.isPlaying) {
+      await _radioPlayer.pause();
+      return;
+    }
+
+    await _startPlayback(
+      url: track.previewUrl!,
+      title: track.title,
+      artist: track.artist,
+      albumArt: track.coverUrl,
+      trackId: track.id,
+      album: 'Top Chart',
+    );
+  }
+
+  Future<void> playPlaylist(List<ChartItem> tracks, int startIndex) async {
+    if (tracks.isEmpty) return;
+    final track = tracks[startIndex];
+    if (track.previewUrl == null) return;
+
+    final validTracks = tracks
+        .where((t) => t.previewUrl != null && t.previewUrl!.isNotEmpty)
+        .toList();
+
+    if (validTracks.isEmpty) return;
+
+    _currentPlaylistIndex = validTracks.indexWhere((t) => t.id == track.id);
+    if (_currentPlaylistIndex < 0) _currentPlaylistIndex = 0;
+    _playlistTracks = validTracks;
+
+    await _startPlayback(
+      url: track.previewUrl!,
+      title: track.title,
+      artist: track.artist,
+      albumArt: track.coverUrl,
+      trackId: track.id,
+      album: 'Top Chart',
+    );
+
+    Logger.log('🎵 Playlist started: ${validTracks.length} tracks', tag: 'Player');
+  }
+
+  Future<void> _playNextPlaylistTrack() async {
+    if (_isSwitchingTrack) return;
+    if (_currentPlaylistIndex < 0 || _currentPlaylistIndex >= _playlistTracks.length - 1) return;
+
+    _isSwitchingTrack = true;
+    try {
+      final nextTrack = _playlistTracks[++_currentPlaylistIndex];
+      if (nextTrack.previewUrl == null) {
+        await _playNextPlaylistTrack(); // Пропускаем невалидные
+        return;
+      }
+
+      await _startPlayback(
+        url: nextTrack.previewUrl!,
+        title: nextTrack.title,
+        artist: nextTrack.artist,
+        albumArt: nextTrack.coverUrl,
+        trackId: nextTrack.id,
+        album: 'Top Chart',
+      );
+    } finally {
+      _isSwitchingTrack = false;
+    }
+  }
+
   Future<void> playStation(Station station) async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
 
-    // 1. Tapping the same station: Toggle Play/Pause
-    if (currentState.currentStation?.name == station.name) {
-      if (currentState.isPlaying) {
-        // If playing, pause it. Notification stays.
-        await _player.pause();
-        // Listener will update state to isPlaying: false
-      } else {
-        // If paused, play.
-        await _player.play();
-        // Listener will update state to isPlaying: true
-      }
+    _playlistTracks = [];
+    _currentPlaylistIndex = -1;
+    _isSwitchingTrack = false;
+
+    if (currentState.currentStation?.id == station.id) {
+      currentState.isPlaying ? await _radioPlayer.pause() : await _radioPlayer.play();
       return;
     }
 
-    // 2. Changing station
-    try {
-      // Optimistic update: Show new station playing immediately
-      state = AsyncData(
-        currentState.copyWith(currentStation: station, isPlaying: true),
-      );
+    // Получаем URI ассета заранее
+    final artUri = station.art.isNotEmpty ? await _getAssetUri(station.art) : null;
 
-      // Stop previous (or pause?) - Stop is better for switching streams to release resources
-      await _player.stop();
+    await _startPlayback(
+      url: station.url,
+      title: station.name,
+      artist: station.desc,
+      albumArt: artUri?.toString(),
+      station: station,
+    );
 
-      final artUri = station.art.isNotEmpty
-          ? await _getAssetUri(station.art)
-          : null;
+    // Сбрасываем старую подписку на метаданные
+    _metadataService.stopFetchingMetadata();
+    _metadataSubscription?.cancel();
 
-      await _player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(station.url),
-          tag: MediaItem(
-            id: station.url,
-            album: 'Sakha Radio',
-            title: station.name,
-            artist: station.desc,
-            artUri: artUri,
-          ),
-        ),
-      );
-
-      await _player.play();
-    } catch (e) {
-      Logger.error("Error playing station: $e");
-      // Revert to stopped if failed? Or keep selected but paused?
-      state = AsyncData(
-        (state.asData?.value ?? currentState).copyWith(isPlaying: false),
-      );
+    final radioBrowserUuid = station.metadata?['radio_browser_uuid'];
+    if (radioBrowserUuid != null) {
+      _metadataService.startFetchingMetadata(radioBrowserUuid);
+      _metadataSubscription = _metadataService.metadataStream.listen((songTitle) {
+        final s = state.asData?.value;
+        if (s != null && s.currentStation?.id == station.id) {
+          _applyState(s.copyWith(
+            trackTitle: songTitle?.isNotEmpty == true ? songTitle : station.name,
+            trackArtist: null,
+          ));
+        }
+      });
     }
   }
 
   Future<void> stop() async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
+    await _radioPlayer.pause(); // Пауза вместо stop - плеер остается видимым
+    state = AsyncData(currentState.copyWith(isPlaying: false));
 
-    state = await AsyncValue.guard(() async {
-      await _player.stop();
-      return currentState.copyWith(isPlaying: false);
-    });
+    // Обновляем виджет
+    ref
+        .read(homeWidgetStateProvider.notifier)
+        .updateFromPlayerState(
+          stationName: currentState.currentStation?.name ?? 'SakhaLive',
+          isPlaying: false,
+        );
+  }
+
+  /// Возобновление воспроизведения после паузы
+  Future<void> resume() async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    // Если была станция - возобновляем радио
+    if (currentState.currentStation != null) {
+      await _radioPlayer.play();
+      state = AsyncData(currentState.copyWith(isPlaying: true));
+      return;
+    }
+
+    // Если был трек - возобновляем трек
+    if (currentState.currentTrackId != null &&
+        currentState.trackTitle != null) {
+      await _radioPlayer.play();
+      state = AsyncData(currentState.copyWith(isPlaying: true));
+      return;
+    }
+  }
+
+  /// Полная остановка и очистка состояния (плеер исчезает)
+  Future<void> clear() async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    await _radioPlayer.stop();
+
+    // Сбрасываем плейлист
+    _playlistTracks = [];
+    _currentPlaylistIndex = -1;
+
+    // Очищаем состояние
+    state = AsyncData(
+      const PlayerState(
+        isPlaying: false,
+        currentStation: null,
+        trackTitle: null,
+        trackArtist: null,
+        albumArt: null,
+        currentTrackId: null,
+      ),
+    );
+
+    // Обновляем виджет
+    ref
+        .read(homeWidgetStateProvider.notifier)
+        .updateFromPlayerState(stationName: 'SakhaLive', isPlaying: false);
+  }
+
+  /// Пауза воспроизведения (для видео-рекламы)
+  Future<void> pause() async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    await _radioPlayer.pause();
+    state = AsyncData(currentState.copyWith(isPlaying: false));
+  }
+
+  /// Воспроизведение (для видео-рекламы)
+  Future<void> play() async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    await _radioPlayer.play();
+    state = AsyncData(currentState.copyWith(isPlaying: true));
   }
 
   Future<void> setVolume(double volume) async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
 
-    state = await AsyncValue.guard(() async {
-      await _player.setVolume(volume);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble('volume', volume);
-      return currentState.copyWith(volume: volume);
+    await _radioPlayer.setVolume(volume);
+    state = AsyncData(currentState.copyWith(volume: volume));
+
+    // Сохраняем в SharedPreferences с debounce (500 мс)
+    _volumeSaveTimer?.cancel();
+    _volumeSaveTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        _cachedPrefs ??= await SharedPreferences.getInstance();
+        await _cachedPrefs!.setDouble('volume', volume);
+      } catch (e) {
+        Logger.error("Failed to save volume: $e", tag: 'Player');
+      }
     });
   }
 
   Future<void> toggleVolumeSlider() async {
     final currentState = state.asData?.value;
     if (currentState == null) return;
+    final newShowVolume = !currentState.showVolumeSlider;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('showVolume', newShowVolume);
+    state = AsyncData(currentState.copyWith(showVolumeSlider: newShowVolume));
+  }
 
-    state = await AsyncValue.guard(() async {
-      final newShowVolume = !currentState.showVolumeSlider;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('showVolume', newShowVolume);
-      return currentState.copyWith(showVolumeSlider: newShowVolume);
-    });
+  Future<void> playNextStation() async {
+    final currentState = state.asData?.value;
+    if (currentState?.currentStation == null) return;
+
+    final stations = ref.read(stationListProvider);
+    final currentIndex = stations.indexWhere(
+      (s) => s.name == currentState!.currentStation!.name,
+    );
+    if (currentIndex < 0) return;
+
+    final nextIndex = (currentIndex + 1) % stations.length;
+    await playStation(stations[nextIndex]);
+  }
+
+  Future<void> playPreviousStation() async {
+    final currentState = state.asData?.value;
+    if (currentState?.currentStation == null) return;
+
+    final stations = ref.read(stationListProvider);
+    final currentIndex = stations.indexWhere(
+      (s) => s.name == currentState!.currentStation!.name,
+    );
+    if (currentIndex < 0) return;
+
+    final prevIndex = currentIndex - 1 < 0
+        ? stations.length - 1
+        : currentIndex - 1;
+    await playStation(stations[prevIndex]);
+  }
+
+  Future<void> _fetchAlbumArt(String? artist, String? title) async {
+    try {
+      final artUrl = await _albumArtService.searchAlbumArt(
+        artist: artist,
+        title: title,
+      );
+      final currentState = state.asData?.value;
+      if (artUrl != null && currentState != null) {
+        // Обновляем обложку, даже если trackTitle изменился
+        // Проверяем что это ещё та же станция или трек
+        final isSameTrack =
+            currentState.trackTitle == title ||
+            currentState.currentStation == null; // Если не радио, а трек
+
+        if (isSameTrack) {
+          state = AsyncData(currentState.copyWith(albumArt: artUrl));
+          Logger.log("🎨 AlbumArt: State updated with artUrl", tag: 'Player');
+        } else {
+          Logger.log(
+            "🎨 AlbumArt: Skipped - track changed (was '$title', now '${currentState.trackTitle}')",
+            tag: 'Player',
+          );
+        }
+      }
+    } catch (e) {
+      Logger.log("AlbumArt error: $e", tag: 'Player');
+    }
+  }
+
+  /// Обновление Web Media Session API
+  void _updateWebMediaSession({
+    required String title,
+    required String artist,
+    String? artwork,
+    required bool isPlaying,
+  }) {
+    if (!kIsWeb || !WebMediaSessionService.isSupported) return;
+
+    try {
+      final mediaSession = WebMediaSessionService();
+
+      // Обновляем метаданные
+      mediaSession.updateMetadata(
+        title: title,
+        artist: artist,
+        artwork: artwork,
+        album: 'SakhaLive Radio',
+      );
+
+      // Обновляем состояние воспроизведения
+      mediaSession.setPlaybackState(
+        isPlaying: isPlaying,
+        hasNext: true,
+        hasPrevious: true,
+      );
+
+      Logger.log('Media Session updated: $title', tag: 'Player');
+    } catch (e) {
+      Logger.error('Media Session update error: $e', tag: 'Player');
+    }
   }
 }
 

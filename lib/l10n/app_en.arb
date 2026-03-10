@@ -1,0 +1,186 @@
+{
+  "@@locale": "en",
+  
+  "app_title": "SakhaLive",
+  "@app_title": {
+    "description": "Application title"
+  },
+  
+  "live_broadcast": "LIVE BROADCAST",
+  "@live_broadcast": {
+    "description": "Live broadcast status in player"
+  },
+  
+  "pause_status": "PAUSE",
+  "@pause_status": {
+    "description": "Pause status in player"
+  },
+  
+  "good_morning": "GOOD MORNING",
+  "@good_morning": {
+    "description": "Morning greeting"
+  },
+  
+  "good_afternoon": "GOOD AFTERNOON",
+  "@good_afternoon": {
+    "description": "Afternoon greeting"
+  },
+  
+  "good_evening": "GOOD EVENING",
+  "@good_evening": {
+    "description": "Evening greeting"
+  },
+  
+  "good_night": "GOOD NIGHT",
+  "@good_night": {
+    "description": "Night greeting"
+  },
+  
+  "on_air": "ON AIR",
+  "@on_air": {
+    "description": "On air status"
+  },
+  
+  "select_zodiac_sign": "SELECT SIGN",
+  "@select_zodiac_sign": {
+    "description": "Zodiac sign selection header"
+  },
+  
+  "loading_horoscope": "Loading horoscope...",
+  "@loading_horoscope": {
+    "description": "Horoscope loading text"
+  },
+  
+  "error_loading_horoscope": "Error loading horoscope: {error}",
+  "@error_loading_horoscope": {
+    "description": "Horoscope loading error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "horoscope_not_found": "Horoscope not found. Try another sign.",
+  "@horoscope_not_found": {
+    "description": "Horoscope not found"
+  },
+  
+  "horoscope_unavailable": "Horoscope is temporarily unavailable",
+  "@horoscope_unavailable": {
+    "description": "Horoscope unavailable"
+  },
+  
+  "forecast_for_today": "Forecast for today",
+  "@forecast_for_today": {
+    "description": "Today's forecast label"
+  },
+  
+  "error_network": "NETWORK ERROR",
+  "@error_network": {
+    "description": "Network error"
+  },
+  
+  "retry": "RETRY",
+  "@retry": {
+    "description": "Retry button"
+  },
+  
+  "error_loading_weather": "Error loading weather: {error}",
+  "@error_loading_weather": {
+    "description": "Weather loading error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "error_playback": "Playback error: {error}",
+  "@error_playback": {
+    "description": "Playback error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "ad_concert_title": "Big Concert in Yakutsk!",
+  "@ad_concert_title": {
+    "description": "Concert advertisement"
+  },
+  "ad_concert_action": "Buy Tickets",
+  "@ad_concert_action": {
+    "description": "Concert ad button text"
+  },
+  "ad_concert_duration": "25s",
+  "@ad_concert_duration": {
+    "description": "Concert ad duration"
+  },
+
+  "ad_album_title": "New Album Available Now!",
+  "@ad_album_title": {
+    "description": "Album advertisement"
+  },
+  "ad_album_action": "Listen",
+  "@ad_album_action": {
+    "description": "Album ad button text"
+  },
+  "ad_album_duration": "30s",
+  "@ad_album_duration": {
+    "description": "Album ad duration"
+  },
+
+  "ad_festival_title": "Music Festival 2026",
+  "@ad_festival_title": {
+    "description": "Music festival advertisement"
+  },
+  "ad_festival_action": "Learn More",
+  "@ad_festival_action": {
+    "description": "Festival ad button text"
+  },
+  "ad_festival_duration": "20s",
+  "@ad_festival_duration": {
+    "description": "Festival ad duration"
+  },
+
+  "ad_studio_title": "Recording Studio - 20% Off",
+  "@ad_studio_title": {
+    "description": "Recording studio advertisement"
+  },
+  "ad_studio_action": "Book Now",
+  "@ad_studio_action": {
+    "description": "Studio ad button text"
+  },
+  "ad_studio_duration": "35s",
+  "@ad_studio_duration": {
+    "description": "Studio ad duration"
+  },
+
+  "ad_instruments_title": "Musical Instruments - New Store",
+  "@ad_instruments_title": {
+    "description": "Instrument store advertisement"
+  },
+  "ad_instruments_action": "Visit",
+  "@ad_instruments_action": {
+    "description": "Store ad button text"
+  },
+  "ad_instruments_duration": "28s",
+  "@ad_instruments_duration": {
+    "description": "Store ad duration"
+  },
+
+  "charts_title": "Top Chart",
+  "@charts_title": {
+    "description": "Charts screen title"
+  },
+  "charts_subtitle": "Most popular in Yakutia today",
+  "@charts_subtitle": {
+    "description": "Charts screen subtitle"
+  },
+  "ad_label": "ADVERTISEMENT",
+  "@ad_label": {
+    "description": "Advertisement label"
+  }
+}

@@ -204,7 +204,8 @@ class WeatherForecastList extends StatelessWidget {
         SizedBox(
           height: 140,
           child: ListView.builder(
-            scrollDirection: Axis.horizontal,
+            scrollDirection: Axis.vertical,
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: forecast.length,
             itemBuilder: (context, i) {
               final day = forecast[i];
@@ -218,7 +219,7 @@ class WeatherForecastList extends StatelessWidget {
                   width: 105,
                   padding: const EdgeInsets.symmetric(
                     vertical: 20,
-                    horizontal: 15,
+                    horizontal: 16,
                   ),
                   decoration: BoxDecoration(
                     color: cardColor,

@@ -1,121 +1,173 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+
 import 'package:firebase_core/firebase_core.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'firebase_options.dart';
-import 'package:radio_v2/features/home/home_screen.dart';
-import 'core/config.dart';
-import 'core/providers.dart';
-import 'widgets/splash_screen.dart';
-import 'core/utils/logger.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:audio_service/audio_service.dart';
+// Условный импорт для home_widget (не поддерживается на Web)
+import 'package:sakha_live/services/home_widget_service.dart'
+    if (dart.library.io) 'package:sakha_live/services/home_widget_service_stub.dart';
+
+import 'package:sakha_live/core/config.dart';
+import 'package:sakha_live/core/providers.dart';
+import 'package:sakha_live/core/utils/logger.dart';
+import 'package:sakha_live/features/home/home_screen.dart';
+import 'package:sakha_live/firebase_options.dart';
+import 'package:sakha_live/services/push_notification_service.dart';
+import 'package:sakha_live/services/audio_handler.dart';
+import 'package:sakha_live/widgets/splash_screen.dart';
+import 'package:sakha_live/l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Загрузка конфигурации
+  // 1. Загрузка конфигурации (должна быть перед Firebase!)
   await AppConfig.initialize();
 
-  // 1. Локализация
-  try {
-    await initializeDateFormatting('ru_RU');
-  } catch (e) {
-    Logger.error("Ошибка локализации: $e");
+  // 2. Инициализация AudioService (только для Android/iOS, не работает на Web)
+  RadioAudioHandler? audioHandler;
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    try {
+      audioHandler = await AudioService.init(
+        builder: () => RadioAudioHandler(),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.sakhalive.radio.audio',
+          androidNotificationChannelName: 'SakhaLive Radio Playback',
+          androidNotificationOngoing: true,
+          androidStopForegroundOnPause: true,
+          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidShowNotificationBadge: true,
+          androidNotificationClickStartsActivity: true,
+          androidResumeOnClick: true,
+        ),
+      );
+      Logger.log("AudioService initialized", tag: 'Main');
+    } catch (e) {
+      Logger.error("AudioService init error: $e", tag: 'Main');
+    }
+  } else {
+    // Для Web/Desktop создаем handler напрямую без обертки AudioService
+    audioHandler = RadioAudioHandler();
+    Logger.log("RadioAudioHandler created directly for Web/Desktop", tag: 'Main');
   }
 
-  // 2. Firebase
+  // 3. Инициализация Firebase
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      Logger.log("Firebase initialized");
-    } else {
-      Logger.log("Firebase already initialized");
+      if (kIsWeb) {
+        // На вебе инициализируем асинхронно, чтобы не блокировать отрисовку Splash Screen
+        Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        ).then((_) {
+          PushNotificationService.initialize().catchError((e) {
+            Logger.error("Web Push init error: $e", tag: 'Main');
+          });
+          Logger.log("Firebase initialized (Async Web)", tag: 'Main');
+        }).catchError((e) {
+          Logger.error("Firebase init error: $e", tag: 'Main');
+        });
+      } else {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        
+        // Push-уведомления не поддерживаются на Windows/Linux через стандартный FirebaseMessaging
+        if (!kIsWeb && !Platform.isWindows && !Platform.isLinux) {
+          try {
+            await PushNotificationService.initialize();
+            Logger.log("PushNotificationService initialized", tag: 'Main');
+          } catch (e) {
+            Logger.error("PushNotificationService init error: $e", tag: 'Main');
+          }
+        } else {
+          Logger.log("PushNotificationService skipped for this platform", tag: 'Main');
+        }
+        Logger.log("Firebase initialized", tag: 'Main');
+      }
     }
   } catch (e) {
-    Logger.error("Firebase init error (ignored if already exists): $e");
+    Logger.error("Firebase init error: $e", tag: 'Main');
   }
 
-  // 3. Audio Background
-  if (!kIsWeb) {
-    try {
-      await JustAudioBackground.init(
-        androidNotificationChannelId: 'com.sakha.radio.channel',
-        androidNotificationChannelName: 'Sakha Radio Playback',
-        androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
-      );
-    } catch (e) {
-      Logger.error("AudioBackground init error: $e");
+  // 4. Инициализация Home Widget (не работает на Web)
+  // Используем условный сервис вместо прямого импорта пакета
+  try {
+    await HomeWidgetService.setAppGroupId('group.com.sakhalive.shared');
+    if (!kIsWeb) {
+      Logger.log("HomeWidget initialized", tag: 'Main');
     }
+  } catch (e) {
+    Logger.error("HomeWidget init error: $e", tag: 'Main');
   }
 
-  runApp(const MyApp());
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Переопределяем audioHandlerProvider для всех платформ
+        audioHandlerProvider.overrideWithValue(audioHandler),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ProviderScope(
-      child: Consumer(
-        builder: (context, ref, child) {
-          ref.watch(themeProvider); // Watch for rebuilds when theme changes
-          final themeNotifier = ref.read(themeProvider.notifier);
-
-          return MaterialApp(
-            title: 'Sakha Radio',
-            debugShowCheckedModeBanner: false,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
-            theme: themeNotifier.themeData,
-            home:
-                const AppInitializer(), // Используем виджет для инициализации приложения
-          );
-        },
-      ),
-    );
-  }
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-// Виджет для инициализации приложения и перехода к главному экрану
-class AppInitializer extends StatefulWidget {
-  const AppInitializer({super.key});
+class _MyAppState extends ConsumerState<MyApp> {
+  bool _isInitialized = false;
 
-  @override
-  State<AppInitializer> createState() => _AppInitializerState();
-}
-
-class _AppInitializerState extends State<AppInitializer> {
   @override
   void initState() {
     super.initState();
-    // Запускаем инициализацию и переход к главному экрану
-    _initializeAndNavigate();
+    _initApp();
   }
 
-  Future<void> _initializeAndNavigate() async {
-    // Небольшая задержка для отображения сплеш-экрана (не более 2 секунд)
-    await Future.delayed(const Duration(milliseconds: 1500));
-
-    // Переход к главному экрану
+  Future<void> _initApp() async {
+    // Минимальная задержка для плавного перехода (100мс вместо 2с)
+    await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      setState(() {
+        _isInitialized = true;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return const SplashScreen(); // Показываем сплеш-экран до перехода
+    // Используем селектор для подписки только на isDarkTheme, чтобы избежать лишних пересборок
+    final isDarkTheme = ref.watch(
+      themeProvider.select((state) => state.value?.isDarkTheme ?? true),
+    );
+
+    final themeNotifier = ref.read(themeProvider.notifier);
+    final themeData = themeNotifier.getThemeData();
+
+    return ShadTheme(
+      data: themeNotifier.getShadcnTheme(),
+      child: MaterialApp(
+        title: 'SakhaLive',
+        debugShowCheckedModeBanner: false,
+        theme: themeData.lightTheme,
+        darkTheme: themeData.darkTheme,
+        themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          AppLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        locale: const Locale('ru'),
+        home: _isInitialized ? const HomeScreen() : const SplashScreen(),
+      ),
+    );
   }
 }

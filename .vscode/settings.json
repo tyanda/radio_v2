@@ -1,4 +1,33 @@
 {
-    "cmake.sourceDirectory": "G:/radio_v2/linux",
-    "java.configuration.updateBuildConfiguration": "interactive"
+  "files.exclude": {
+    "**/defaultSettings.jsonc": true
+  },
+  "files.watcherExclude": {
+    "**/defaultSettings.jsonc": true,
+    "**/build/**": true,
+    "**/.dart_tool/**": true
+  },
+  "json.validate.enable": false,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "python.terminal.useEnvFile": true,
+  "dart.flutterSdkPath": "C:\\src\\flutter",
+  "dart.hotReloadOnSave": "manual",
+  "dart.gradleDaemon": true,
+  "dart.openDevTools": "flutter",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "Dart-Code.dart-code",
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.quickSuggestions": {
+      "strings": true,
+      "comments": true,
+      "other": true
+    }
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

@@ -1,60 +1,93 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/station.dart';
+import '../../domain/repositories/favorites_repository.dart';
 
-class FavoritesNotifier extends Notifier<String?> {
-  static const String _favoriteKey =
-      'favorite_station_v2'; // Changed key to avoid conflict
+class FavoritesState {
+  final List<Station> stations;
+  final Set<String> favoriteStationNames; // Несколько избранных
+  final bool isLoading;
+  final String? error;
 
-  @override
-  String? build() {
-    _loadFavorite();
-    return null;
+  FavoritesState({
+    required this.stations,
+    Set<String>? favoriteStationNames,
+    this.isLoading = false,
+    this.error,
+  }) : favoriteStationNames = favoriteStationNames ?? {};
+
+  FavoritesState copyWith({
+    List<Station>? stations,
+    Set<String>? favoriteStationNames,
+    bool? isLoading,
+    String? error,
+  }) {
+    return FavoritesState(
+      stations: stations ?? this.stations,
+      favoriteStationNames: favoriteStationNames ?? this.favoriteStationNames,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
   }
 
-  Future<void> _loadFavorite() async {
+  List<Station> get favoriteStations {
+    return stations
+        .where((station) => favoriteStationNames.contains(station.name))
+        .toList();
+  }
+
+  bool isFavorite(String stationName) {
+    return favoriteStationNames.contains(stationName);
+  }
+}
+
+class FavoritesNotifier extends StateNotifier<FavoritesState> {
+  final FavoritesRepository _repository;
+
+  FavoritesNotifier(this._repository)
+    : super(FavoritesState(stations: [], isLoading: true)) {
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final favorite = prefs.getString(_favoriteKey);
-      if (favorite != null && favorite.isNotEmpty) {
-        state = favorite;
-      }
+      state = state.copyWith(isLoading: true, error: null);
+      final stations = await _repository.loadStationList();
+      final favoriteNames = await _repository.loadFavorites();
+      state = FavoritesState(
+        stations: stations,
+        favoriteStationNames: favoriteNames,
+      );
     } catch (e) {
-      // Handle error
+      state = state.copyWith(
+        error: 'Failed to load data: $e',
+        isLoading: false,
+      );
     }
   }
 
   Future<void> toggleFavorite(String stationName) async {
-    String? newState;
-
-    if (state == stationName) {
-      // If already favorite, remove it (toggle off)
-      newState = null;
-    } else {
-      // Set as new favorite (replacing any previous)
-      newState = stationName;
-    }
-
-    state = newState;
-
     try {
-      final prefs = await SharedPreferences.getInstance();
-      if (newState == null) {
-        await prefs.remove(_favoriteKey);
+      final newFavorites = Set<String>.from(state.favoriteStationNames);
+
+      if (newFavorites.contains(stationName)) {
+        newFavorites.remove(stationName);
       } else {
-        await prefs.setString(_favoriteKey, newState);
+        newFavorites.add(stationName);
       }
+
+      await _repository.saveFavorites(newFavorites);
+      state = state.copyWith(favoriteStationNames: newFavorites);
     } catch (e) {
-      // Handle error
+      state = state.copyWith(error: 'Failed to toggle favorite: $e');
     }
   }
 
-  bool isFavorite(String stationName) {
-    return state == stationName;
+  Future<void> clearAllFavorites() async {
+    try {
+      await _repository.saveFavorites({});
+      state = state.copyWith(favoriteStationNames: {});
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to clear favorites: $e');
+    }
   }
 }
-
-final favoritesProvider = NotifierProvider<FavoritesNotifier, String?>(
-  FavoritesNotifier.new,
-);

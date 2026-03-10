@@ -3,7 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'core/config.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -45,7 +44,7 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions web = FirebaseOptions(
-    apiKey: AppConfig.firebaseWebApiKey,
+    apiKey: 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q',
     appId: '1:1097107309921:web:72ee1a1fd96448f62d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -56,7 +55,7 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions android = FirebaseOptions(
-    apiKey: AppConfig.firebaseAndroidApiKey,
+    apiKey: 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q',
     appId: '1:1097107309921:android:7a5c8b928ec2005c2d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -65,7 +64,7 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions ios = FirebaseOptions(
-    apiKey: AppConfig.firebaseIOSApiKey,
+    apiKey: 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q',
     appId: '1:1097107309921:ios:b8fb3ac41625f5ac2d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',
@@ -75,7 +74,7 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions windows = FirebaseOptions(
-    apiKey: AppConfig.firebaseWebApiKey,
+    apiKey: 'AIzaSyApqgccLr4zrPFv5PIXgQiJa4BKfSRkw7Q',
     appId: '1:1097107309921:web:43b1cd2d37c9f9822d3120',
     messagingSenderId: '1097107309921',
     projectId: 'sakhalive-ticker',

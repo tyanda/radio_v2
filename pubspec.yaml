@@ -1,5 +1,5 @@
-name: radio_v2
-description: "A new Flutter project."
+name: sakha_live
+description: "SakhaLive Radio - Ваше любимое радио всегда с вами."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.1+2
+version: 1.0.6+3
 
 environment:
   sdk: ^3.10.8
@@ -34,32 +34,63 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  
+
   # Additional dependencies
-  http: ^1.2.2
-  html: ^0.15.4
-  provider: ^6.1.2
-  intl: ^0.19.0
-  shared_preferences: ^2.3.0
+  http: ^1.4.0
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
+  shadcn_ui: ^0.46.1
   firebase_core: ^4.4.0
   firebase_database: ^12.1.2
-  just_audio: ^0.9.40
-  just_audio_background: ^0.0.1-beta.11
-  marquee: ^2.3.0
-  dart_rss: ^3.0.3
+  cloud_firestore: ^6.1.2
+  
+  # --- ФУНКЦИОНАЛ РАДИО ---
+  just_audio: ^0.10.5
+  just_audio_windows: ^0.2.2
+  just_audio_background: ^0.0.1-beta.17
+  audio_service: ^0.18.18
+  
+  marquee: ^2.2.3
   flutter_localizations:
     sdk: flutter
-  geolocator: ^13.0.1
-  geocoding: ^3.0.0
-  flutter_riverpod: ^3.2.1
-  path_provider: ^2.1.4
-  flutter_dotenv: ^5.2.1
-  lottie: ^3.1.2
-  dio: ^5.4.3+1
-  translator: ^1.0.0
+  geolocator: ^14.0.2
+  
+  # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
+  flutter_riverpod: ^2.5.1
+  riverpod: ^2.5.1
 
-dependency_overrides:
-  intl: ^0.20.2
+  # --- HOME SCREEN WIDGETS ---
+  home_widget: ^0.9.0
+
+  # --- ПРОИЗВОДИТЕЛЬНОСТЬ И UX ---
+  cached_network_image: ^3.4.1
+  connectivity_plus: ^6.1.1
+  crypto: ^3.0.3
+  
+  path_provider: ^2.1.5
+  flutter_dotenv: ^6.0.0
+  lottie: ^3.3.0
+  dio: ^5.8.0+1
+  translator: ^1.0.0
+  audio_session: ^0.2.2
+  web: ^1.1.0
+  flutter_svg: ^2.2.0
+  share_plus: ^10.1.2
+  rxdart: ^0.28.0
+
+  # --- ШРИФТЫ ---
+  google_fonts: ^6.2.1
+  palette_generator: ^0.3.3+7
+  firebase_messaging: ^16.1.1
+  flutter_local_notifications: ^20.1.0
+
+  # --- ИКОНКИ ---
+  lucide_icons_flutter: ^3.1.10
+
+  # --- ВИДЕО ДЛЯ РЕКЛАМЫ ---
+  video_player: ^2.9.5
+  chewie: ^1.9.4
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -71,16 +102,32 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.3
+  build_runner: ^2.4.15
 
-flutter_launcher_icons:
-  image_path: "assets/images/icon.png"
+  # Testing
+  mockito: ^5.4.4
+
+  # Splash screen
+  flutter_native_splash: ^2.4.0
+
+flutter_native_splash:
+  # SVG изображение не поддерживается, используем PNG
+  image: assets/images/icon.png
+  color: "#0A0A0A"
   android: true
   ios: true
-  web:
-    generate: true
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/images/icon.png"
+  web: false
+
+  # Для тёмной темы
+  color_dark: "#0A0A0A"
+  image_dark: assets/images/icon.png
+
+  # Платформы
+  android_12:
+    image: assets/images/icon.png
+    color: "#0A0A0A"
+    image_dark: assets/images/icon.png
+    color_dark: "#0A0A0A"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -108,6 +155,19 @@ flutter:
     - assets/images/europa_plus.jpg
     - assets/images/superdisco.jpg
     - assets/images/load.png
+    - assets/images/radio_record_logo.png
+    - assets/images/russkoe_radio.png
+    - assets/images/images.png
+    - assets/images/record-russian-hits.png
+    - assets/images/stv.jpeg
+    - assets/images/icon.png
+    - assets/icon/Icon - Heart.svg
+    - assets/icons/morning.svg
+    - assets/icons/day.svg
+    - assets/icons/evening.svg
+    - assets/icons/night.svg
+    - assets/animations/radio_pulse.json
+    - .env
 
   # Enable support for additional languages including Cyrillic script
   generate: true
@@ -133,5 +193,4 @@ flutter:
   #         weight: 700
   #
   # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
-
+  # see https://dart.dev/tools/pub/pubspec#flutter

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-import 'package:radio_v2/core/theme/app_colors.dart';
+import '../core/design/design.dart';
 
 class EqualizerAnimation extends StatefulWidget {
   final bool isActive;
@@ -61,7 +61,7 @@ class _EqualizerAnimationState extends State<EqualizerAnimation>
                 width: 3.5,
                 height: height,
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               );

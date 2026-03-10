@@ -1,60 +1,121 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+  <!-- This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`. -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="SakhaLive Radio - онлайн радио Якутии">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firebaseio.com">
+  <link rel="preconnect" href="https://stream2.sakhafm.ru">
+  <link rel="preconnect" href="https://icecast-saha.cdnvideo.ru">
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="radio_v2">
-  <meta name="theme-color" content="#0A0A0A">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <!-- CSP для веб-версии - оптимизированный -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com https://lottie.host;
+    style-src 'self' 'unsafe-inline' https://*.googleapis.com https://fonts.googleapis.com;
+    font-src 'self' data: https://*.googleapis.com https://fonts.gstatic.com;
+    img-src 'self' data: blob: https:;
+    media-src 'self' blob: https: http:;
+    connect-src 'self' blob: https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://api.openweathermap.org https://api.api-ninjas.com https://api.apiverve.com https://itunes.apple.com https://api.deezer.com https://*.deezer.com https://lottie.host https://www.gstatic.com https://*.hostingradio.ru https://*.cdnvideo.ru https://stream2.sakhafm.ru https://icecast-saha.cdnvideo.ru https://i.sakhafm.ru https://nvsakh.ru https://irrADIO.ru https://europaplus.ru https://radiorecord.ru https://stream2.radiotoday.ru http://stream2.radiotoday.ru:8000 https://api.rss2json.com http://localhost:* ws://localhost:*;
+    worker-src 'self' blob:;
+    object-src 'none';
+    base-uri 'self';
+  ">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>radio_v2</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.png"/>
   <link rel="manifest" href="manifest.json">
+
+  <title>SakhaLive Radio</title>
   <style>
     body {
-      background-color: #0A0A0A; /* Твой цвет фона из AppColors */
+      background-color: #0A0A0A;
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      overscroll-behavior: none;
     }
-    /* Запрет поворота экрана - строго вертикальная ориентация */
+
+    /* Адаптация под ориентацию устройства */
     @media screen and (orientation: landscape) {
       body {
-        transform: rotate(-90deg);
-        transform-origin: 50% 50%;
-        width: 100vh;
-        height: 100vw;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        margin-top: -50vh;
-        margin-left: -50vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
+
+    /* Splash screen */
+    .splash {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #0A0A0A;
+    }
+    .splash-text {
+      color: #F2C94C;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   </style>
+
+  <!-- PWA Script -->
+  <script>
+    // iOS audio context fix - разрешаем воспроизведение после взаимодействия пользователя
+    let audioContext = null;
+
+    function initAudioContext() {
+      if (!audioContext) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioContext = new AudioContext();
+          // Resume audio context после первого взаимодействия
+          if (audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+        }
+      }
+    }
+
+    // Инициализация аудио при первом взаимодействии (требуется для iOS)
+    document.addEventListener('touchstart', initAudioContext, { once: true });
+    document.addEventListener('click', initAudioContext, { once: true });
+    document.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+
+  </script>
 </head>
 <body>
+  <!-- Splash screen до загрузки Flutter -->
+  <div id="splash" class="splash">
+    <div class="splash-text">SakhaLive Radio</div>
+  </div>
+
+  <!-- Загрузка Flutter -->
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
